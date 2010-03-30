@@ -5,7 +5,7 @@ dnl AC 2.62 needed for OpenMP
 AC_PREREQ(2.62)
 
 dnl AC_INIT (package, version, [bug-report-email], [tarname])
-AC_INIT([gtfold],[1.10])
+AC_INIT([gtfold],[1.14])
 
 dnl check for this file's existence to make sure that the directory
 dnl specified by --srcdir is the right one
@@ -47,9 +47,9 @@ fi
 
 
 dnl Search for a C compiler starting with the specified list
-AC_PROG_CC([xlc cc gcc icc])
+AC_PROG_CC([xlc gcc icc])
 dnl Search for a C++ compiler starting with the specified list
-AC_PROG_CXX([xlC CC g++ iCC])
+AC_PROG_CXX([xlC g++ iCC])
 dnl Check for programs
 #AC_PROG_LIBTOOL
 AC_PROG_INSTALL
