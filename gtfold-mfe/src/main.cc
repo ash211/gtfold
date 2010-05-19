@@ -384,10 +384,10 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
-	char cons[10];
+	char cons[100];
 
 	while (!cf.eof()) {
-		cf.getline(cons, 10);
+		cf.getline(cons, 100);
 		if (cons[0] == 'F' || cons[0] == 'f')
 			numfConstraints++;
 		if (cons[0] == 'P' || cons[0] == 'p')
@@ -418,7 +418,7 @@ int main(int argc, char** argv) {
 	cf.open(argv[consIndex], ios::in);
 
 	while(!cf.eof()) {
-		cf.getline(cons,10);
+		cf.getline(cons,100);
 		char *p=strtok(cons, " ");
 		p = strtok(NULL, " ");
 		if(cons[0]=='F' || cons[0]=='f') {

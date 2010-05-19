@@ -55,7 +55,7 @@ void traceW(int j) {
 	int done, i, Wj;
 	int wim1, flag, Widjd, Wijd, Widj, Wij;
 
-	flag = 1;
+	//flag = 1;
 
 	done = 0; /* the done variable makes it sure that we are tracebacking the first optimal possibility */
 	Wj = INFINITY_;
@@ -64,14 +64,14 @@ void traceW(int j) {
 		/* W[j] = 0; */
 	} else {
 		for (i = 1; i < j && !done; i++) {
-			wim1 = W[i - 1];
-			//  wim1 = MIN ( 0, W[i-1] );
+			//wim1 = W[i - 1];
+		    wim1 = MIN ( 0, W[i-1] );
 
-			/*
+			
 			 flag = 1;
 			 if (wim1 != W[i-1])
 			 flag = 0;
-			 */
+			 
 
 			Widjd = INFINITY_;
 			Wijd = INFINITY_;

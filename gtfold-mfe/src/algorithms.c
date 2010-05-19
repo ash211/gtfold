@@ -92,7 +92,7 @@ void initTables(int len) {
 	init_chPair();
 
 	for (i = 0; i < LENGTH; i++) {
-		W[i] = 0; /* Initializing W array with INFINITY make sure that an unfolded sequence will have a large +ve value for free energy - INIFINITY*/
+		W[i] = INFINITY_; /* Initializing W array with INFINITY make sure that an unfolded sequence will have a large +ve value for free energy - INIFINITY*/
 		constraints[i] = 0;
 #if 0
 		indx[i] = (LENGTH-1)*(i-1) - (i*(i-1))/2;
@@ -1131,7 +1131,7 @@ void calcW(int j) {
 		Wim1 = MIN(0, W[i - 1]); /* If W[i-1] >=0, this means that there is a branch contained in the sequence from 1 to i-1. Otherwise W[i-1] will be INFINITY. Here Wim1 is defined in this manner, to make the energy of unfolded sequence as INFINITY. */
 #endif
 
-		Wim1 = W[i - 1];
+		//Wim1 = W[i - 1];
 
 		rnai = RNA[i];
 

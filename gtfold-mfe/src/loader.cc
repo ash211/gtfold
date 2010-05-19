@@ -30,6 +30,8 @@
 #define xstr(s) str(s)
 #define str(s) #s
 
+//#define GENBIN
+
 using namespace std;
 
 //Global Variables
