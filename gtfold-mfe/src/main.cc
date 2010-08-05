@@ -19,6 +19,7 @@
 
 /* Authored by Amrita Mathuriya August 2007 - January 2009.*/
 /* Modified by Sonny Hernandez May 2007 - Aug 2007. All comments added marked by "SH: "*/
+/* Modified by Sainath Mallidi August 2009 - "*/
 
 #include <iostream>
 #include <iomanip>
@@ -44,8 +45,10 @@ using namespace std;
 enum BOOL ILSA; /* A boolean variable to know if we are executing with Internal loop speedup algorithm (ILA) or not. ILSA finds the optimal internal loop by exploring all possibilities. */
 enum BOOL NOISOLATE;
 enum BOOL USERDATA;
+enum BOOL PARAMS;
 #ifdef DYNALLOC
 int LENGTH;
+unsigned char *RNA1; 
 unsigned char *RNA; /* Contains RNA string in terms of 0, 1, 2, 3 for A, C, G and U respectively*/
 int *structure; /* An array to contain the optimal structure */
 int *V; /* int V[LENGTH][LENGTH]; */
@@ -58,6 +61,7 @@ int *constraints;
 #else
 /* This are previously used variables, now they are not used. */
 unsigned char RNA[LENGTH];
+unsigned char RNA1[LENGTH];
 int structure[LENGTH];
 int VBI[LENGTH][LENGTH];
 int VM[LENGTH][LENGTH];
@@ -71,7 +75,7 @@ int indx [LENGTH];
 void help() {
 	fprintf(
 			stderr,
-			"Usage: gtfold [-ilsa] [-noisolate] [-constraints filename] [-datadir datadirloc] filename(sequence)\n\n-ilsa = Calculation of all possible internal loops using the speedup algorithm\n-noisolate=prevents isolated base pairs from forming\nSequence file has to be in one of the two formats: Single line or FASTA\nConstraint filename is a optional parameter.\n\nSyntax for giving constraints is:\n\t\tfor forcing (i,j) base pair, F i j and\n\t\tto prohibit (i,j) base pair, P i j.\n\n");
+			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-datadir datadirloc] filename(sequence)\n\n-ilsa = Calculation of all possible internal loops using the speedup algorithm\n-noisolate=prevents isolated base pairs from forming\nSequence file has to be in one of the two formats: Single line or FASTA\nset-of-parameter is the choice of the Thermodynamic sets of parameters: Turner99 or Turner04\nConstraint filename is a optional parameter.\n\nSyntax for giving constraints is:\n\t\tfor forcing (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, F i j k and\n\t\tto prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, P i j k and \n\t\tP i 0 k to make bases from i to i+k-1 single stranded bases.\n\n");
 	exit(-1);
 }
 
@@ -86,14 +90,16 @@ double get_seconds() {
 void printSequence(int len) {
 	int i = 1;
 	for (i = 1; i <= len; i++) {
-		if (RNA[i] == 0)
+		if (RNA1[i] == 0)
 			printf("A");
-		else if (RNA[i] == 1)
+		else if (RNA1[i] == 1)
 			printf("C");
-		else if (RNA[i] == 2)
+		else if (RNA1[i] == 2)
 			printf("G");
-		else
+		else if (RNA1 [i] == 3)
 			printf("T");
+		else
+			printf("N");
 	}
 	printf("\n");
 }
@@ -141,7 +147,11 @@ void init_variables(int len) {
 		perror("Cannot allocate variable 'RNA'");
 		exit(-1);
 	}
-
+	RNA1 = (unsigned char *) malloc(LENGTH * sizeof(unsigned char));
+	if (RNA1 == NULL) {
+		perror("Cannot allocate variable 'RNA'");
+		exit(-1);
+	}
 	structure = (int *) malloc(LENGTH * sizeof(int));
 	if (structure == NULL) {
 		perror("Cannot allocate variable 'structure'");
@@ -235,6 +245,7 @@ void free_variables() {
 	free(constraints);
 	free(structure);
 	free(RNA);
+	free(RNA1);
 
 #endif
 
@@ -253,12 +264,14 @@ void free_variables() {
 int main(int argc, char** argv) {
 	int i;
 	ifstream cf;
+	ifstream cfcons;
 	int bases;
 	string s, seq;
 	int energy;
 	double t1;
 	ILSA = FALSE;
 	NOISOLATE = FALSE;
+	
 	fprintf(stdout,
 			"GTfold: A Scalable Multicore Code for RNA Secondary Structure Prediction\n");
 	fprintf(
@@ -270,7 +283,7 @@ int main(int argc, char** argv) {
 	if (argc < 2)
 		help();
 
-	int fileIndex = 0, consIndex = 0, dataIndex = 0;
+	int fileIndex = 0, consIndex = 0, dataIndex = 0, paramsIndex=0;
 	i = 1;
 	while (i < argc) {
 		if (argv[i][0] == '-') {
@@ -283,6 +296,12 @@ int main(int argc, char** argv) {
 			} else if (strcmp(argv[i], "-constraints") == 0) {
 				if (i < argc)
 					consIndex = ++i;
+				else
+					help();
+			} else if (strcmp(argv[i], "-params")==0) { 
+				PARAMS = TRUE;			  
+				if (i < argc)
+					paramsIndex = ++i;
 				else
 					help();
 			} else if (strcmp(argv[i], "-datadir") == 0) {
@@ -376,8 +395,8 @@ int main(int argc, char** argv) {
 
 	fprintf(stdout, "Running with constraints\n");
 	fprintf(stdout, "Opening constraint file: %s\n", argv[consIndex]);
-	cf.open(argv[consIndex], ios::in);
-	if (cf != NULL)
+	cfcons.open(argv[consIndex], ios::in);
+	if (cfcons != NULL)
 		fprintf(stdout, "Constraint file opened.\n");
 	else {
 		fprintf(stderr, "Error opening constraint file\n\n");
@@ -386,15 +405,15 @@ int main(int argc, char** argv) {
 
 	char cons[100];
 
-	while (!cf.eof()) {
-		cf.getline(cons, 100);
+	while (!cfcons.eof()) {
+		cfcons.getline(cons, 100);
 		if (cons[0] == 'F' || cons[0] == 'f')
 			numfConstraints++;
 		if (cons[0] == 'P' || cons[0] == 'p')
 			numpConstraints++;
 	}
 
-	cf.close();
+	cfcons.close();
 
 	fprintf(stdout, "Number of Constraints given: %d\n\n", numfConstraints
 			+ numpConstraints);
@@ -415,10 +434,10 @@ int main(int argc, char** argv) {
 	for(it=0; it<numpConstraints; it++) {
 		pbp[it] = (int*)malloc(2*sizeof(int));
 	}
-	cf.open(argv[consIndex], ios::in);
+	cfcons.open(argv[consIndex], ios::in);
 
-	while(!cf.eof()) {
-		cf.getline(cons,100);
+	while(!cfcons.eof()) {
+		cfcons.getline(cons,100);
 		char *p=strtok(cons, " ");
 		p = strtok(NULL, " ");
 		if(cons[0]=='F' || cons[0]=='f') {
@@ -441,11 +460,13 @@ int main(int argc, char** argv) {
 
 	fprintf(stdout, "Forced base pairs: ");
 	for(it=0; it<numfConstraints; it++) {
-		fprintf(stdout, "(%d,%d) ", fbp[it][0], fbp[it][1]);
+		for(int k=1;k<=fbp[it][2];k++)
+		fprintf(stdout, "(%d,%d) ", fbp[it][0]+k-1, fbp[it][1]-k+1);
 	}
 	fprintf(stdout, "\nProhibited base pairs: ");
 	for(it=0; it<numpConstraints; it++) {
-		fprintf(stdout, "(%d,%d) ", pbp[it][0], pbp[it][1]);
+		for(int k=1;k<=pbp[it][2];k++)
+		fprintf(stdout, "(%d,%d) ", pbp[it][0]+k-1, pbp[it][1]-k+1);
 	}
 	fprintf(stdout, "\n\n");
 
@@ -453,6 +474,7 @@ int main(int argc, char** argv) {
 	/* SH: Conversion of the sequence to numerical values. */
 	for(i = 1; i <= bases; i++) {
 		RNA[i] = getBase(s.substr(i-1,1));
+		RNA1[i]=getBase1(s.substr(i-1,1));
 		if (RNA[i]=='X') {
 			fprintf(stderr,"ERROR: Base unrecognized\n");
 			exit(0);
@@ -460,9 +482,11 @@ int main(int argc, char** argv) {
 	}
 
 	if(USERDATA==TRUE)
-		populate(argv[dataIndex]);
+	  populate(argv[dataIndex],true);
+	else if (PARAMS == TRUE)
+	  populate(argv[paramsIndex],false);
 	else
-		populate(NULL); /* Defined in loader.cc file to read in the thermodynamic parameter values from the tables in the ../data directory. */
+	  populate("Turner99",false); /* Defined in loader.cc file to read in the thermodynamic parameter values from the tables in the ../data directory. */
 
 	initTables(bases); /* Initialize global variables */
 

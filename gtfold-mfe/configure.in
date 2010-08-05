@@ -5,7 +5,7 @@ dnl AC 2.62 needed for OpenMP
 AC_PREREQ(2.62)
 
 dnl AC_INIT (package, version, [bug-report-email], [tarname])
-AC_INIT([gtfold],[1.15])
+AC_INIT([gtfold],[1.17])
 
 dnl check for this file's existence to make sure that the directory
 dnl specified by --srcdir is the right one
@@ -47,9 +47,9 @@ fi
 
 
 dnl Search for a C compiler starting with the specified list
-AC_PROG_CC([xlc gcc icc])
+AC_PROG_CC([xlc gcc icc cc])
 dnl Search for a C++ compiler starting with the specified list
-AC_PROG_CXX([xlC g++ iCC])
+AC_PROG_CXX([xlC g++ iCC CC])
 dnl Check for programs
 #AC_PROG_LIBTOOL
 AC_PROG_INSTALL
@@ -184,6 +184,7 @@ AM_CONDITIONAL(GTFOLD_DEBUG, test x$debug = xtrue)
 
 dnl Create makefiles and other configuration files
 AC_CONFIG_FILES([Makefile src/Makefile data/Makefile include/Makefile])
+AC_CONFIG_FILES([data/Turner99/Makefile data/Turner04/Makefile])
 
 dnl Generate `config.status' and launch it
 AC_OUTPUT

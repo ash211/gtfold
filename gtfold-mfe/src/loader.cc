@@ -21,6 +21,7 @@
  * This file defines various functions to read the thermodynamic parameters from files in the data directory.
  * */
 /* Modified by Sonny Hernandez May 2007 - Aug 2007. All comments added marked by "SH: "*/
+/* Modified by Sainath Mallidi August 2009 -  "*/
 
 #include <string.h>
 #include <stdlib.h>
@@ -79,13 +80,15 @@ float prelog; /* Used for loops having size > 30 */
 
 string EN_DATADIR;
 
-void populate(char *userdatadir) {
+void populate(char *userdatadir,bool userdatalogic) {
 
 	cout << "Loading in GTfold data files from ";
 
 #ifndef GENBIN
-	if (userdatadir == NULL) {
+	if (!userdatalogic) {
 		EN_DATADIR.assign(xstr(DATADIR));
+		EN_DATADIR += "/";
+		EN_DATADIR += userdatadir;
 	} else {
 		EN_DATADIR.assign(userdatadir);
 	}
@@ -103,31 +106,22 @@ void populate(char *userdatadir) {
 
 	initMiscloopValues("miscloop.dat");
 	// miscloop.dat - Miscellaneous loop file
-
 	initStackValues("stack.dat");
 	// stack.dat - free energies for base pair stacking
-
 	initDangleValues("dangle.dat");
 	// dangle.dat - single base stacking free energies
-
 	initLoopValues("loop.dat");
 	// loop.dat - entropic component for internal, bulge and hairpin loops.
-
 	initTstkhValues("tstackh.dat");
 	// tstackh.dat - free energies for terminal mismatch stacking in hairpin loops
-
 	initTstkiValues("tstacki.dat");
 	// tstacki.dat - free energies for terminal mismatch stacking in internal loops
-
 	initTloopValues("tloop.dat");
 	// tloop.dat - free energies for distinguished tetraloops
-
 	initInt21Values("int21.dat");
 	// int21.dat - free energies for 2 x 1 interior loops
-
 	initInt22Values("int22.dat");
 	// int22.dat - free energies for 2 x 2 interior loops
-
 	initInt11Values("int11.dat");
 	// int11.dat - free energies for 1 x 1 interior loops
 
@@ -146,6 +140,9 @@ char baseToDigit(std::string base) {
 	}
 	if (!strcmp(base.c_str(), "U")) {
 		return '4';
+	}
+	if (!strcmp(base.c_str(), "N")) {
+		return '5';
 	}
 	return (char) NULL;
 }
@@ -168,6 +165,35 @@ unsigned char getBase(std::string base) {
 			base.c_str(), "T") || !strcmp(base.c_str(), "t")) {
 		//cout << "4";
 		return BASE_U;
+	}
+	if (!strcmp(base.c_str(), "N") || !strcmp(base.c_str(), "n")) {
+		//cout << "4";
+		return BASE_A;
+	}
+	return 'X';
+}
+unsigned char getBase1(std::string base) {
+	//cout << base;
+	if (!strcmp(base.c_str(), "A") || !strcmp(base.c_str(), "a")) {
+		//cout << "1";
+		return BASE_A;
+	}
+	if (!strcmp(base.c_str(), "C") || !strcmp(base.c_str(), "c")) {
+		//cout << "2";
+		return BASE_C;
+	}
+	if (!strcmp(base.c_str(), "G") || !strcmp(base.c_str(), "g")) {
+		//cout << "3";
+		return BASE_G;
+	}
+	if (!strcmp(base.c_str(), "U") || !strcmp(base.c_str(), "u") || !strcmp(
+			base.c_str(), "T") || !strcmp(base.c_str(), "t")) {
+		//cout << "4";
+		return BASE_U;
+	}
+	if (!strcmp(base.c_str(), "N") || !strcmp(base.c_str(), "n")) {
+		//cout << "4";
+		return 'N';
 	}
 	return 'X';
 }
@@ -201,8 +227,8 @@ int initStackValues(string fileName) {
 	}
 
 	// Read the thermodynamic parameters.
-	// The 27 first lines are junk we don't need
-	for (index = 1; index <= 17; index++) {
+	// The 24 first lines are junk we don't need
+	for (index = 1; index <= 15; index++) {
 		cf.getline(currentLine, 256);
 	}
 
@@ -215,7 +241,7 @@ int initStackValues(string fileName) {
 	while (i < 16) {
 
 		if (i % 4 == 0)
-			for (index = 1; index < 10; index++)
+			for (index = 1; index < 9; index++)
 				cf.getline(currentLine, 256);
 
 		cf.getline(currentLine, 256);
@@ -564,7 +590,7 @@ int initDangleValues(string fileName) {
 	while (i < 8) {
 
 		if (i != 0)
-			for (index = 1; index < 10; index++)
+			for (index = 1; index < 9; index++)
 				cf.getline(currentLine, 256);
 
 		cf.getline(currentLine, 256);
@@ -716,7 +742,7 @@ int initTstkhValues(string fileName) {
 	}
 
 	// The 27 first lines are junk we don't need
-	for (index = 1; index <= 17; index++) {
+	for (index = 1; index <= 15; index++) {
 		cf.getline(currentLine, 256);
 	}
 
@@ -729,7 +755,7 @@ int initTstkhValues(string fileName) {
 	while (i < 16) {
 
 		if (i % 4 == 0)
-			for (index = 1; index < 10; index++)
+			for (index = 1; index < 9; index++)
 				cf.getline(currentLine, 256);
 
 		cf.getline(currentLine, 256);
@@ -822,7 +848,7 @@ int initTstkiValues(string fileName) {
 	}
 
 	// The 27 first lines are junk we don't need
-	for (index = 1; index <= 17; index++) {
+	for (index = 1; index <= 15; index++) {
 		cf.getline(currentLine, 256);
 	}
 
@@ -835,7 +861,7 @@ int initTstkiValues(string fileName) {
 	while (i < 16) {
 
 		if (i % 4 == 0)
-			for (index = 1; index < 10; index++)
+			for (index = 1; index < 9; index++)
 				cf.getline(currentLine, 256);
 
 		cf.getline(currentLine, 256);
@@ -936,17 +962,22 @@ int initTloopValues(string fileName) {
 		 MFold use a weird system : it's sthg like Sum(base[i]*5^i) / Algorithm.c line 3134
 		 that's 97655 valuess
 		 */
+		int clindex=0;
 		cf.getline(currentLine, 256);
+		while(currentLine[clindex]== ' ') clindex++;
 		for (count = 0; count < 6; count++) {
-			temp = currentLine[count + 1];
+			temp = currentLine[count + clindex];
 			currentSeqNumbers[count] = baseToDigit(temp);
 			//cout << currentSeqNumbers[count];
 			//cout << currentLine[count+1];
 		}
 		//cout << endl;
-
-		for (count = 0; count < 5; count++) {
-			currentValue[count] = currentLine[count + 8];
+		clindex=clindex+7;
+		while(currentLine[clindex]== ' ') clindex++;
+		count = 0;
+		while(currentLine[clindex+count]!=' '&&currentLine[clindex+count]!='\0') {
+			currentValue[count] = currentLine[count + clindex];
+			count++;
 			//cout << currentValue[count];
 		}
 		//cout << endl;
@@ -1000,7 +1031,7 @@ int initInt22Values(string fileName) {
 	}
 
 	// Get rid of the 38 1st lines
-	for (index = 1; index < 31; index++) {
+	for (index = 1; index < 28; index++) {
 		cf.getline(currentLine, 256);
 	}
 
@@ -1029,7 +1060,7 @@ int initInt22Values(string fileName) {
 		for (i = 0; i < 5; ++i) {
 			cf.getline(currentLine, 256);
 		}
-
+ 
 		// get the closing bases
 		cf.getline(currentLine, 256);
 		s1 = currentLine;
@@ -1144,7 +1175,7 @@ int initInt21Values(string fileName) {
 	}
 
 	// Get rid of the 18 1st lines
-	for (index = 1; index <= 18; index++) {
+	for (index = 1; index <= 17; index++) {
 		cf.getline(currentLine, 256);
 	}
 
@@ -1158,7 +1189,7 @@ int initInt21Values(string fileName) {
 
 			k = 1;
 
-			for (index = 1; index <= 11; index++)
+			for (index = 1; index <= 10; index++)
 				cf.getline(currentLine, 256);
 
 			s = currentLine;
@@ -1266,7 +1297,7 @@ int initInt11Values(string fileName) {
 	}
 
 	// Get rid of the 19 1st lines
-	for (index = 1; index <= 18; index++) {
+	for (index = 1; index <= 17; index++) {
 		cf.getline(currentLine, 256);
 	}
 
@@ -1296,7 +1327,7 @@ int initInt11Values(string fileName) {
 	while (k < 6) {
 		k++;
 		index = 0;
-		for (index = 1; index <= 11; index++) {
+		for (index = 1; index <= 10; index++) {
 			cf.getline(currentLine, 256);
 		}
 

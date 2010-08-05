@@ -24,6 +24,7 @@
 
 #ifdef DYNALLOC
 extern int LENGTH;
+extern unsigned char *RNA1; /* [LENGTH] */
 extern unsigned char *RNA; /* [LENGTH] */
 extern int *structure; /* [LENGTH] */
 extern int *V; /* [(LENGTH-1)*(LENGTH)/2 + 1] */
@@ -38,6 +39,7 @@ extern int *constraints;
 #define LENGTH 8500
 
 extern unsigned char RNA[LENGTH];
+extern unsigned char RNA1[LENGTH];
 extern int structure[LENGTH];
 extern int V[(LENGTH-1)*(LENGTH)/2 + 1];
 extern int VBI[LENGTH][LENGTH];

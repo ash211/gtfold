@@ -28,6 +28,9 @@
  * I am not sure of what these eparam values are at various places except for multiloops.
  * */
 
+/* Modified by Sainath Mallidi August 2009 -  "*/
+/* Added constraint support that can force a base pair, prohibit a base pair and make single stranded regions */
+
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -131,25 +134,29 @@ int checkSS(int i, int j) {
 
 int calculate(int len, int **forceList, int **prohibitList, int forcelen,
 		int prohibitlen) {
-	int b, i, j, it;
-
+	int b, i, j, it,k;
+	for(i=1;i<=len;i++) {
+		if(RNA1[i]=='N') {
+			constraints[i] = -1;}}	
 	if (prohibitlen != 0) {
 		for (it = 0; it < prohibitlen; it++) {
-			constraints[prohibitList[it][0]] = -1;
-			constraints[prohibitList[it][1]] = -1;
+			for(k=1;k<=prohibitList[it][2];k++){
+				constraints[prohibitList[it][0]+k-1] = -1;
+				if(prohibitList[it][1]!=0){constraints[prohibitList[it][1]+1-k] = -1;}}
 		}
 	}
 	if (forcelen != 0) {
 		printf("Running with constraints\n");
 		for (it = 0; it < forcelen; it++) {
-			if (!chPair(RNA[forceList[it][0]], RNA[forceList[it][1]])) {
-				printf("Can't constrain (%d,%d)\n", forceList[it][0],
-						forceList[it][1]);
-				continue;
-			}
-			constraints[forceList[it][0]] = forceList[it][1];
-			constraints[forceList[it][1]] = forceList[it][0];
-			printf("(%d,%d)\n", forceList[it][0], forceList[it][1]);
+			for(k=1;k<=forceList[it][2];k++){
+				if (!chPair(RNA[forceList[it][0]+k-1], RNA[forceList[it][1]-k+1])) {
+					printf("Can't constrain (%d,%d)\n", forceList[it][0]+k-1,
+							forceList[it][1]-k+1);
+					continue;
+				}
+			constraints[forceList[it][0]+k-1] = forceList[it][1]+1-k;
+			constraints[forceList[it][1]+1-k] = forceList[it][0]+k-1;}
+			//printf("(%d,%d)\n", forceList[it][0], forceList[it][1]);
 		}
 	}
 
@@ -166,6 +173,8 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen,
 #endif
 #endif
 
+    //printf("starting.......\n");
+
 	/* Here b-1 is the length of the segment closed with (i,j) base pair. We assume the minimum size of a hairpin loop closed with (i,j) equal to 3.*/
 
 	/* For b = 4 to 6, hairpin loops and at b = 6 stack loops are possible. So, only WM, and V array are needs to be calculated.
@@ -180,8 +189,8 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen,
 #endif
 		for (i = 1; i <= len - b; i++) {
 			j = i + b;
-			if (constraints[i] == -1 && constraints[j] == -1)
-				continue;
+			//if (constraints[i] == -1 && constraints[j] == -1)
+			//	continue;
 			if (chPair(RNA[i], RNA[j])) /* Check if bases i and j pair up or not */
 				calcVWM(i, j, INFINITY_, INFINITY_); /* Calculates V and WM array for element (i,j)*/
 			else
@@ -200,8 +209,8 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen,
 #endif
 			for (i = 1; i <= len - b; i++) {
 				j = i + b;
-				if (constraints[i] == -1 && constraints[j] == -1)
-					continue;
+				//if (constraints[i] == -1 && constraints[j] == -1)
+				//	continue;
 				if (chPair(RNA[i], RNA[j])) {
 					calcVBI(i, j); /* Calculates VBI element at (i,j) */
 					calcVWM(i, j, VBI[i][j], INFINITY_); /* Calculates V and WM arrays*/
@@ -216,8 +225,9 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen,
 #endif
 			for (i = 1; i <= len - b; i++) {
 				j = i + b;
-				if (constraints[i] == -1 && constraints[j] == -1)
-					continue;
+                //printf("%d %d: %d %d\n", i, j, constraints[i], constraints[j]);
+				//if (constraints[i] == -1 && constraints[j] == -1)
+				//	continue;
 				if (chPair(RNA[i], RNA[j])) {
 					calcVBIVMVWM(i, j); /* Calculates VBI, VM, V and WM elements at (i,j) */
 				} else
@@ -232,8 +242,8 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen,
 			for (i = 1; i <= len - b; i++) {
 				j = i + b;
 				calcVBIS(i, j); /* Calculates VBI[i][j] array with Internal loop speedup algorithm (ILSA) */
-				if (constraints[i] == -1 && constraints[j] == -1)
-					continue;
+				//if (constraints[i] == -1 && constraints[j] == -1)
+				//	continue;
 				if (chPair(RNA[i], RNA[j])) {
 					calcVWM(i, j, VBI[i][j], INFINITY_); /* Calculates V and WM element at (i,j) */
 				} else {
@@ -249,8 +259,8 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen,
 			for (i = 1; i <= len - b; i++) {
 				j = i + b;
 				calcVBIS(i, j); /* Calculation of VBI array at (i,j) - Done in both cases whether (i,j) pairs up or not*/
-				if (constraints[i] == -1 && constraints[j] == -1)
-					continue;
+				//if (constraints[i] == -1 && constraints[j] == -1)
+				//	continue;
 				if (chPair(RNA[i], RNA[j])) {
 					calcVMVWM(i, j); /* Calculation of VM, V, WM in Order at (i,j)*/
 				} else
@@ -258,6 +268,15 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen,
 			}
 		}
 	}
+
+/*
+    for(j=2; j<=len; j++){
+        for (i=j-1; i>0; i--){
+		    printf("%d, (%d,%d), WM: %d\n", j-i, i, j, WM[i][j]);
+        }
+    }
+*/            
+
 	for (j = 5; j <= len; j++) /* Recurssion relation for W array does not depend upon any other array, so can be done after the computation of other arrays are finished.*/
 		calcW(j);
 
@@ -511,8 +530,6 @@ void calcWM(int i, int j) {
 	if (constraints[j] <= 0)
 		WMsijm1 = WM[i][j - 1];
 
-	//	if(i==6 && j==11)
-	//		printf("(%d,%d), WMij: %d, WMsip1j: %d, WMsijm1: %d, constraints: (%d,%d)\n", i, j, WMij, WMsip1j, WMsijm1, constraints[i], constraints[j]);
 
 	WMij = MIN(MIN(WMsip1j + c, WMsijm1 + c), WMij);
 	WMij = MIN(WMijp, WMij);
@@ -1089,6 +1106,7 @@ void calcVBIVMVWM(int i, int j) {
 	//	  if(i==36 && j==50)
 	//		  printf("(%d,%d), WMij: %d, WMsip1j: %d, WMsijm1: %d\n", i, j, WMij, WMsip1j, WMsijm1);
 
+
 	WMij = MIN(MIN(WMsip1j + c, WMsijm1 + c), WMij);
 
 	//  if(i==35 && j==50)
@@ -1106,6 +1124,7 @@ void calcVBIVMVWM(int i, int j) {
 //problems in this function.. i think this should fix it..
 /* Function to calculate the value of W[j]. */
 void calcW(int j) {
+
 	int i;
 	int Wj, Widjd /*Dangling base on both sides*/,
 	Wijd/* Dangling base on jth side.*/,
@@ -1158,10 +1177,10 @@ void calcW(int j) {
 			besti = i;
 		}
 
-		//  if(j==56){
-		//      printf("V(%d, %d): %d\n", i, j, V[indx[i]+j]);
+	  // if(i==46 && j==395){
+		//      printf("V(%d, %d): %d, WM: %d\n", 46, j, V[indx[46]+j], WM[46][j]);
 		//      printf("Wij: %d, Widjd: %d, Wijd: %d, Widj: %d\n\n", Wij, Widjd, Wijd, Widj);
-		//  }
+		//}
 
 		if (Wj < INFINITY_) {
 			if (Wj == Wij) {

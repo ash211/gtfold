@@ -1,12 +1,14 @@
 GTfold: A Scalable Multicore Code for RNA Secondary Structure Prediction
 
-(C) 2007-2009, David A. Bader
+(C) 2007-2010, David A. Bader
                Amrita Mathuriya
                 College of Computing, Georgia Institute of Technology
                Christine E. Heitsch
                 School of Mathematics, Georgia Institute of Technology
                Stephen C. Harvey
                 School of Biology, Georgia Institute of Technology
+               Sainath Mallidi
+                College of Computing, Georgia Institute of Technology
 
 The prediction of the correct secondary structures of large RNAs is
 one of the unsolved challenges of computational molecular biology.
@@ -91,3 +93,21 @@ Version History:
                           calculations are modified to read the penalties from this array.
 1.9  15 January 2009   Documented GTfold with various comments.  
 1.10 22 January 2009   More documentation 
+1.11 30 Spetember 2009 Added Better support for input sequence files (removing intermediate white spaces)
+1.12 5 Mar 2010   Added support for constraints, forcing, prohibitng a base pair, specifying single stranded regions.
+            Modified gtfold command line options. Run "gtfold -help".
+1.13 25 Mar 2010  Added a toggle switch for preventing isolated base pairs
+            Handling constraints has been changed drastically and it produces much better output now.
+            Modified gtfold command line options. Run "gtfold -help".
+1.14 30 Mar 2010  Added support to change data directory on fly.
+            Support for generating binaries which reads the data files from its subdir data/
+            More robust handling of input file sequences
+            Changed the output print sequence of GTfold, now also prints in Vienna format
+            Modified the command line options. Run "gtfold -help" to see the usage.
+            Changed the output format of traceback to print loop energies instead of running energy.
+            Changed the initialized values of W[i] to 0 to play nice with the constraints.
+1.15 18 May 2010  Fixed a nasty bug with reading constraints by increasing the length of string to 100 that reads the lines from sontraints file.
+1.16 20 May 2010  Fixed another nasty bug with prohibited constraints handling.
+            Earlier not used to update the WM array if a base pair is prohibited which is causing GTfold to trace partial structure.
+            Some documentation added.
+                    

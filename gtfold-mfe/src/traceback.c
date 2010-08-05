@@ -23,6 +23,10 @@
  * Please note that - To understand the functions defined in this file, you first need to understand functions defined in algorithms.c file. As all those functions have a corresponding function here, for traceback the calculations done there.
  * */
 
+/* Modified by Sainath Mallidi August 2009 -  "*/
+/* Modified traceback to handle constraints */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -52,14 +56,14 @@ void traceW(int j) {
 
 	//printf("Call made with j=%d\n", j);
 
-	int done, i, Wj;
+	int done, i, Wj,Wj_temp;
 	int wim1, flag, Widjd, Wijd, Widj, Wij;
 
-	//flag = 1;
+	flag = 1;
 
 	done = 0; /* the done variable makes it sure that we are tracebacking the first optimal possibility */
 	Wj = INFINITY_;
-
+	int min_i=1;
 	if (j == 0 || j == 1) {
 		/* W[j] = 0; */
 	} else {
@@ -68,9 +72,11 @@ void traceW(int j) {
 		    wim1 = MIN ( 0, W[i-1] );
 
 			
-			 flag = 1;
-			 if (wim1 != W[i-1])
-			 flag = 0;
+			flag = 1;
+			if (wim1 != W[i-1])
+			    flag = 0;
+
+            //printf("i: %d, j: %d, flag: %d\n", i, j, flag);
 			 
 
 			Widjd = INFINITY_;
@@ -89,8 +95,10 @@ void traceW(int j) {
 			if (constraints[i] <= 0)
 				Widj = V[indx[i + 1] + j] + auPen(RNA[i + 1], RNA[j])
 				+ dangle[RNA[j]][RNA[i + 1]][RNA[i]][1] + wim1;
+			Wj_temp=Wj;
 
 			Wj = MIN(MIN(MIN(Wij, Widjd), MIN(Wijd, Widj)), Wj);
+			if (Wj_temp>Wj) min_i=i;	
 
 			//if(W[j]==Wj)
 			// printf("Energies at (%d,%d), W[j]: %d, Wj: %d, Wij: %d, Wijd: %d, Widj: %d, Widjd: %d\n", i, j, W[j], Wj, Wij, Wijd, Widj, Widjd);
@@ -100,9 +108,11 @@ void traceW(int j) {
 					done = 1;
 					structure[i] = j;
 					structure[j] = i;
-					//   printf("before V1, i: %d, j: %d\n", i, j);
+				    //printf("before V1, i: %d, j: %d\n", i, j);
 					traceV(i, j);
-					if (flag)
+					printf("AU Penalty: %12.2f\n",auPen(RNA[i], RNA[j])/100.00);
+
+					if (flag || checkSS(1,i)) // Added this condition because if constraints are present, flag should be overridden
 						traceW(i - 1);
 					break;
 				} else if (W[j] == Widjd && constraints[i] <= 0
@@ -110,9 +120,11 @@ void traceW(int j) {
 					done = 1;
 					structure[i + 1] = j - 1;
 					structure[j - 1] = i + 1;
-					//  printf("before V2, i: %d, j: %d, flag: %d\n", i, j, flag);
+					//printf("before V2, i: %d, j: %d, flag: %d\n", i, j, flag);
 					traceV(i + 1, j - 1);
-					if (flag)
+					printf("AU Penalty: %12.2f\nEnergy of dangling base on both the sides: %12.2f  %12.2f\n",auPen(RNA[i + 1], RNA[j - 1])/100.00, dangle[RNA[j - 1]][RNA[i + 1]][RNA[i]][1]/100.00, dangle[RNA[j - 1]][RNA[i + 1]][RNA[j]][0]/100.00);
+
+					if (flag || checkSS(1,i))
 						traceW(i - 1);
 					break;
 				} else if (W[j] == Wijd && constraints[j] <= 0) { /* If base pair (i,j-1) pairs and base j is single stranded. */
@@ -121,22 +133,25 @@ void traceW(int j) {
 					structure[j - 1] = i;
 					//printf("before V3, i: %d, j: %d\n", i, j);
 					traceV(i, j - 1);
-					if (flag)
+					printf("AU Penalty: %12.2f\nEnergy of dangling base: %12.2f\n",auPen(RNA[i], RNA[j - 1])/100.00,dangle[RNA[j - 1]][RNA[i]][RNA[j]][0]/100.00);
+
+					if (flag || checkSS(1,i) )
 						traceW(i - 1);
 					break;
 				} else if (W[j] == Widj && constraints[i] <= 0) { /* If base pair (i+1,j) pairs and base i is single stranded. */
 					done = 1;
 					structure[i + 1] = j;
 					structure[j] = i + 1;
-					// printf("before V4, i: %d, j: %d\n", i, j);
+					//printf("before V4, i: %d, j: %d\n", i, j);
 					traceV(i + 1, j);
-					if (flag)
+					printf("AU Penalty: %12.2f\nEnergy of dangling base:  %12.2f\n",auPen(RNA[i + 1], RNA[j])/100.00, dangle[RNA[j]][RNA[i + 1]][RNA[i]][1]/100.00);
+					if (flag || checkSS(1,i))
 						traceW(i - 1);
 					break;
 				}
 			}
 		}
-
+		
 		if (W[j] == W[j - 1] && !done) /* If jth base is single stranded and also does not have dangling energy contribution */
 			traceW(j - 1);
 
@@ -162,14 +177,14 @@ void traceV(int i, int j) {
 	Vij = MIN(MIN(a, b), MIN(c, d));
 
 	if (multi_flag == 1) {
-		printf("  %12d\n", multi_en - Vij);
+		printf("  %12.2f\n", (multi_en-Vij)/100.00);
 		multi_flag = 0;
 	}
 
 	if (Vij == a && Vij != b && Vij != c && Vij != d) { /* If () a hairpin loop */
-		printf("i %5d  j %5d    Hairpin  Loop  %12d\n", i, j, eH(i, j));
+		printf("i %5d  j %5d    Hairpin  Loop  %12.2f\n", i, j, eH(i, j)/100.00);
 	} else if (Vij == b /*&& Vij != a && Vij != c && Vij != d*/) { /* If it forms a stack */
-		printf("i %5d  j %5d    Stack    Loop  %12d\n", i, j, eS(i, j));
+		printf("i %5d  j %5d    Stack    Loop  %12.2f\n", i, j, eS(i, j)/100.00);
 		structure[i + 1] = j - 1;
 		structure[j - 1] = i + 1;
 		traceV(i + 1, j - 1);
@@ -219,7 +234,7 @@ void traceVBI(int i, int j) {
 
 	structure[ifinal] = jfinal;
 	structure[jfinal] = ifinal;
-	printf("  %12d\n", eL(i, j, ifinal, jfinal));
+	printf("  %12.2f\n", eL(i, j, ifinal, jfinal)/100.00);
 	traceV(ifinal, jfinal);
 	return;
 }
@@ -328,11 +343,13 @@ void traceWM(int i, int j) {
 				done = 1;
 				structure[i] = j;
 				structure[j] = i;
+				//printf("%12.2f %12.2f %12.2f \n",V[indx[i] + j] , auPen(RNA[i], RNA[j]) , b);
 				traceV(i, j);
 			} else if (WM[i][j] == V[indx[i + 1] + j] + dangle[RNA[j]][RNA[i
 			                                                               + 1]][RNA[i]][1] + auPen(RNA[i + 1], RNA[j]) + b + c
 			                                                               && constraints[i] <= 0) { /* If base pair (i+1, j) forms and base i remain as a dangling base*/
 				done = 1;
+				//printf("%12.2f %12.2f %12.2f %12.2f %12.2f\n",V[indx[i + 1] + j],dangle[RNA[j]][RNA[i+ 1]][RNA[i]][1] , auPen(RNA[i + 1], RNA[j]) , b , c);
 				traceV(i + 1, j);
 				structure[i + 1] = j;
 				structure[j] = i + 1;
@@ -349,6 +366,7 @@ void traceWM(int i, int j) {
 			                                                                                                            + auPen(RNA[i + 1], RNA[j - 1]) + b + 2* c
 			                                                                                                            && constraints[i] <= 0 && constraints[j] <= 0) { /* IF base pair (i+1,j-1) forms and base i and base j remain as dangling bases on each side.*/
 				done = 1;
+//printf("%12.2f %12.2f %12.2f %12.2f %12.2f %12.2f \n",V[indx[i + 1] + j - 1], dangle[RNA[j - 1]][RNA[i + 1]][RNA[i]][1],dangle[RNA[j- 1]][RNA[i + 1]][RNA[j]][0], auPen(RNA[i + 1], RNA[j - 1]) , b , 2* c);
 				traceV(i + 1, j - 1);
 				structure[i + 1] = j - 1;
 				structure[j - 1] = i + 1;

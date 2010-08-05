@@ -30,8 +30,9 @@
 #include "constants.h"
 #include "data.h"
 
-void populate(char *userdatadir);
+void populate(char *userdatadir,bool userdatalogic);
 unsigned char getBase(std::string base);
+unsigned char getBase1(std::string base);
 int initStackValues(std::string fileName);
 int initMiscloopValues(std::string fileName);
 int initDangleValues(std::string fileName);
