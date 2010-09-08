@@ -17,6 +17,9 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* Modified by Prashant Gaurav <pgaurav3@gatech.edu>, 09/07/2010 */
+/* Fixed the incorrect reporting of multiloop energy */
+
 #ifndef _TRACEBACK_H
 #define _TRACEBACK_H
 
@@ -29,9 +32,9 @@ extern "C" {
 #endif
 
 void traceW(int i);
-void traceV(int i, int j);
-void traceVM(int i, int j);
-void traceVBI(int i, int j);
-void traceWM(int i, int j);
+int traceV(int i, int j);
+int traceVM(int i, int j);
+int traceVBI(int i, int j);
+int traceWM(int i, int j);
 
 #endif
