@@ -80,7 +80,7 @@ float prelog; /* Used for loops having size > 30 */
 
 string EN_DATADIR;
 
-void populate(char *userdatadir,bool userdatalogic) {
+void populate(const char *userdatadir,bool userdatalogic) {
 
 	cout << "Loading in GTfold data files from ";
 
@@ -166,7 +166,7 @@ unsigned char getBase(std::string base) {
 		//cout << "4";
 		return BASE_U;
 	}
-	if (!strcmp(base.c_str(), "N") || !strcmp(base.c_str(), "n")) {
+	if (!strcmp(base.c_str(), "N") || !strcmp(base.c_str(), "n")||!strcmp(base.c_str(), "R")|| !strcmp(base.c_str(), "r")|| !strcmp(base.c_str(), "Y")|| !strcmp(base.c_str(), "y")|| !strcmp(base.c_str(), "M")|| !strcmp(base.c_str(), "m")|| !strcmp(base.c_str(), "K")|| !strcmp(base.c_str(), "k")|| !strcmp(base.c_str(), "S")|| !strcmp(base.c_str(), "s")|| !strcmp(base.c_str(), "W")|| !strcmp(base.c_str(), "w")|| !strcmp(base.c_str(), "B")|| !strcmp(base.c_str(), "b")|| !strcmp(base.c_str(), "D")|| !strcmp(base.c_str(), "d")|| !strcmp(base.c_str(), "H")|| !strcmp(base.c_str(), "h")|| !strcmp(base.c_str(), "V")|| !strcmp(base.c_str(), "v")) {
 		//cout << "4";
 		return BASE_A;
 	}
@@ -191,7 +191,7 @@ unsigned char getBase1(std::string base) {
 		//cout << "4";
 		return BASE_U;
 	}
-	if (!strcmp(base.c_str(), "N") || !strcmp(base.c_str(), "n")) {
+	if (!strcmp(base.c_str(), "N") || !strcmp(base.c_str(), "n")|| !strcmp(base.c_str(), "R")|| !strcmp(base.c_str(), "r")|| !strcmp(base.c_str(), "Y")|| !strcmp(base.c_str(), "y")|| !strcmp(base.c_str(), "M")|| !strcmp(base.c_str(), "m")|| !strcmp(base.c_str(), "K")|| !strcmp(base.c_str(), "k")|| !strcmp(base.c_str(), "S")|| !strcmp(base.c_str(), "s")|| !strcmp(base.c_str(), "W")|| !strcmp(base.c_str(), "w")|| !strcmp(base.c_str(), "B")|| !strcmp(base.c_str(), "b")|| !strcmp(base.c_str(), "D")|| !strcmp(base.c_str(), "d")|| !strcmp(base.c_str(), "H")|| !strcmp(base.c_str(), "h")|| !strcmp(base.c_str(), "V")|| !strcmp(base.c_str(), "v")) {
 		//cout << "4";
 		return 'N';
 	}
