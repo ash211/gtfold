@@ -30,7 +30,7 @@
 #include "constants.h"
 #include "data.h"
 
-void populate(char *userdatadir,bool userdatalogic);
+void populate(const char *userdatadir,bool userdatalogic);
 unsigned char getBase(std::string base);
 unsigned char getBase1(std::string base);
 int initStackValues(std::string fileName);
