@@ -469,8 +469,12 @@ int main(int argc, char** argv) {
 		fprintf(stdout, "(%d,%d) ", pbp[it][0]+k-1, pbp[it][1]-k+1);
 	}
 	fprintf(stdout, "\n\n");
-
+	
 	nocons:
+	int* stack_unidentified_base;
+	int stack_count=0;
+	bool unspecd=0;
+	stack_unidentified_base=new int[bases];
 	/* SH: Conversion of the sequence to numerical values. */
 	for(i = 1; i <= bases; i++) {
 		RNA[i] = getBase(s.substr(i-1,1));
@@ -479,7 +483,19 @@ int main(int argc, char** argv) {
 			fprintf(stderr,"ERROR: Base unrecognized\n");
 			exit(0);
 		}
+		else if(RNA[i]!='X'&&RNA1[i]=='N'){
+		  unspecd=1;
+		  stack_unidentified_base[stack_count]=i;
+		  stack_count++;
+		}
+		
 	}
+	if(unspecd) {printf("IUPAC codes have been detected at positions:");
+	for(i=0;i<stack_count;i++){printf("%d , ",stack_unidentified_base[i]);}
+	printf("\nYou may wish to resubmit the sequence with fully specified positions.Alternatively, GTfold will fold the sequence under the standard assumption that these ambiguous positions do not pair.  Do you wish to continue with the current computation? <Y/N>");
+	char reply;
+	scanf("%c",&reply);
+	if(reply=='n'||reply=='N') exit(0);}
 
 	if(USERDATA==TRUE)
 	  populate(argv[dataIndex],true);
