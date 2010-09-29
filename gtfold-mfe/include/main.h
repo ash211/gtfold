@@ -25,4 +25,11 @@ using namespace std;
 
 void traverse_wholeData(int[], int, int);
 
+enum GTFOLD_RETURN_VAL { ERR_OPEN_FILE = 0, NO_CONS_FOUND, GTFOLD_OK};
+
+GTFOLD_RETURN_VAL initialize_constraints(int*** fbp, int*** pbp, int& numpConstraints, int& numfConstraints, const char* constr_file);
+bool handle_IUPAC_code(const std::string& s, const int bases);
+
+void limit_contact_distance(int lCD, int length);
+
 #endif

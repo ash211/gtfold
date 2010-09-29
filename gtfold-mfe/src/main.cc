@@ -46,6 +46,7 @@ enum BOOL ILSA; /* A boolean variable to know if we are executing with Internal 
 enum BOOL NOISOLATE;
 enum BOOL USERDATA;
 enum BOOL PARAMS;
+enum BOOL LIMIT_DISTANCE;
 #ifdef DYNALLOC
 int LENGTH;
 unsigned char *RNA1; 
@@ -71,11 +72,15 @@ int W[LENGTH];
 int indx [LENGTH];
 #endif
 
+
+
+
+
 /* Function for displaying help */
 void help() {
 	fprintf(
 			stderr,
-			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-datadir datadirloc] filename(sequence)\n\n-ilsa = Calculation of all possible internal loops using the speedup algorithm\n-noisolate=prevents isolated base pairs from forming\nSequence file has to be in one of the two formats: Single line or FASTA\nset-of-parameter is the choice of the Thermodynamic sets of parameters: Turner99 or Turner04\nConstraint filename is a optional parameter.\n\nSyntax for giving constraints is:\n\t\tfor forcing (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, F i j k and\n\t\tto prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, P i j k and \n\t\tP i 0 k to make bases from i to i+k-1 single stranded bases.\n\n");
+			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-lCD dist] [-datadir datadirloc] filename(sequence)\n\n-ilsa = Calculation of all possible internal loops using the speedup algorithm\n-noisolate=prevents isolated base pairs from forming\nSequence file has to be in one of the two formats: Single line or FASTA\nset-of-parameter is the choice of the Thermodynamic sets of parameters: Turner99 or Turner04\nConstraint filename is a optional parameter.\n\nSyntax for giving constraints is:\n\t\tfor forcing (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, F i j k and\n\t\tto prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, P i j k and \n\t\tP i 0 k to make bases from i to i+k-1 single stranded bases.\n\n");
 	exit(-1);
 }
 
@@ -264,14 +269,13 @@ void free_variables() {
 int main(int argc, char** argv) {
 	int i;
 	ifstream cf;
-	ifstream cfcons;
 	int bases;
 	string s, seq;
 	int energy;
 	double t1;
 	ILSA = FALSE;
 	NOISOLATE = FALSE;
-	
+
 	fprintf(stdout,
 			"GTfold: A Scalable Multicore Code for RNA Secondary Structure Prediction\n");
 	fprintf(
@@ -283,7 +287,7 @@ int main(int argc, char** argv) {
 	if (argc < 2)
 		help();
 
-	int fileIndex = 0, consIndex = 0, dataIndex = 0, paramsIndex=0;
+	int fileIndex = 0, consIndex = 0, dataIndex = 0, paramsIndex=0, lcdIndex = 0;
 	i = 1;
 	while (i < argc) {
 		if (argv[i][0] == '-') {
@@ -310,30 +314,18 @@ int main(int argc, char** argv) {
 					dataIndex = ++i;
 				else
 					help();
+			} else if (strcmp(argv[i], "-lCD") == 0)
+			{
+				if (i < argc)
+					lcdIndex = ++i;
+				else
+					help();	
 			}
 		} else {
 			fileIndex = i;
 		}
 		i++;
 	}
-
-	/*
-	 for ( int i = 1; i < argc; i++ ) {
-	 if ( argv[i][0] == '-' ) {
-	 if ( strcmp(argv[i], "-ilsa")==0 ) {
-	 ILSA = TRUE;
-	 }
-	 else if ( strcmp(argv[i], "-noisolate")==0 ){
-	 NOISOLATE = TRUE;
-	 }
-	 else if ( strcmp(argv[i], "-help")==0 )  help();
-	 else help();
-	 } else {
-	 if(fileIndex ==0) fileIndex = i;
-	 else conIndex=i;
-	 }
-	 }
-	 */
 
 	if (fileIndex == 0)
 		help();
@@ -386,125 +378,44 @@ int main(int argc, char** argv) {
 
 	cf.close();
 
-	int fit = 0, pit = 0, it = 0;
 	int **fbp = NULL, **pbp = NULL;
 	int numfConstraints = 0, numpConstraints = 0;
 
-	if (consIndex == 0)
-		goto nocons;
-
-	fprintf(stdout, "Running with constraints\n");
-	fprintf(stdout, "Opening constraint file: %s\n", argv[consIndex]);
-	cfcons.open(argv[consIndex], ios::in);
-	if (cfcons != NULL)
-		fprintf(stdout, "Constraint file opened.\n");
-	else {
-		fprintf(stderr, "Error opening constraint file\n\n");
-		exit(-1);
-	}
-
-	char cons[100];
-
-	while (!cfcons.eof()) {
-		cfcons.getline(cons, 100);
-		if (cons[0] == 'F' || cons[0] == 'f')
-			numfConstraints++;
-		if (cons[0] == 'P' || cons[0] == 'p')
-			numpConstraints++;
-	}
-
-	cfcons.close();
-
-	fprintf(stdout, "Number of Constraints given: %d\n\n", numfConstraints
-			+ numpConstraints);
-	if (numfConstraints + numpConstraints != 0)
-		fprintf(stdout, "Reading Constraints.\n");
-	else {
-		fprintf(stderr, "No Constraints found.\n\n");
-		goto nocons;
-	}
-
-	//int fbp[numfConstraints][2], pbp[numpConstraints][2];
-	fbp = (int**) malloc(numfConstraints * sizeof(int*));
-	pbp = (int**) malloc(numpConstraints * sizeof(int*));
-
-	for (it = 0; it < numfConstraints; it++) {
-		fbp[it] = (int*) malloc(2* sizeof (int));
-	}
-	for(it=0; it<numpConstraints; it++) {
-		pbp[it] = (int*)malloc(2*sizeof(int));
-	}
-	cfcons.open(argv[consIndex], ios::in);
-
-	while(!cfcons.eof()) {
-		cfcons.getline(cons,100);
-		char *p=strtok(cons, " ");
-		p = strtok(NULL, " ");
-		if(cons[0]=='F' || cons[0]=='f') {
-			int fit1=0;
-			while(p!=NULL) {
-				fbp[fit][fit1++] = atoi(p);
-				p = strtok(NULL, " ");
-			}
-			fit++;
-		}
-		if( cons[0]=='P' || cons[0]=='p') {
-			int pit1=0;
-			while(p!=NULL) {
-				pbp[pit][pit1++] = atoi(p);
-				p = strtok(NULL, " ");
-			}
-			pit++;
+	if (consIndex != 0)
+	{
+		GTFOLD_RETURN_VAL r = initialize_constraints(&fbp, &pbp, numpConstraints, numfConstraints, argv[consIndex]);
+		if (r == ERR_OPEN_FILE)
+		{
+			free_variables();
+			exit(-1);
 		}
 	}
-
-	fprintf(stdout, "Forced base pairs: ");
-	for(it=0; it<numfConstraints; it++) {
-		for(int k=1;k<=fbp[it][2];k++)
-		fprintf(stdout, "(%d,%d) ", fbp[it][0]+k-1, fbp[it][1]-k+1);
-	}
-	fprintf(stdout, "\nProhibited base pairs: ");
-	for(it=0; it<numpConstraints; it++) {
-		for(int k=1;k<=pbp[it][2];k++)
-		fprintf(stdout, "(%d,%d) ", pbp[it][0]+k-1, pbp[it][1]-k+1);
-	}
-	fprintf(stdout, "\n\n");
 	
-	nocons:
-	int* stack_unidentified_base;
-	int stack_count=0;
-	bool unspecd=0;
-	stack_unidentified_base=new int[bases];
-	/* SH: Conversion of the sequence to numerical values. */
-	for(i = 1; i <= bases; i++) {
-		RNA[i] = getBase(s.substr(i-1,1));
-		RNA1[i]=getBase1(s.substr(i-1,1));
-		if (RNA[i]=='X') {
-			fprintf(stderr,"ERROR: Base unrecognized\n");
-			exit(0);
-		}
-		else if(RNA[i]!='X'&&RNA1[i]=='N'){
-		  unspecd=1;
-		  stack_unidentified_base[stack_count]=i;
-		  stack_count++;
-		}
-		
-	}
-	if(unspecd) {printf("IUPAC codes have been detected at positions:");
-	for(i=0;i<stack_count;i++){printf("%d , ",stack_unidentified_base[i]);}
-	printf("\nYou may wish to resubmit the sequence with fully specified positions.Alternatively, GTfold will fold the sequence under the standard assumption that these ambiguous positions do not pair.  Do you wish to continue with the current computation? <Y/N>");
-	char reply;
-	scanf("%c",&reply);
-	if(reply=='n'||reply=='N') exit(0);}
+	
 
+	if (handle_IUPAC_code(s, bases)  == true)
+	{
+		free_variables();
+		exit(0);
+	}
+	
 	if(USERDATA==TRUE)
-	  populate(argv[dataIndex],true);
+		populate(argv[dataIndex],true);
 	else if (PARAMS == TRUE)
-	  populate(argv[paramsIndex],false);
+		populate(argv[paramsIndex],false);
 	else
-	  populate("Turner99",false); /* Defined in loader.cc file to read in the thermodynamic parameter values from the tables in the ../data directory. */
+		populate("Turner99",false); /* Defined in loader.cc file to read in the thermodynamic parameter values from the tables in the ../data directory. */
 
 	initTables(bases); /* Initialize global variables */
+
+	int lCD = -1;
+	if (lcdIndex != 0)
+	{
+		lCD = atoi(argv[lcdIndex]);
+		fprintf(stdout, "Maximum Contact Distance = %d\n\n", lCD);
+		limit_contact_distance(lCD, bases);
+		
+	}
 
 	fprintf(stdout,"Computing minimum free energy structure. . . \n");
 	fflush(stdout);
@@ -569,4 +480,149 @@ int main(int argc, char** argv) {
 
 	return 0;
 
+}
+
+
+GTFOLD_RETURN_VAL initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& numfConstraints, const char* constr_file)
+{
+	ifstream cfcons;
+
+	fprintf(stdout, "Running with constraints\n");
+	//fprintf(stdout, "Opening constraint file: %s\n", argv[consIndex]);
+	fprintf(stdout, "Opening constraint file: %s\n", constr_file);
+
+	cfcons.open(constr_file, ios::in);
+	if (cfcons != NULL)
+		fprintf(stdout, "Constraint file opened.\n");
+	else {
+		fprintf(stderr, "Error opening constraint file\n\n");
+		cfcons.close();
+		return ERR_OPEN_FILE; //exit(-1);
+	}
+
+	char cons[100];
+
+	while (!cfcons.eof()) {
+		cfcons.getline(cons, 100);
+		if (cons[0] == 'F' || cons[0] == 'f')
+			numfConstraints++;
+		if (cons[0] == 'P' || cons[0] == 'p')
+			numpConstraints++;
+	}
+	cfcons.close();
+
+	fprintf(stdout, "Number of Constraints given: %d\n\n", numfConstraints
+			+ numpConstraints);
+	if (numfConstraints + numpConstraints != 0)
+		fprintf(stdout, "Reading Constraints.\n");
+	else {
+		fprintf(stderr, "No Constraints found.\n\n");
+		return NO_CONS_FOUND;
+	}
+
+	*fbp = (int**) malloc(numfConstraints * sizeof(int*));
+	*pbp = (int**) malloc(numpConstraints * sizeof(int*));
+
+	int fit = 0, pit = 0, it = 0;
+
+	for (it = 0; it < numfConstraints; it++) {
+		(*fbp)[it] = (int*) malloc(2* sizeof (int));
+	}
+	for(it=0; it<numpConstraints; it++) {
+		(*pbp)[it] = (int*)malloc(2*sizeof(int));
+	}
+	cfcons.open(constr_file, ios::in);
+
+	while(!cfcons.eof()) {
+		cfcons.getline(cons,100);
+		char *p=strtok(cons, " ");
+		p = strtok(NULL, " ");
+		if(cons[0]=='F' || cons[0]=='f') {
+			int fit1=0;
+			while(p!=NULL) {
+				(*fbp)[fit][fit1++] = atoi(p);
+				p = strtok(NULL, " ");
+			}
+			fit++;
+		}
+		if( cons[0]=='P' || cons[0]=='p') {
+			int pit1=0;
+			while(p!=NULL) {
+				(*pbp)[pit][pit1++] = atoi(p);
+				p = strtok(NULL, " ");
+			}
+			pit++;
+		}
+	}
+
+	fprintf(stdout, "Forced base pairs: ");
+	for(it=0; it<numfConstraints; it++) {
+		for(int k=1;k<= (*fbp)[it][2];k++)
+			fprintf(stdout, "(%d,%d) ", (*fbp)[it][0]+k-1, (*fbp)[it][1]-k+1);
+	}
+	fprintf(stdout, "\nProhibited base pairs: ");
+	for(it=0; it<numpConstraints; it++) {
+		for(int k=1;k<= (*pbp)[it][2];k++)
+			fprintf(stdout, "(%d,%d) ", (*pbp)[it][0]+k-1, (*pbp)[it][1]-k+1);
+	}
+	fprintf(stdout, "\n\n");
+	
+	return GTFOLD_OK;
+}
+
+bool handle_IUPAC_code(const std::string& s, const int bases)
+{
+	int* stack_unidentified_base;
+	int stack_count=0;
+	bool unspecd=0;
+	stack_unidentified_base=new int[bases];
+
+	/* SH: Conversion of the sequence to numerical values. */
+	for(int i = 1; i <= bases; i++) {
+		RNA[i] = getBase(s.substr(i-1,1));
+		RNA1[i] = getBase1(s.substr(i-1,1));
+		if (RNA[i]=='X') {
+			fprintf(stderr,"ERROR: Base unrecognized\n");
+			exit(0);
+		}
+		else if(RNA[i]!='X' && RNA1[i]=='N'){
+			unspecd=1;
+			stack_unidentified_base[stack_count]=i;
+			stack_count++;
+		}
+
+	}
+	if(unspecd) {
+		printf("IUPAC codes have been detected at positions:");
+
+		for(int i=0;i<stack_count;i++)
+		{
+			printf("%d , ",stack_unidentified_base[i]);
+		}
+		printf("\n");
+		printf("You may wish to resubmit the sequence with fully specified positions. Alternatively, GTfold will fold the sequence under the standard assumption that these ambiguous positions do not pair.  Do you wish to continue with the current computation? <Y/N>");
+
+		char reply;
+		scanf("%c",&reply);
+
+		return (reply=='n'||reply=='N');
+	}
+	else 
+		return false;
+
+}
+
+
+void limit_contact_distance(int lCD, int len)
+{
+	for (int ii = 1; ii <= len; ++ii) 
+	{
+		for(int jj = ii+lCD; jj <= len; ++jj)
+		{
+			constraints[ii] = -1;
+			constraints[jj] = -1;
+			//std::cout << '(' << ii << ',' << jj << ')' << ' ';
+		}
+	}
+	//std::cout << std::endl;
 }
