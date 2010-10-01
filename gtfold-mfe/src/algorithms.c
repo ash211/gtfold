@@ -62,6 +62,22 @@ void init_chPair() {
 			chPairKey += checkPair(i, j) << ((i << 2) + j);
 }
 
+int update_chPair(int i, int j) 
+{
+	int r = 0;
+	if (!((i >= 0 && i <=3 )&&(j >=0 && j <=3)))
+		return r;
+
+	if (!(chPairKey & (1 << ((i << 2) + j))))
+	{
+		chPairKey += 1 << ((i << 2) + j);	
+		r = 1;
+	}
+
+	return r;
+}
+
+
 /* This pragma returns 1 if  base b1 and b2 can pair up, otherwise returns 0, using chPairKey calculated in init_chPair function. Here b1 and b2 are 0-3 to represent one of the four nucleotides A, C, G and U. */
 #if 0
 inline
@@ -132,31 +148,49 @@ int checkSS(int i, int j) {
 
 }
 
-int calculate(int len, int **forceList, int **prohibitList, int forcelen,
-		int prohibitlen) {
-	int b, i, j, it,k;
-	for(i=1;i<=len;i++) {
-		if(RNA1[i]=='N') {
-			constraints[i] = -1;}}	
-	if (prohibitlen != 0) {
-		for (it = 0; it < prohibitlen; it++) {
-			for(k=1;k<=prohibitList[it][2];k++){
+int calculate(int len, int **forceList, int **prohibitList, int forcelen, int prohibitlen) {
+	int b, i, j, it, k;
+	
+	printf("chPairKey %d ", chPairKey);
+
+	for(i=1;i<=len;i++) 
+	{
+		if(RNA1[i]=='N') 
+			constraints[i] = -1;
+	}	
+
+	if (prohibitlen != 0) 
+	{
+		for (it = 0; it < prohibitlen; it++) 
+		{
+			for(k= 1; k <= prohibitList[it][2];k++)
+			{
 				constraints[prohibitList[it][0]+k-1] = -1;
-				if(prohibitList[it][1]!=0){constraints[prohibitList[it][1]+1-k] = -1;}}
+				if(prohibitList[it][1]!=0)
+				{
+					constraints[prohibitList[it][1]+1-k] = -1;
+				}
+			}
 		}
 	}
-	if (forcelen != 0) {
+
+	if (forcelen != 0) 
+	{
 		printf("Running with constraints\n");
-		for (it = 0; it < forcelen; it++) {
-			for(k=1;k<=forceList[it][2];k++){
-				if (!chPair(RNA[forceList[it][0]+k-1], RNA[forceList[it][1]-k+1])) {
+		for (it = 0; it < forcelen; it++) 
+		{
+			for(k=1; k <= forceList[it][2];k++)
+			{
+				if (!chPair(RNA[forceList[it][0]+k-1], RNA[forceList[it][1]-k+1])) 
+				{
 					printf("Can't constrain (%d,%d)\n", forceList[it][0]+k-1,
 							forceList[it][1]-k+1);
 					continue;
 				}
-			constraints[forceList[it][0]+k-1] = forceList[it][1]+1-k;
-			constraints[forceList[it][1]+1-k] = forceList[it][0]+k-1;}
-			//printf("(%d,%d)\n", forceList[it][0], forceList[it][1]);
+				constraints[forceList[it][0]+k-1] = forceList[it][1]+1-k;
+				constraints[forceList[it][1]+1-k] = forceList[it][0]+k-1;
+			}
+				//printf("(%d,%d)\n", forceList[it][0], forceList[it][1]);
 		}
 	}
 
@@ -1127,9 +1161,9 @@ void calcW(int j) {
 
 	int i;
 	int Wj, Widjd /*Dangling base on both sides*/,
-	Wijd/* Dangling base on jth side.*/,
-	Widj/* Dangling base on ith side */,
-	Wij/* No dangle base on any of the sides */, Wim1 /* Value of W at (i-1). Set to zero if positive*/;
+		Wijd/* Dangling base on jth side.*/,
+		Widj/* Dangling base on ith side */,
+		Wij/* No dangle base on any of the sides */, Wim1 /* Value of W at (i-1). Set to zero if positive*/;
 	int rnai, rnaj;
 	int must_branch = 0, besti = 0;
 
@@ -1159,16 +1193,16 @@ void calcW(int j) {
 		/* Dangle on both sides of the base pair (i+1,j-1). Add the corresponding energy. */
 		if (constraints[i] <= 0 && constraints[j] <= 0)
 			Widjd = V[indx[i + 1] + j - 1] + auPen(RNA[i + 1], RNA[j - 1])
-			+ dangle[RNA[j - 1]][RNA[i + 1]][rnai][1] + dangle[RNA[j
-			                                                       - 1]][RNA[i + 1]][rnaj][0] + Wim1;
+				+ dangle[RNA[j - 1]][RNA[i + 1]][rnai][1] + dangle[RNA[j
+				- 1]][RNA[i + 1]][rnaj][0] + Wim1;
 		/* Single base j dangling on the 5' end of base pair (i,j-1) */
 		if (constraints[j] <= 0)
 			Wijd = V[indx[i] + j - 1] + auPen(rnai, RNA[j - 1]) + dangle[RNA[j
-			                                                                 - 1]][rnai][rnaj][0] + Wim1;
+				- 1]][rnai][rnaj][0] + Wim1;
 		/* Single base i dangling on the 3' end of base pair (i+1,j)  */
 		if (constraints[i] <= 0)
 			Widj = V[indx[i + 1] + j] + auPen(RNA[i + 1], rnaj)
-			+ dangle[rnaj][RNA[i + 1]][rnai][1] + Wim1;
+				+ dangle[rnaj][RNA[i + 1]][rnai][1] + Wim1;
 
 		int tmpWj = Wj;
 		Wj = MIN(MIN(MIN(Wij, Widjd), MIN(Wijd, Widj)), Wj); /* Take the minimum */
@@ -1177,7 +1211,7 @@ void calcW(int j) {
 			besti = i;
 		}
 
-	  // if(i==46 && j==395){
+		// if(i==46 && j==395){
 		//      printf("V(%d, %d): %d, WM: %d\n", 46, j, V[indx[46]+j], WM[46][j]);
 		//      printf("Wij: %d, Widjd: %d, Wijd: %d, Widj: %d\n\n", Wij, Widjd, Wijd, Widj);
 		//}

@@ -287,7 +287,7 @@ int main(int argc, char** argv) {
 	if (argc < 2)
 		help();
 
-	int fileIndex = 0, consIndex = 0, dataIndex = 0, paramsIndex=0, lcdIndex = 0;
+	int fileIndex = 0, consIndex = 0, dataIndex = 0, paramsIndex=0, lcdIndex = 0, fNCIndex = 0;
 	i = 1;
 	while (i < argc) {
 		if (argv[i][0] == '-') {
@@ -320,7 +320,14 @@ int main(int argc, char** argv) {
 					lcdIndex = ++i;
 				else
 					help();	
+			} else if (strcmp(argv[i], "-forceNC") == 0)
+			{
+				if (i < argc)
+					fNCIndex = ++i;
+				else
+					help();	
 			}
+
 		} else {
 			fileIndex = i;
 		}
@@ -383,7 +390,7 @@ int main(int argc, char** argv) {
 
 	if (consIndex != 0)
 	{
-		GTFOLD_RETURN_VAL r = initialize_constraints(&fbp, &pbp, numpConstraints, numfConstraints, argv[consIndex]);
+		GTFOLD_FLAGS r = initialize_constraints(&fbp, &pbp, numpConstraints, numfConstraints, argv[consIndex]);
 		if (r == ERR_OPEN_FILE)
 		{
 			free_variables();
@@ -392,12 +399,12 @@ int main(int argc, char** argv) {
 	}
 	
 	
-
-	if (handle_IUPAC_code(s, bases)  == true)
+	if (handle_IUPAC_code(s, bases)  == FAILURE)
 	{
 		free_variables();
 		exit(0);
 	}
+	std::cout << "DEBUG " << std::endl;
 	
 	if(USERDATA==TRUE)
 		populate(argv[dataIndex],true);
@@ -407,6 +414,12 @@ int main(int argc, char** argv) {
 		populate("Turner99",false); /* Defined in loader.cc file to read in the thermodynamic parameter values from the tables in the ../data directory. */
 
 	initTables(bases); /* Initialize global variables */
+
+	if (fNCIndex != 0)
+	{
+		// Force non canonical base pairing
+		force_noncanonical_basepair(argv[fNCIndex], bases);
+	}
 
 	int lCD = -1;
 	if (lcdIndex != 0)
@@ -483,7 +496,7 @@ int main(int argc, char** argv) {
 }
 
 
-GTFOLD_RETURN_VAL initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& numfConstraints, const char* constr_file)
+GTFOLD_FLAGS initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& numfConstraints, const char* constr_file)
 {
 	ifstream cfcons;
 
@@ -567,10 +580,10 @@ GTFOLD_RETURN_VAL initialize_constraints(int*** fbp, int ***pbp, int& numpConstr
 	}
 	fprintf(stdout, "\n\n");
 	
-	return GTFOLD_OK;
+	return SUCCESS;
 }
 
-bool handle_IUPAC_code(const std::string& s, const int bases)
+GTFOLD_FLAGS handle_IUPAC_code(const std::string& s, const int bases)
 {
 	int* stack_unidentified_base;
 	int stack_count=0;
@@ -583,7 +596,7 @@ bool handle_IUPAC_code(const std::string& s, const int bases)
 		RNA1[i] = getBase1(s.substr(i-1,1));
 		if (RNA[i]=='X') {
 			fprintf(stderr,"ERROR: Base unrecognized\n");
-			exit(0);
+			return FAILURE; //exit(0);
 		}
 		else if(RNA[i]!='X' && RNA1[i]=='N'){
 			unspecd=1;
@@ -605,10 +618,10 @@ bool handle_IUPAC_code(const std::string& s, const int bases)
 		char reply;
 		scanf("%c",&reply);
 
-		return (reply=='n'||reply=='N');
+		return (reply=='n'||reply=='N')?(FAILURE):(SUCCESS);
 	}
 	else 
-		return false;
+		return SUCCESS;
 
 }
 
@@ -621,8 +634,62 @@ void limit_contact_distance(int lCD, int len)
 		{
 			constraints[ii] = -1;
 			constraints[jj] = -1;
-			//std::cout << '(' << ii << ',' << jj << ')' << ' ';
+		//	std::cout << '(' << ii << ',' << jj << ')' << ' ';
 		}
 	}
-	//std::cout << std::endl;
+	std::cout << std::endl;
+}
+
+
+
+void force_noncanonical_basepair(const char* ncb, int len)
+{
+	if (ncb == 0 || ncb[0] == '\0') return;
+	
+	printf("Permitted noncanonical base pairs : ");	
+
+	std::string ncb1(ncb);
+	
+	for (unsigned int i =0 ; i < ncb1.size(); ++i)
+	{
+		ncb1[i] = toupper(ncb1[i]);
+	}
+	
+	std::vector<std::string> tokens;
+	tokenize(ncb1, tokens, ",");	
+	
+	for (unsigned int i = 0; i < tokens.size(); ++i)
+	{
+		trim_spaces(tokens[i]);
+		if (tokens.size() != 3 && tokens[i][1] != '-') 
+		{
+			// ignore
+			continue;
+		}
+
+		int b1 = getBase(tokens[i].substr(0,1));
+		int b2 = getBase(tokens[i].substr(2,1));
+
+		int r1=0;
+		r1 = update_chPair(b1, b2);			
+		if (r1 == 1) 
+		{
+			printf("(%c,%c) ",  tokens[i][0], tokens[i][2]) ;
+			for (int ii = 1; ii <= len; ++ii) 
+			{
+				for(int jj = ii+1; jj <= len; ++jj)
+				{
+					if (b1 == RNA[ii] && b2 == RNA[jj])
+					{
+						constraints[ii] = jj;
+						constraints[jj] = ii;
+						//std::cout << '(' << RNA[ii] << ',' << RNA[jj] << ')' << ' ';
+					}
+				}
+				std::cout << std::endl;
+			}
+		}
+	}
+
+	printf("\n\n");
 }
