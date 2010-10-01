@@ -36,6 +36,9 @@ extern int *constraints;
 extern "C" {
 #endif
 	void initTables(int len);
+	
+	void init_chPair();
+	int update_chPair(int i, int j);
 #ifdef __cplusplus
 }
 #endif
