@@ -1,0 +1,191 @@
+dnl Process this file with autoconf to produce a configure script.
+
+dnl AC_PREREQ(1.8)
+dnl AC 2.62 needed for OpenMP
+AC_PREREQ(2.62)
+
+dnl AC_INIT (package, version, [bug-report-email], [tarname])
+AC_INIT([gtfold],[1.17])
+
+dnl check for this file's existence to make sure that the directory
+dnl specified by --srcdir is the right one
+AC_CONFIG_SRCDIR([README])
+
+dnl Specify a header configuration file
+AM_CONFIG_HEADER(gtfold_config.h)
+
+dnl Compute the canonical host-system type variable, host, and its
+dnl three individual parts host_cpu, host_vendor, and host_os.
+AC_CANONICAL_SYSTEM
+
+dnl Initialize Automake
+AM_INIT_AUTOMAKE
+
+dnl Argument -enable-64bit specifies that the library should be
+dnl compiled for 64-bit environments, if possible. 
+AC_ARG_ENABLE(64bit,
+  [  --enable-64bit          compile for 64-bit environments],
+  [case "${enableval}" in
+    "" | y | ye | yes) gtfold_cv_enable_64bit=yes ;;
+    n | no) gtfold_cv_enable_64bit=no ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-64bit) ;;
+  esac],
+  [gtfold_cv_enable_64bit=no])
+
+if test "$gtfold_cv_enable_64bit" == "yes" ; 
+then 
+   if test "$gtfold_cv_check_sunpro_cc" == "yes" ; then
+      CFLAGS=$(echo $CFLAGS | sed -e 's/-fast\|-xarch=.*//g') 
+      CFLAGS="$CFLAGS -fast -xarch=v9" 
+   else
+      if test "$GCC" == "yes"; then
+         CFLAGS=$(echo $CFLAGS | sed -e 's/-m32\|-m64//g') 
+         CFLAGS="$CFLAGS -m64" 
+      fi
+   fi
+fi
+
+
+dnl Search for a C compiler starting with the specified list
+AC_PROG_CC([xlc gcc icc cc])
+dnl Search for a C++ compiler starting with the specified list
+AC_PROG_CXX([xlC g++ iCC CC])
+dnl Check for programs
+#AC_PROG_LIBTOOL
+AC_PROG_INSTALL
+
+AC_OPENMP
+
+#AC_DEFINE([_RAND],[],[RNG library to use])
+
+dnl Check for libraries
+AC_CHECK_LIB(m, log2, AC_DEFINE([HAVE_LOG2],[],[log2 function is present]))
+
+dnl Check for header files
+AC_STDC_HEADERS
+#AC_CHECK_HEADERS(sys/resource.h)
+#AC_CHECK_HEADERS(getopt.h)
+AC_CHECK_HEADERS([stdlib.h string.h sys/time.h])
+
+dnl Check for typedefs, structures, C compiler characteristics
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+AC_STRUCT_TM
+
+dnl If using xlC add OPENMP_CFLAGS to the link flags
+if test "x$CXX" = "xxlC"; then
+  LDFLAGS="-qsmp=omp"
+fi
+
+dnl This is an example how to specify different CFLAGS depending on
+dnl the C compiler detected: 
+
+dnl If gcc is present, use -Wall
+if test "x$GCC" = "xyes"; then
+  if test -z "`echo "$CFLAGS" | grep "\-Wall" 2> /dev/null`" ; then
+    CFLAGS="$CFLAGS -Wall"
+  fi
+fi
+
+dnl If g++ is present, use -Wall
+if test "x$GXX" = "xyes"; then
+  if test -z "`echo "$CXXFLAGS" | grep "\-Wall" 2> /dev/null`" ; then
+    CXXFLAGS="$CXXFLAGS -Wall"
+  fi
+fi
+
+dnl This is an example how to check for compiler characteristics that
+dnl are not a part of the standard Autoconf tests:
+
+If Sun cc is present, define appropriate compiler flags  
+AC_MSG_CHECKING(for Sun C compiler)
+AC_TRY_COMPILE([], [#ifndef __SUNPRO_C
+                    #include "error: this is not a Sun C compiler."
+                    #endif 
+                   ],
+		   [AC_MSG_RESULT(yes)
+                    gtfold_cv_check_sunpro_cc=yes],
+		   [AC_MSG_RESULT(no)
+                    gtfold_cv_check_sunpro_cc=no])
+
+if test "$gtfold_cv_check_sunpro_cc" == "yes";
+then
+	AC_MSG_CHECKING(for Sun C compiler architecture target)
+	AC_TRY_COMPILE([], [#ifndef __sparc
+                    #include "error: this is not a Sun Sparc processor."
+                    #endif 
+                   ],
+		   [AC_MSG_RESULT(yes)
+                    gtfold_cv_check_sun_sparc=yes],
+		   [AC_MSG_RESULT(no)
+                    gtfold_cv_check_sun_sparc=no])
+fi
+
+if test "$gtfold_cv_check_sunpro_cc" == "yes";
+then
+	if test "$gtfold_cv_check_sun_sparc" == "yes";
+	then	
+		AC_MSG_CHECKING(for Sun sparc v9 architecture)
+		AC_TRY_COMPILE([], [#ifndef __sparcv9
+				    #include "error: this is not a Sun Sparc V9 processor."
+				    #endif 
+				    ],		    
+				    [AC_MSG_RESULT(yes)
+				    gtfold_cv_check_sun_sparcv9=yes],
+				    [AC_MSG_RESULT(no)
+				    gtfold_cv_check_sun_sparcv9=no])
+        fi				    
+fi
+
+if test "$gtfold_cv_check_sunpro_cc" == "yes";
+then
+	CFLAGS="$CFLAGS -mt -fast"
+        LIBS="$LIBS -lmtsk"
+	if test "$gtfold_cv_check_sun_sparc" == "yes";
+	then
+		if test "$gtfold_cv_check_sun_sparcv9" == "yes";
+		then
+			CFLAGS="$CFLAGS -xarch=v9"
+                else
+			CFLAGS="$CFLAGS -xarch=v8plusa"
+                fi
+        fi
+fi
+
+
+if test "$enable_openmp" != 'no'; then  
+   if test "x${GCC}" = "xyes"; then  
+      AC_CHECK_LIB( omp,GOMP_parallel_start,LIB_OMP="-lgomp",,)  
+      AC_CHECK_LIB(gomp,GOMP_parallel_start,GOMP_LIBS="-lgomp",,)  
+   else  
+      AC_CHECK_LIB(mtsk,sunw_mp_register_warn,LIB_OMP="-lmtsk",,)  
+      AC_CHECK_LIB(mtsk,sunw_mp_register_warn,GOMP_LIBS="-lmtsk",,)  
+   fi  
+   LIBS="$GOMP_LIBS $LIBS"  
+fi
+
+
+dnl Check for library functions
+AC_CHECK_FUNCS(floor gettimeofday pow)
+
+dnl debug flag 
+AC_ARG_ENABLE(debug,
+  [  --enable-debug          turn on debugging],
+  [case "${enableval}" in
+    "" | y | ye | yes) debug=true; 
+		       CFLAGS=$(echo $CFLAGS -g | sed -e 's/-O\|-O2\|-O3//g') ;;
+    n | no) debug=false ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
+  esac],
+  [debug=false])
+AM_CONDITIONAL(GTFOLD_DEBUG, test x$debug = xtrue)
+
+dnl Create makefiles and other configuration files
+AC_CONFIG_FILES([Makefile src/Makefile data/Makefile include/Makefile])
+AC_CONFIG_FILES([data/Turner99/Makefile data/Turner04/Makefile])
+
+dnl Generate `config.status' and launch it
+AC_OUTPUT
+ 
