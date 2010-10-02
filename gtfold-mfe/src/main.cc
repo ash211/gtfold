@@ -80,7 +80,8 @@ int indx [LENGTH];
 void help() {
 	fprintf(
 			stderr,
-			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-limitCD dist] [-datadir datadirloc] filename(sequence)\n\n-ilsa = Calculation of all possible internal loops using the speedup algorithm\n-noisolate=prevents isolated base pairs from forming\nSequence file has to be in one of the two formats: Single line or FASTA\nset-of-parameter is the choice of the Thermodynamic sets of parameters: Turner99 or Turner04 or Andronescu\nConstraint filename is a optional parameter.\n\nSyntax for giving constraints is:\n\t\tfor forcing (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, F i j k and\n\t\tto prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, P i j k and \n\t\tP i 0 k to make bases from i to i+k-1 single stranded bases.\n\n-limitCD = an option to limit the 'contact distance' for a base pair\n\n");
+			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-limitCD dist] [-forceNC] [-datadir datadirloc] filename(sequence)\n\n-ilsa = Calculation of all possible internal loops using the speedup algorithm\n-noisolate=prevents isolated base pairs from forming\nSequence file has to be in one of the two formats: Single line or FASTA\nset-of-parameter is the choice of the Thermodynamic sets of parameters: Turner99 or Turner04 or Andronescu\nConstraint filename is a optional parameter.\nSyntax for giving constraints is:\n\t\tfor forcing (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, F i j k and\n\t\tto prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, P i j k and \n\t\tP i 0 k to make bases from i to i+k-1 single stranded bases.\n-limitCD = an option to limit the 'contact distance' for a base pair\n");
+	//		-forceNC = an option to force pairing of noncanonical bases \nSyntax for forcing noncanonical bases (example):\n\t\tA-A,A-G,U-U\n\n");
 	exit(-1);
 }
 
@@ -287,7 +288,7 @@ int main(int argc, char** argv) {
 	if (argc < 2)
 		help();
 
-	int fileIndex = 0, consIndex = 0, dataIndex = 0, paramsIndex=0, lcdIndex = 0, fNCIndex = 0;
+	int fileIndex = 0, consIndex = 0, dataIndex = 0, paramsIndex=0, lcdIndex = 0; // fNCIndex = 0;
 	i = 1;
 	while (i < argc) {
 		if (argv[i][0] == '-') {
@@ -320,13 +321,14 @@ int main(int argc, char** argv) {
 					lcdIndex = ++i;
 				else
 					help();	
-			} else if (strcmp(argv[i], "-forceNC") == 0)
+			} 
+			/*else if (strcmp(argv[i], "-forceNC") == 0)
 			{
 				if (i < argc)
 					fNCIndex = ++i;
 				else
 					help();	
-			}
+			}*/
 
 		} else {
 			fileIndex = i;
@@ -404,8 +406,7 @@ int main(int argc, char** argv) {
 		free_variables();
 		exit(0);
 	}
-	std::cout << "DEBUG " << std::endl;
-	
+		
 	if(USERDATA==TRUE)
 		populate(argv[dataIndex],true);
 	else if (PARAMS == TRUE)
@@ -414,12 +415,14 @@ int main(int argc, char** argv) {
 		populate("Turner99",false); /* Defined in loader.cc file to read in the thermodynamic parameter values from the tables in the ../data directory. */
 
 	initTables(bases); /* Initialize global variables */
-
+	
+	/*
 	if (fNCIndex != 0)
 	{
 		// Force non canonical base pairing
-		force_noncanonical_basepair(argv[fNCIndex], bases);
+		//force_noncanonical_basepair(argv[fNCIndex], bases);
 	}
+	*/
 
 	int lCD = -1;
 	if (lcdIndex != 0)
@@ -646,7 +649,7 @@ void force_noncanonical_basepair(const char* ncb, int len)
 {
 	if (ncb == 0 || ncb[0] == '\0') return;
 	
-	printf("Permitted noncanonical base pairs : ");	
+	printf("Permitted noncanonical base pairs : \n");	
 
 	std::string ncb1(ncb);
 	
@@ -667,27 +670,14 @@ void force_noncanonical_basepair(const char* ncb, int len)
 			continue;
 		}
 
-		int b1 = getBase(tokens[i].substr(0,1));
-		int b2 = getBase(tokens[i].substr(2,1));
+		char b1 = getBase(tokens[i].substr(0,1));
+		char b2 = getBase(tokens[i].substr(2,1));
 
 		int r1=0;
 		r1 = update_chPair(b1, b2);			
 		if (r1 == 1) 
 		{
 			printf("(%c,%c) ",  tokens[i][0], tokens[i][2]) ;
-			for (int ii = 1; ii <= len; ++ii) 
-			{
-				for(int jj = ii+1; jj <= len; ++jj)
-				{
-					if (b1 == RNA[ii] && b2 == RNA[jj])
-					{
-						constraints[ii] = jj;
-						constraints[jj] = ii;
-						//std::cout << '(' << RNA[ii] << ',' << RNA[jj] << ')' << ' ';
-					}
-				}
-				std::cout << std::endl;
-			}
 		}
 	}
 
