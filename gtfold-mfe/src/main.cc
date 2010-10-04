@@ -80,8 +80,8 @@ int indx [LENGTH];
 void help() {
 	fprintf(
 			stderr,
-			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-limitCD dist] [-forceNC] [-datadir datadirloc] filename(sequence)\n\n-ilsa = Calculation of all possible internal loops using the speedup algorithm\n-noisolate=prevents isolated base pairs from forming\nSequence file has to be in one of the two formats: Single line or FASTA\nset-of-parameter is the choice of the Thermodynamic sets of parameters: Turner99 or Turner04 or Andronescu\nConstraint filename is a optional parameter.\nSyntax for giving constraints is:\n\t\tfor forcing (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, F i j k and\n\t\tto prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, P i j k and \n\t\tP i 0 k to make bases from i to i+k-1 single stranded bases.\n-limitCD = an option to limit the 'contact distance' for a base pair\n");
-	//		-forceNC = an option to force pairing of noncanonical bases \nSyntax for forcing noncanonical bases (example):\n\t\tA-A,A-G,U-U\n\n");
+			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-limitCD dist] [-datadir datadirloc] filename(sequence)\n\n-ilsa = Calculation of all possible internal loops using the speedup algorithm\n-noisolate=prevents isolated base pairs from forming\nSequence file has to be in one of the two formats: Single line or FASTA\nset-of-parameter is the choice of the Thermodynamic sets of parameters: Turner99 or Turner04 or Andronescu\nConstraint filename is a optional parameter.\nSyntax for giving constraints is:\n\t\tfor forcing (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, F i j k and\n\t\tto prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, P i j k and \n\t\tP i 0 k to make bases from i to i+k-1 single stranded bases.\n-limitCD = an option to limit the 'contact distance' for a base pair\n");
+	//	[-forceNC] 	-forceNC = an option to force pairing of noncanonical bases \nSyntax for forcing noncanonical bases (example):\n\t\tA-A,A-G,U-U\n\n");
 	exit(-1);
 }
 
