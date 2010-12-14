@@ -9,6 +9,7 @@ gtfold_SOURCES = \
 	main.cc\
 	loader.cc\
 	algorithms.c\
+	algorithms-partition.c\
 	traceback.c
 
 

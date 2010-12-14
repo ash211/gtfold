@@ -21,6 +21,7 @@
 /* Modified by Sonny Hernandez May 2007 - Aug 2007. All comments added marked by "SH: "*/
 /* Modified by Sainath Mallidi August 2009 - "*/
 
+#include <errno.h>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -35,6 +36,7 @@
 
 #include "loader.h"
 #include "algorithms.h"
+#include "algorithms-partition.h"
 #include "traceback.h"
 #include "main.h"
 #include "main-c.h"
@@ -44,6 +46,7 @@ using namespace std;
 /* GLOBAL VARIABLES */
 enum BOOL ILSA; /* A boolean variable to know if we are executing with Internal loop speedup algorithm (ILA) or not. ILSA finds the optimal internal loop by exploring all possibilities. */
 enum BOOL NOISOLATE;
+enum BOOL BPP; // calculating base pair probabilities
 enum BOOL USERDATA;
 enum BOOL PARAMS;
 enum BOOL LIMIT_DISTANCE;
@@ -59,6 +62,14 @@ int **VM; /* VM(i, j) will contain the energy of optimla multiloop closed with (
 int **WM; /* This array is introduced to help multiloop calculations. WM(i,j) contains the optimal energy of string segment from si to sj if this forms part of a multiloop */
 int *indx; /* This array is used to index V array. Here V array is mapped from 2D to 1D and indx array is used to get the mapping back.*/
 int *constraints;
+
+double **QB;  // QB[i][j] is the sum over all possible loops closed by (i,j),
+              // including the summed contributions of their subloops
+double **Q;   // Q[i][j] in addition to the above quantity QB[i][j], Q[i][j]
+              // also includes all configurations with (i,j) not paired
+double **QM;  // QM[i][j] is the sum of configuration energies from i to j,
+              // assuming that i,j are contained in a multiloop
+double **P;   // P[i][j] The probability that nucleotides i and j form a basepair
 #else
 /* This are previously used variables, now they are not used. */
 unsigned char RNA[LENGTH];
@@ -80,7 +91,7 @@ int indx [LENGTH];
 void help() {
 	fprintf(
 			stderr,
-			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-limitCD dist] [-datadir datadirloc] filename(sequence)\n\n-ilsa = Calculation of all possible internal loops using the speedup algorithm\n-noisolate=prevents isolated base pairs from forming\nSequence file has to be in one of the two formats: Single line or FASTA\nset-of-parameter is the choice of the Thermodynamic sets of parameters: Turner99 or Turner04 or Andronescu\nConstraint filename is a optional parameter.\nSyntax for giving constraints is:\n\t\tfor forcing (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, F i j k and\n\t\tto prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, P i j k and \n\t\tP i 0 k to make bases from i to i+k-1 single stranded bases.\n-limitCD = an option to limit the 'contact distance' for a base pair\n");
+			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-limitCD dist] [-datadir datadirloc] [-basepairprobabilities] filename(sequence)\n\n-ilsa\t\t= Use the Internal Loop Speedup Algorithm for faster calculation\n-noisolate\t= Prevent isolated base pairs from forming\n-params\t\t= Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu\n-constraints\t= Force or prohibit particular pairings\n\tConstraint syntax:\n\t\tF i j k  to force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) to pair\n\t\tP i j k  to prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) from pairing\n\t\tP i 0 k  to make bases from i to i+k-1 single stranded bases.\n-limitCD\t= Limit the 'contact distance' for a base pair to the given distance\n-basepairprobabilities\n\t\t= Calculate and output base pair probabilities of the predicted structure\n\nSequence file has to be in one of the two formats: Single line or FASTA\n\n");
 	//	[-forceNC] 	-forceNC = an option to force pairing of noncanonical bases \nSyntax for forcing noncanonical bases (example):\n\t\tA-A,A-G,U-U\n\n");
 	exit(-1);
 }
@@ -259,6 +270,40 @@ void free_variables() {
 
 }
 
+void init_partition_function_variables(int bases) {
+    QB = mallocTwoD(bases+1, bases+1);
+    if(QB == NULL) {
+        fprintf(stderr,"Failed to allocate QB\n");
+        exit(-1);
+    }
+
+    Q = mallocTwoD(bases+1, bases+1);
+    if(Q == NULL) {
+        fprintf(stderr,"Failed to allocate Q\n");
+        exit(-1);
+    }
+
+    QM = mallocTwoD(bases+1, bases+1);
+    if(QM == NULL) {
+        fprintf(stderr,"Failed to allocate QM\n");
+        exit(-1);
+    }
+
+    P = mallocTwoD(bases+1, bases+1);
+    if(P == NULL) {
+        fprintf(stderr,"Failed to allocate P\n");
+        exit(-1);
+    }
+}
+
+void free_partition_function_variables(int bases) {
+    freeTwoD(QB, bases+1, bases+1);
+    freeTwoD(Q, bases+1, bases+1);
+    freeTwoD(QM, bases+1, bases+1);
+    freeTwoD(P, bases+1, bases+1);
+}
+
+
 /* main function - This calls
  *  1) Read command line arguments.
  *  2) populate() from loader.cc to read the thermodynamic parameters defined in the files given in data directory.
@@ -276,6 +321,7 @@ int main(int argc, char** argv) {
 	double t1;
 	ILSA = FALSE;
 	NOISOLATE = FALSE;
+	BPP = FALSE;
 
 	fprintf(stdout,
 			"GTfold: A Scalable Multicore Code for RNA Secondary Structure Prediction\n");
@@ -321,7 +367,10 @@ int main(int argc, char** argv) {
 					lcdIndex = ++i;
 				else
 					help();	
-			} 
+			}  else if (strcmp(argv[i], "-basepairprobabilities") == 0)
+			{
+				BPP = TRUE;
+			}
 			/*else if (strcmp(argv[i], "-forceNC") == 0)
 			{
 				if (i < argc)
@@ -346,6 +395,8 @@ int main(int argc, char** argv) {
 		fprintf(stdout, "Allowing isolated base pairs\n");
 	if (consIndex != 0)
 		fprintf(stdout, "Constraint file index: %d\n", consIndex);
+	if (BPP == TRUE)
+		fprintf(stdout, "Calculating base pair probabilities\n");
 
 	fprintf(stdout, "Opening file: %s\n", argv[fileIndex]);
 	cf.open(argv[fileIndex], ios::in);
@@ -438,9 +489,26 @@ int main(int argc, char** argv) {
 
 	t1 = get_seconds();
 	energy = calculate(bases, fbp, pbp, numfConstraints, numpConstraints); /* Runs the Dynamic programming algorithm to calculate the optimal energy. Defined in algorithms.c file.*/
+    //energy = 0;
 	t1 = get_seconds() - t1;
 
 	fprintf(stdout," Done.\n");
+
+    // only fill the partition function structures if they are needed for BPP
+    if(BPP) {
+        fprintf(stdout,"Filling Partition Function structure. . . \n");
+        fflush(stdout);
+
+        // malloc the arrays
+        init_partition_function_variables(bases);
+
+        // fill the arrays
+        fill_partition_fn_arrays(bases, QB, Q, QM);
+
+        fprintf(stdout," Done.\n");
+
+        fprintf(stdout,"Q[1][n]: %f\n\n", Q[1][bases]);
+    }
 
 	fprintf(stdout,"Minimum Free Energy = %12.2f\n\n", energy/100.00);
 	fprintf(stdout,"MFE running time (in seconds): %9.6f\n\n", t1);
@@ -491,6 +559,14 @@ int main(int argc, char** argv) {
 	printSequence(bases);
 	printConstraints(bases);
 	printStructure(bases);
+
+    if(BPP) {
+        fillBasePairProbabilities(bases, structure, Q, QB, QM, P);
+
+        printBasePairProbabilities(bases, structure, P);
+
+        free_partition_function_variables(bases);
+    }
 
 	free_variables();
 

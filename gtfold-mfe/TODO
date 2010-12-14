@@ -1,0 +1,5 @@
+Partition Function
+==================
+
+ - fast inner loops optimization
+ - factor in dangling energies
