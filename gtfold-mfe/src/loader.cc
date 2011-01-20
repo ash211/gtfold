@@ -31,7 +31,6 @@
 #define xstr(s) str(s)
 #define str(s) #s
 
-//#define GENBIN
 
 using namespace std;
 
@@ -84,7 +83,6 @@ void populate(const char *userdatadir,bool userdatalogic) {
 
 	cout << "Loading in GTfold data files from ";
 
-#ifndef GENBIN
 	if (!userdatalogic) {
 		EN_DATADIR.assign(xstr(DATADIR));
 		EN_DATADIR += "/";
@@ -92,9 +90,6 @@ void populate(const char *userdatadir,bool userdatalogic) {
 	} else {
 		EN_DATADIR.assign(userdatadir);
 	}
-#else
-	EN_DATADIR = "data";
-#endif
 
 	//Handle the ending forward slash case
 	if (EN_DATADIR[EN_DATADIR.length() - 1] != '/') {
