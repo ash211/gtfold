@@ -87,15 +87,28 @@ int W[LENGTH];
 int indx [LENGTH];
 #endif
 
-
-
-
-
-/* Function for displaying help */
+/**
+ * Print the hep message and quit.
+ */
 void help() {
-	fprintf(
-			stderr,
-			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-limitCD dist] [-datadir datadirloc] [-basepairprobabilities] filename(sequence)\n\n-ilsa\t\t= Use the Internal Loop Speedup Algorithm for faster calculation\n-noisolate\t= Prevent isolated base pairs from forming\n-params\t\t= Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu\n-constraints\t= Force or prohibit particular pairings\n\tConstraint syntax:\n\t\tF i j k  to force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) to pair\n\t\tP i j k  to prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) from pairing\n\t\tP i 0 k  to make bases from i to i+k-1 single stranded bases.\n-limitCD\t= Limit the 'contact distance' for a base pair to the given distance\n-basepairprobabilities\n\t\t= Calculate and output base pair probabilities of the predicted structure\n\nSequence file has to be in one of the two formats: Single line or FASTA\n\n");
+	fprintf(stderr,
+			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-limitCD dist] [-datadir datadirloc] [-basepairprobabilities] filename(sequence)\n\n");
+    fprintf(stderr,
+            "-ilsa\t\t= Use the Internal Loop Speedup Algorithm for faster calculation\n");
+    fprintf(stderr,
+            "-noisolate\t= Prevent isolated base pairs from forming\n");
+    fprintf(stderr,
+            "-params\t\t= Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu\n");
+    fprintf(stderr,
+            "-constraints\t= Force or prohibit particular pairings\n");
+    fprintf(stderr,
+            "\tConstraint syntax:\n\t\tF i j k  to force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) to pair\n\t\tP i j k  to prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) from pairing\n\t\tP i 0 k  to make bases from i to i+k-1 single stranded bases.\n");
+    fprintf(stderr,
+            "-limitCD\t= Limit the 'contact distance' for a base pair to the given distance\n");
+    fprintf(stderr,
+            "-basepairprobabilities\n\t\t= Calculate and output base pair probabilities of the predicted structure\n");
+    fprintf(stderr,
+            "\nSequence file has to be in one of the two formats: Single line or FASTA\n\n");
 	//	[-forceNC] 	-forceNC = an option to force pairing of noncanonical bases \nSyntax for forcing noncanonical bases (example):\n\t\tA-A,A-G,U-U\n\n");
 	exit(-1);
 }
