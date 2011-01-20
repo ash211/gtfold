@@ -44,23 +44,27 @@
 using namespace std;
 
 /* GLOBAL VARIABLES */
-enum BOOL ILSA; /* A boolean variable to know if we are executing with Internal loop speedup algorithm (ILA) or not. ILSA finds the optimal internal loop by exploring all possibilities. */
+
+enum BOOL ILSA; // enable internal loop speedup algorithm (ILSA)
 enum BOOL NOISOLATE;
-enum BOOL BPP; // calculating base pair probabilities
+enum BOOL BPP; // calculate base pair probabilities
 enum BOOL USERDATA;
 enum BOOL PARAMS;
 enum BOOL LIMIT_DISTANCE;
 #ifdef DYNALLOC
 int LENGTH;
 unsigned char *RNA1; 
-unsigned char *RNA; /* Contains RNA string in terms of 0, 1, 2, 3 for A, C, G and U respectively*/
-int *structure; /* An array to contain the optimal structure */
-int *V; /* int V[LENGTH][LENGTH]; */
+unsigned char *RNA; // the RNA string in terms of 0, 1, 2, 3 for A, C, G and U
+int *structure; // An array to contain the optimal structure
+int *V; // int V[LENGTH][LENGTH];
 int *W;
-int **VBI; /* VBI(i,j) will contain the energy of optimal internal loop closed with (i,j) base pair */
-int **VM; /* VM(i, j) will contain the energy of optimla multiloop closed with (i,j) base pair */
-int **WM; /* This array is introduced to help multiloop calculations. WM(i,j) contains the optimal energy of string segment from si to sj if this forms part of a multiloop */
-int *indx; /* This array is used to index V array. Here V array is mapped from 2D to 1D and indx array is used to get the mapping back.*/
+int **VBI; // VBI(i,j) -- energy of optimal internal loop closed with (i,j) base pair
+int **VM; // VM(i,j) -- energy of optimal multiloop closed with (i,j) base pair
+int **WM; // WM(i,j) -- the optimal energy of string segment from i to j,
+          // if this forms part of a multiloop. Used to speed multiloop
+          // calculations.
+int *indx; // used to index V array. The V array is mapped from 2D to 1D and
+           // the indx array is used to get the mapping back.
 int *constraints;
 
 double **QB;  // QB[i][j] is the sum over all possible loops closed by (i,j),
@@ -103,7 +107,9 @@ double get_seconds() {
 	return (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0;
 }
 
-/*Function for printing the sequence*/
+/**
+ * Print out the sequence contained in RNA1
+ */
 void printSequence(int len) {
 	int i = 1;
 	for (i = 1; i <= len; i++) {
@@ -121,7 +127,9 @@ void printSequence(int len) {
 	printf("\n");
 }
 
-/*Function for printing the input constraints*/
+/**
+ * Print out the constraints located in variable: constraints
+ */
 void printConstraints(int len) {
 	int i = 1;
 	for (i = 1; i <= len; i++) {
