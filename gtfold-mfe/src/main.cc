@@ -51,7 +51,7 @@ enum BOOL BPP; // calculate base pair probabilities
 enum BOOL USERDATA;
 enum BOOL PARAMS;
 enum BOOL LIMIT_DISTANCE;
-#ifdef DYNALLOC
+
 int LENGTH;
 unsigned char *RNA1; 
 unsigned char *RNA; // the RNA string in terms of 0, 1, 2, 3 for A, C, G and U
@@ -74,18 +74,6 @@ double **Q;   // Q[i][j] in addition to the above quantity QB[i][j], Q[i][j]
 double **QM;  // QM[i][j] is the sum of configuration energies from i to j,
               // assuming that i,j are contained in a multiloop
 double **P;   // P[i][j] The probability that nucleotides i and j form a basepair
-#else
-/* This are previously used variables, now they are not used. */
-unsigned char RNA[LENGTH];
-unsigned char RNA1[LENGTH];
-int structure[LENGTH];
-int VBI[LENGTH][LENGTH];
-int VM[LENGTH][LENGTH];
-int V[(LENGTH-1)*(LENGTH)/2 + 1]; /* int V[LENGTH][LENGTH]; */
-int WM[LENGTH][LENGTH];
-int W[LENGTH];
-int indx [LENGTH];
-#endif
 
 /**
  * Print the hep message and quit.
@@ -177,7 +165,6 @@ void init_variables(int len) {
 
 	int i;
 
-#ifdef DYNALLOC
 	LENGTH = len + 1;
 
 	RNA = (unsigned char *) malloc(LENGTH * sizeof(unsigned char));
@@ -258,16 +245,12 @@ void init_variables(int len) {
 		perror("Cannot allocate variable 'constraints'");
 		exit(-1);
 	}
-
-#endif
-	return;
 }
 
 /* deallocate global variables */
 void free_variables() {
 	int i;
 
-#ifdef DYNALLOC
 	free(indx);
 	for (i = 0; i < LENGTH; i++)
 		free(WM[i]);
@@ -284,11 +267,6 @@ void free_variables() {
 	free(structure);
 	free(RNA);
 	free(RNA1);
-
-#endif
-
-	return;
-
 }
 
 void init_partition_function_variables(int bases) {
