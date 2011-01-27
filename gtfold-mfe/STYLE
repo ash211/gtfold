@@ -1,0 +1,18 @@
+This document contains some style guidelines for code in this project
+
+For compound names, prefer under_scores over camelCase.
+
+
+For curly brace guidelines, prefer at the end of the line instead of the
+beginning of the next line:
+
+for(i=0; i<10; i++) {
+    sum += i;
+}
+
+is better than
+
+for(i=0; i<10; i++)
+{
+    sum += i;
+}
