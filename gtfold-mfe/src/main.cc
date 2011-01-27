@@ -269,37 +269,37 @@ void free_variables() {
 	free(RNA1);
 }
 
-void init_partition_function_variables(int bases) {
-    QB = mallocTwoD(bases+1, bases+1);
+void init_partition_function_variables(int length) {
+    QB = mallocTwoD(length+1, length+1);
     if(QB == NULL) {
         fprintf(stderr,"Failed to allocate QB\n");
         exit(-1);
     }
 
-    Q = mallocTwoD(bases+1, bases+1);
+    Q = mallocTwoD(length+1, length+1);
     if(Q == NULL) {
         fprintf(stderr,"Failed to allocate Q\n");
         exit(-1);
     }
 
-    QM = mallocTwoD(bases+1, bases+1);
+    QM = mallocTwoD(length+1, length+1);
     if(QM == NULL) {
         fprintf(stderr,"Failed to allocate QM\n");
         exit(-1);
     }
 
-    P = mallocTwoD(bases+1, bases+1);
+    P = mallocTwoD(length+1, length+1);
     if(P == NULL) {
         fprintf(stderr,"Failed to allocate P\n");
         exit(-1);
     }
 }
 
-void free_partition_function_variables(int bases) {
-    freeTwoD(QB, bases+1, bases+1);
-    freeTwoD(Q, bases+1, bases+1);
-    freeTwoD(QM, bases+1, bases+1);
-    freeTwoD(P, bases+1, bases+1);
+void free_partition_function_variables(int length) {
+    freeTwoD(QB, length+1, length+1);
+    freeTwoD(Q, length+1, length+1);
+    freeTwoD(QM, length+1, length+1);
+    freeTwoD(P, length+1, length+1);
 }
 
 
@@ -314,7 +314,7 @@ void free_partition_function_variables(int bases) {
 int main(int argc, char** argv) {
 	int i;
 	ifstream cf;
-	int bases;
+	int length;
 	string s, seq;
 	int energy;
 	double t1;
@@ -426,12 +426,12 @@ int main(int argc, char** argv) {
 	}
 	s = seq;
 
-	bases = s.length();
+	length = s.length();
 
-	init_variables(bases);
+	init_variables(length);
 
 	cout << "Sequence: " << s << endl;
-	fprintf(stdout, "Sequence length: %5d\n\n", bases);
+	fprintf(stdout, "Sequence length: %5d\n\n", length);
 
 	cf.close();
 
@@ -447,7 +447,7 @@ int main(int argc, char** argv) {
 	}
 	
 	
-	if (handle_IUPAC_code(s, bases)  == FAILURE) {
+	if (handle_IUPAC_code(s, length)  == FAILURE) {
 		free_variables();
 		exit(0);
 	}
@@ -459,12 +459,12 @@ int main(int argc, char** argv) {
 	else
 		populate("Turner99",false); /* Defined in loader.cc file to read in the thermodynamic parameter values from the tables in the ../data directory. */
 
-	initTables(bases); /* Initialize global variables */
+	initTables(length); /* Initialize global variables */
 	
 	/*
 	if (fNCIndex != 0) {
 		// Force non canonical base pairing
-		//force_noncanonical_basepair(argv[fNCIndex], bases);
+		//force_noncanonical_basepair(argv[fNCIndex], length);
 	}
 	*/
 
@@ -472,7 +472,7 @@ int main(int argc, char** argv) {
 	if (lcdIndex != 0) {
 		lCD = atoi(argv[lcdIndex]);
 		fprintf(stdout, "Maximum Contact Distance = %d\n\n", lCD);
-		limit_contact_distance(lCD, bases);
+		limit_contact_distance(lCD, length);
 		
 	}
 
@@ -480,7 +480,7 @@ int main(int argc, char** argv) {
 	fflush(stdout);
 
 	t1 = get_seconds();
-	energy = calculate(bases, fbp, pbp, numfConstraints, numpConstraints); /* Runs the Dynamic programming algorithm to calculate the optimal energy. Defined in algorithms.c file.*/
+	energy = calculate(length, fbp, pbp, numfConstraints, numpConstraints); /* Runs the Dynamic programming algorithm to calculate the optimal energy. Defined in algorithms.c file.*/
     //energy = 0;
 	t1 = get_seconds() - t1;
 
@@ -492,26 +492,26 @@ int main(int argc, char** argv) {
         fflush(stdout);
 
         // malloc the arrays
-        init_partition_function_variables(bases);
+        init_partition_function_variables(length);
 
         // fill the arrays
-        fill_partition_fn_arrays(bases, QB, Q, QM);
+        fill_partition_fn_arrays(length, QB, Q, QM);
 
         fprintf(stdout," Done.\n");
 
-        fprintf(stdout,"Q[1][n]: %f\n\n", Q[1][bases]);
+        fprintf(stdout,"Q[1][n]: %f\n\n", Q[1][length]);
     }
 
 	fprintf(stdout,"Minimum Free Energy = %12.2f\n\n", energy/100.00);
 	fprintf(stdout,"MFE running time (in seconds): %9.6f\n\n", t1);
 
 	t1 = get_seconds();
-	trace(bases); /* Traces the optimal structure*/
+	trace(length); /* Traces the optimal structure*/
 	t1 = get_seconds() - t1;
 
 	std::stringstream ss1, ss2;
 	char suboptfile[1024];
-	ss1 << bases;
+	ss1 << length;
 	ss2 << energy/100.0;
 
 	i = 0;
@@ -524,18 +524,18 @@ int main(int argc, char** argv) {
 	fprintf(stdout, "Writing secondary structure to the file: %s\n", suboptfile);
 
 #if 0
-	outfile << bases << " " << energy/100.0;
+	outfile << length << " " << energy/100.0;
 	outfile << endl << s;
 
-	for ( i = 1; i <= bases; i++ )
+	for ( i = 1; i <= length; i++ )
 		outfile << "\n" <<  i << " " << structure[i] ;
 #endif
 	/* Generate the output file containing the optimal secondary structure in .ct format */
 #if 1
-	outfile << bases << "\t  dG = " << energy/100.0;
+	outfile << length << "\t  dG = " << energy/100.0;
 	i = 1;
-	while ( i <= bases ) {
-		outfile << endl << i << "\t" << s[i-1] << "\t" << i-1 << "\t" << (i+1)%(bases+1) << "\t" << structure[i] << "\t" << i;
+	while ( i <= length ) {
+		outfile << endl << i << "\t" << s[i-1] << "\t" << i-1 << "\t" << (i+1)%(length+1) << "\t" << structure[i] << "\t" << i;
 		i++;
 	}
 	outfile << endl;
@@ -548,16 +548,16 @@ int main(int argc, char** argv) {
 	fprintf(stdout,"Traceback running time (in seconds): %9.6f\n", t1);
 
 	fprintf(stdout, "\n\nFolding complete\n\n");
-	printSequence(bases);
-	printConstraints(bases);
-	printStructure(bases);
+	printSequence(length);
+	printConstraints(length);
+	printStructure(length);
 
     if(BPP) {
-        fillBasePairProbabilities(bases, structure, Q, QB, QM, P);
+        fillBasePairProbabilities(length, structure, Q, QB, QM, P);
 
-        printBasePairProbabilities(bases, structure, P);
+        printBasePairProbabilities(length, structure, P);
 
-        free_partition_function_variables(bases);
+        free_partition_function_variables(length);
     }
 
 	free_variables();
@@ -653,14 +653,14 @@ GTFOLD_FLAGS initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints
 	return SUCCESS;
 }
 
-GTFOLD_FLAGS handle_IUPAC_code(const std::string& s, const int bases) {
+GTFOLD_FLAGS handle_IUPAC_code(const std::string& s, const int length) {
 	int* stack_unidentified_base;
 	int stack_count=0;
 	bool unspecd=0;
-	stack_unidentified_base=new int[bases];
+	stack_unidentified_base=new int[length];
 
 	/* SH: Conversion of the sequence to numerical values. */
-	for(int i = 1; i <= bases; i++) {
+	for(int i = 1; i <= length; i++) {
 		RNA[i] = getBase(s.substr(i-1,1));
 		RNA1[i] = getBase1(s.substr(i-1,1));
 		if (RNA[i]=='X') {
