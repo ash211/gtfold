@@ -339,14 +339,12 @@ int main(int argc, char** argv) {
 					dataIndex = ++i;
 				else
 					help();
-			} else if (strcmp(argv[i], "-limitCD") == 0)
-			{
+			} else if (strcmp(argv[i], "-limitCD") == 0) {
 				if (i < argc)
 					lcdIndex = ++i;
 				else
 					help();	
-			}  else if (strcmp(argv[i], "-basepairprobabilities") == 0)
-			{
+			}  else if (strcmp(argv[i], "-basepairprobabilities") == 0) {
 				BPP = TRUE;
 			}
 			/*else if (strcmp(argv[i], "-forceNC") == 0)
@@ -419,19 +417,16 @@ int main(int argc, char** argv) {
 	int **fbp = NULL, **pbp = NULL;
 	int numfConstraints = 0, numpConstraints = 0;
 
-	if (consIndex != 0)
-	{
+	if (consIndex != 0) {
 		GTFOLD_FLAGS r = initialize_constraints(&fbp, &pbp, numpConstraints, numfConstraints, argv[consIndex]);
-		if (r == ERR_OPEN_FILE)
-		{
+		if (r == ERR_OPEN_FILE) {
 			free_variables();
 			exit(-1);
 		}
 	}
 	
 	
-	if (handle_IUPAC_code(s, bases)  == FAILURE)
-	{
+	if (handle_IUPAC_code(s, bases)  == FAILURE) {
 		free_variables();
 		exit(0);
 	}
@@ -446,16 +441,14 @@ int main(int argc, char** argv) {
 	initTables(bases); /* Initialize global variables */
 	
 	/*
-	if (fNCIndex != 0)
-	{
+	if (fNCIndex != 0) {
 		// Force non canonical base pairing
 		//force_noncanonical_basepair(argv[fNCIndex], bases);
 	}
 	*/
 
 	int lCD = -1;
-	if (lcdIndex != 0)
-	{
+	if (lcdIndex != 0) {
 		lCD = atoi(argv[lcdIndex]);
 		fprintf(stdout, "Maximum Contact Distance = %d\n\n", lCD);
 		limit_contact_distance(lCD, bases);
@@ -553,8 +546,7 @@ int main(int argc, char** argv) {
 }
 
 
-GTFOLD_FLAGS initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& numfConstraints, const char* constr_file)
-{
+GTFOLD_FLAGS initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& numfConstraints, const char* constr_file) {
 	ifstream cfcons;
 
 	fprintf(stdout, "Running with constraints\n");
@@ -640,8 +632,7 @@ GTFOLD_FLAGS initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints
 	return SUCCESS;
 }
 
-GTFOLD_FLAGS handle_IUPAC_code(const std::string& s, const int bases)
-{
+GTFOLD_FLAGS handle_IUPAC_code(const std::string& s, const int bases) {
 	int* stack_unidentified_base;
 	int stack_count=0;
 	bool unspecd=0;
@@ -665,8 +656,7 @@ GTFOLD_FLAGS handle_IUPAC_code(const std::string& s, const int bases)
 	if(unspecd) {
 		printf("IUPAC codes have been detected at positions:");
 
-		for(int i=0;i<stack_count;i++)
-		{
+		for(int i=0;i<stack_count;i++) {
 			printf("%d , ",stack_unidentified_base[i]);
 		}
 		printf("\n");
@@ -683,12 +673,9 @@ GTFOLD_FLAGS handle_IUPAC_code(const std::string& s, const int bases)
 }
 
 
-void limit_contact_distance(int lCD, int len)
-{
-	for (int ii = 1; ii <= len; ++ii) 
-	{
-		for(int jj = ii+lCD; jj <= len; ++jj)
-		{
+void limit_contact_distance(int lCD, int len) {
+	for (int ii = 1; ii <= len; ++ii) {
+		for(int jj = ii+lCD; jj <= len; ++jj) {
 			constraints[ii] = -1;
 			constraints[jj] = -1;
 		//	std::cout << '(' << ii << ',' << jj << ')' << ' ';
@@ -699,40 +686,33 @@ void limit_contact_distance(int lCD, int len)
 
 
 
-void force_noncanonical_basepair(const char* ncb, int len)
-{
+void force_noncanonical_basepair(const char* ncb, int len) {
 	if (ncb == 0 || ncb[0] == '\0') return;
 	
 	printf("Permitted noncanonical base pairs : \n");	
 
 	std::string ncb1(ncb);
 	
-	for (unsigned int i =0 ; i < ncb1.size(); ++i)
-	{
+	for (unsigned int i =0 ; i < ncb1.size(); ++i) {
 		ncb1[i] = toupper(ncb1[i]);
 	}
 	
 	std::vector<std::string> tokens;
 	tokenize(ncb1, tokens, ",");	
 	
-	for (unsigned int i = 0; i < tokens.size(); ++i)
-	{
+	for (unsigned int i = 0; i < tokens.size(); ++i) {
 		trim_spaces(tokens[i]);
-		if (tokens.size() != 3 && tokens[i][1] != '-') 
-		{
+		if (tokens.size() != 3 && tokens[i][1] != '-')
 			// ignore
 			continue;
-		}
 
 		char b1 = getBase(tokens[i].substr(0,1));
 		char b2 = getBase(tokens[i].substr(2,1));
 
 		int r1=0;
 		r1 = update_chPair(b1, b2);			
-		if (r1 == 1) 
-		{
+		if (r1 == 1)
 			printf("(%c,%c) ",  tokens[i][0], tokens[i][2]) ;
-		}
 	}
 
 	printf("\n\n");
