@@ -31,7 +31,6 @@
 #define xstr(s) str(s)
 #define str(s) #s
 
-//#define GENBIN
 
 using namespace std;
 
@@ -44,15 +43,9 @@ int dangle[4][4][4][2]; /* Dangling energies */
 int inter[31]; /* Size penalty for internal loops */
 int bulge[31]; /* Size penalty for bulges*/
 int hairpin[31]; /* Size penalty for hairpin loops */
-#if 0
-int stack[4][4][4][4];
-int tstkh[4][4][4][4];
-int tstki[4][4][4][4];
-#else
 int stack[256]; /* Stacking energy for stack loops */
 int tstkh[256]; /* Terminal stacking energy for hairpin loops */
 int tstki[256]; /* Terminal stacking energy for internal loops */
-#endif
 int tloop[maxtloop + 1][2];
 int numoftloops;
 int iloop22[5][5][5][5][5][5][5][5]; /* 2*1 internal loops*/
@@ -84,7 +77,6 @@ void populate(const char *userdatadir,bool userdatalogic) {
 
 	cout << "Loading in GTfold data files from ";
 
-#ifndef GENBIN
 	if (!userdatalogic) {
 		EN_DATADIR.assign(xstr(DATADIR));
 		EN_DATADIR += "/";
@@ -92,9 +84,6 @@ void populate(const char *userdatadir,bool userdatalogic) {
 	} else {
 		EN_DATADIR.assign(userdatadir);
 	}
-#else
-	EN_DATADIR = "data";
-#endif
 
 	//Handle the ending forward slash case
 	if (EN_DATADIR[EN_DATADIR.length() - 1] != '/') {
