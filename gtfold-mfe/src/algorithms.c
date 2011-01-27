@@ -102,10 +102,8 @@ void initTables(int len) {
 #endif
 
 #if DEBUG
-#ifdef DYNALLOC
 	if (len != LENGTH-1)
 		fprintf(stderr,"ERROR: in initTables, len (%5d) != LENGTH-1 (%5d)\n",len,LENGTH-1);
-#endif
 #endif
 
 	init_chPair();

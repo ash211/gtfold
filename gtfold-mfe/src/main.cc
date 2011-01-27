@@ -44,23 +44,27 @@
 using namespace std;
 
 /* GLOBAL VARIABLES */
-enum BOOL ILSA; /* A boolean variable to know if we are executing with Internal loop speedup algorithm (ILA) or not. ILSA finds the optimal internal loop by exploring all possibilities. */
+
+enum BOOL ILSA; // enable internal loop speedup algorithm (ILSA)
 enum BOOL NOISOLATE;
-enum BOOL BPP; // calculating base pair probabilities
+enum BOOL BPP; // calculate base pair probabilities
 enum BOOL USERDATA;
 enum BOOL PARAMS;
 enum BOOL LIMIT_DISTANCE;
-#ifdef DYNALLOC
+
 int LENGTH;
 unsigned char *RNA1; 
-unsigned char *RNA; /* Contains RNA string in terms of 0, 1, 2, 3 for A, C, G and U respectively*/
-int *structure; /* An array to contain the optimal structure */
-int *V; /* int V[LENGTH][LENGTH]; */
+unsigned char *RNA; // the RNA string in terms of 0, 1, 2, 3 for A, C, G and U
+int *structure; // An array to contain the optimal structure
+int *V; // int V[LENGTH][LENGTH];
 int *W;
-int **VBI; /* VBI(i,j) will contain the energy of optimal internal loop closed with (i,j) base pair */
-int **VM; /* VM(i, j) will contain the energy of optimla multiloop closed with (i,j) base pair */
-int **WM; /* This array is introduced to help multiloop calculations. WM(i,j) contains the optimal energy of string segment from si to sj if this forms part of a multiloop */
-int *indx; /* This array is used to index V array. Here V array is mapped from 2D to 1D and indx array is used to get the mapping back.*/
+int **VBI; // VBI(i,j) -- energy of optimal internal loop closed with (i,j) base pair
+int **VM; // VM(i,j) -- energy of optimal multiloop closed with (i,j) base pair
+int **WM; // WM(i,j) -- the optimal energy of string segment from i to j,
+          // if this forms part of a multiloop. Used to speed multiloop
+          // calculations.
+int *indx; // used to index V array. The V array is mapped from 2D to 1D and
+           // the indx array is used to get the mapping back.
 int *constraints;
 
 double **QB;  // QB[i][j] is the sum over all possible loops closed by (i,j),
@@ -70,28 +74,29 @@ double **Q;   // Q[i][j] in addition to the above quantity QB[i][j], Q[i][j]
 double **QM;  // QM[i][j] is the sum of configuration energies from i to j,
               // assuming that i,j are contained in a multiloop
 double **P;   // P[i][j] The probability that nucleotides i and j form a basepair
-#else
-/* This are previously used variables, now they are not used. */
-unsigned char RNA[LENGTH];
-unsigned char RNA1[LENGTH];
-int structure[LENGTH];
-int VBI[LENGTH][LENGTH];
-int VM[LENGTH][LENGTH];
-int V[(LENGTH-1)*(LENGTH)/2 + 1]; /* int V[LENGTH][LENGTH]; */
-int WM[LENGTH][LENGTH];
-int W[LENGTH];
-int indx [LENGTH];
-#endif
 
-
-
-
-
-/* Function for displaying help */
+/**
+ * Print the hep message and quit.
+ */
 void help() {
-	fprintf(
-			stderr,
-			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-limitCD dist] [-datadir datadirloc] [-basepairprobabilities] filename(sequence)\n\n-ilsa\t\t= Use the Internal Loop Speedup Algorithm for faster calculation\n-noisolate\t= Prevent isolated base pairs from forming\n-params\t\t= Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu\n-constraints\t= Force or prohibit particular pairings\n\tConstraint syntax:\n\t\tF i j k  to force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) to pair\n\t\tP i j k  to prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) from pairing\n\t\tP i 0 k  to make bases from i to i+k-1 single stranded bases.\n-limitCD\t= Limit the 'contact distance' for a base pair to the given distance\n-basepairprobabilities\n\t\t= Calculate and output base pair probabilities of the predicted structure\n\nSequence file has to be in one of the two formats: Single line or FASTA\n\n");
+	fprintf(stderr,
+			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-limitCD dist] [-datadir datadirloc] [-basepairprobabilities] filename(sequence)\n\n");
+    fprintf(stderr,
+            "-ilsa\t\t= Use the Internal Loop Speedup Algorithm for faster calculation\n");
+    fprintf(stderr,
+            "-noisolate\t= Prevent isolated base pairs from forming\n");
+    fprintf(stderr,
+            "-params\t\t= Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu\n");
+    fprintf(stderr,
+            "-constraints\t= Force or prohibit particular pairings\n");
+    fprintf(stderr,
+            "\tConstraint syntax:\n\t\tF i j k  to force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) to pair\n\t\tP i j k  to prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) from pairing\n\t\tP i 0 k  to make bases from i to i+k-1 single stranded bases.\n");
+    fprintf(stderr,
+            "-limitCD\t= Limit the 'contact distance' for a base pair to the given distance\n");
+    fprintf(stderr,
+            "-basepairprobabilities\n\t\t= Calculate and output base pair probabilities of the predicted structure\n");
+    fprintf(stderr,
+            "\nSequence file has to be in one of the two formats: Single line or FASTA\n\n");
 	//	[-forceNC] 	-forceNC = an option to force pairing of noncanonical bases \nSyntax for forcing noncanonical bases (example):\n\t\tA-A,A-G,U-U\n\n");
 	exit(-1);
 }
@@ -103,7 +108,9 @@ double get_seconds() {
 	return (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0;
 }
 
-/*Function for printing the sequence*/
+/**
+ * Print out the sequence contained in RNA1
+ */
 void printSequence(int len) {
 	int i = 1;
 	for (i = 1; i <= len; i++) {
@@ -121,7 +128,9 @@ void printSequence(int len) {
 	printf("\n");
 }
 
-/*Function for printing the input constraints*/
+/**
+ * Print out the constraints located in variable: constraints
+ */
 void printConstraints(int len) {
 	int i = 1;
 	for (i = 1; i <= len; i++) {
@@ -156,7 +165,6 @@ void init_variables(int len) {
 
 	int i;
 
-#ifdef DYNALLOC
 	LENGTH = len + 1;
 
 	RNA = (unsigned char *) malloc(LENGTH * sizeof(unsigned char));
@@ -237,16 +245,12 @@ void init_variables(int len) {
 		perror("Cannot allocate variable 'constraints'");
 		exit(-1);
 	}
-
-#endif
-	return;
 }
 
 /* deallocate global variables */
 void free_variables() {
 	int i;
 
-#ifdef DYNALLOC
 	free(indx);
 	for (i = 0; i < LENGTH; i++)
 		free(WM[i]);
@@ -263,11 +267,6 @@ void free_variables() {
 	free(structure);
 	free(RNA);
 	free(RNA1);
-
-#endif
-
-	return;
-
 }
 
 void init_partition_function_variables(int bases) {
