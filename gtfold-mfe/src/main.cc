@@ -76,24 +76,35 @@ double **P;   // P[i][j] The probability that nucleotides i and j form a basepai
  */
 void help() {
 	fprintf(stderr,
-			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-limitCD dist] [-datadir datadirloc] [-basepairprobabilities] filename(sequence)\n\n");
+			"Usage: gtfold [OPTION]... FILE\n\n");
+    //[--ilsa] [--noisolate] [--params setofparameters] [--constraints filename] [--limitCD dist] [--datadir datadirloc] [--basepairprobabilities] filename(sequence)\n\n");
+
     fprintf(stderr,
-            "-ilsa\t\t= Use the Internal Loop Speedup Algorithm for faster calculation\n");
+            "  FILE is an RNA sequence file.  Single line or FASTA formats are accepted.\n\n");
+
     fprintf(stderr,
-            "-noisolate\t= Prevent isolated base pairs from forming\n");
+            "OPTIONS\n");
     fprintf(stderr,
-            "-params\t\t= Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu\n");
+            "   --ilsa           Use the Internal Loop Speedup Algorithm (faster)\n");
     fprintf(stderr,
-            "-constraints\t= Force or prohibit particular pairings\n");
+            "   --noisolate      Prevent isolated base pairs from forming\n");
+    // Remove this option until the loader is capable of loading multiple
+    // thermodynamic parameters
+    //fprintf(stderr,
+    //        "   --params       Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu\n");
     fprintf(stderr,
-            "\tConstraint syntax:\n\t\tF i j k  to force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) to pair\n\t\tP i j k  to prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) from pairing\n\t\tP i 0 k  to make bases from i to i+k-1 single stranded bases.\n");
+            "   --constraints FILE\n                    Load constraints from FILE.  See Constraint syntax below\n");
     fprintf(stderr,
-            "-limitCD\t= Limit the 'contact distance' for a base pair to the given distance\n");
+            "   --limitCD dist   Set a maximum base pair contact distance to dist. If no\n                      limit is given, base pairs can be over any distance\n");
     fprintf(stderr,
-            "-basepairprobabilities\n\t\t= Calculate and output base pair probabilities of the predicted structure\n");
+            "   --bpp            Print base pair probabilities for the predicted structure\n");
+
     fprintf(stderr,
-            "\nSequence file has to be in one of the two formats: Single line or FASTA\n\n");
-	//	[-forceNC] 	-forceNC = an option to force pairing of noncanonical bases \nSyntax for forcing noncanonical bases (example):\n\t\tA-A,A-G,U-U\n\n");
+            "\n   --help           Output help (this message) and exit\n");
+
+    fprintf(stderr,
+            "\nConstraint syntax:\n\tF i j k  # force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i j k  # prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i 0 k  # make bases from i to i+k-1 single stranded bases.\n");
+	//	[-forceNC] 	-forceNC an option to force pairing of noncanonical bases \nSyntax for forcing noncanonical bases (example):\n\t\tA-A,A-G,U-U\n\n");
 	exit(-1);
 }
 
@@ -329,38 +340,38 @@ int main(int argc, char** argv) {
 	i = 1;
 	while (i < argc) {
 		if (argv[i][0] == '-') {
-			if (strcmp(argv[i], "-ilsa") == 0) {
+			if (strcmp(argv[i], "--ilsa") == 0) {
 				ILSA = TRUE;
-			} else if (strcmp(argv[i], "-noisolate") == 0) {
+			} else if (strcmp(argv[i], "--noisolate") == 0) {
 				NOISOLATE = TRUE;
-			} else if (strcmp(argv[i], "-help") == 0) {
+			} else if (strcmp(argv[i], "--help") == 0) {
 				help();
-			} else if (strcmp(argv[i], "-constraints") == 0) {
+			} else if (strcmp(argv[i], "--constraints") == 0) {
 				if (i < argc)
 					consIndex = ++i;
 				else
 					help();
-			} else if (strcmp(argv[i], "-params")==0) { 
+			} else if (strcmp(argv[i], "--params")==0) { 
 				PARAMS = TRUE;			  
 				if (i < argc)
 					paramsIndex = ++i;
 				else
 					help();
-			} else if (strcmp(argv[i], "-datadir") == 0) {
+			} else if (strcmp(argv[i], "--datadir") == 0) {
 				USERDATA = TRUE;
 				if (i < argc)
 					dataIndex = ++i;
 				else
 					help();
-			} else if (strcmp(argv[i], "-limitCD") == 0) {
+			} else if (strcmp(argv[i], "--limitCD") == 0) {
 				if (i < argc)
 					lcdIndex = ++i;
 				else
 					help();	
-			}  else if (strcmp(argv[i], "-basepairprobabilities") == 0) {
+			}  else if (strcmp(argv[i], "--bpp") == 0) {
 				BPP = TRUE;
 			}
-			/*else if (strcmp(argv[i], "-forceNC") == 0)
+			/*else if (strcmp(argv[i], "--forceNC") == 0)
 			{
 				if (i < argc)
 					fNCIndex = ++i;
