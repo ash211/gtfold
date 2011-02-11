@@ -82,25 +82,24 @@ void help() {
     fprintf(stderr,
             "  FILE is an RNA sequence file.  Single line or FASTA formats are accepted.\n\n");
 
+    fprintf(stderr, "OPTIONS\n");
     fprintf(stderr,
-            "OPTIONS\n");
+            "   -c, --constraints FILE\n                        Load constraints from FILE.  See Constraint syntax below\n");
     fprintf(stderr,
-            "   --ilsa           Use the Internal Loop Speedup Algorithm (faster)\n");
+            "   -d, --limitCD dist   Set a maximum base pair contact distance to dist. If no\n                        limit is given, base pairs can be over any distance\n");
     fprintf(stderr,
-            "   --noisolate      Prevent isolated base pairs from forming\n");
-    // Remove this option until the loader is capable of loading multiple
-    // thermodynamic parameters
-    //fprintf(stderr,
-    //        "   --params       Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu\n");
+            "   -n, --noisolate      Prevent isolated base pairs from forming\n");
     fprintf(stderr,
-            "   --constraints FILE\n                    Load constraints from FILE.  See Constraint syntax below\n");
-    fprintf(stderr,
-            "   --limitCD dist   Set a maximum base pair contact distance to dist. If no\n                      limit is given, base pairs can be over any distance\n");
-    fprintf(stderr,
-            "   --bpp            Print base pair probabilities for the predicted structure\n");
+            "   -h, --help           Output help (this message) and exit\n");
 
+    fprintf(stderr, "\nADVANCED\n");
     fprintf(stderr,
-            "\n   --help           Output help (this message) and exit\n");
+            "   --bpp                Print base pair probabilities for the predicted structure\n");
+    fprintf(stderr,
+            "   --ilsa               Use the Internal Loop Speedup Algorithm (faster)\n");
+    fprintf(stderr,
+            "   --params             Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu [NONFUNCTIONAL]\n");
+
 
     fprintf(stderr,
             "\nConstraint syntax:\n\tF i j k  # force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i j k  # prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i 0 k  # make bases from i to i+k-1 single stranded bases.\n");
