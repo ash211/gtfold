@@ -54,7 +54,12 @@ extern "C" {
 		FALSE, TRUE
 	};
 	extern enum BOOL ILSA;
-	extern enum BOOL NOISOLATE;
+	
+	int eS(int i, int j);
+	int eH(int i, int j);
+	int eL(int i, int j, int ip, int jp);
+
+extern enum BOOL NOISOLATE;
 #ifdef __cplusplus
 }
 #endif
@@ -72,9 +77,5 @@ void calcVBIVMVWM2(int i, int j);
 
 void calcVBIS(int i, int j);
 void calcVMVWM(int i, int j);
-int eS(int i, int j);
-int eH(int i, int j);
-int eL(int i, int j, int ip, int jp);
-
 #endif
 
