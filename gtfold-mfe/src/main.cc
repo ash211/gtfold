@@ -38,6 +38,7 @@
 #include "algorithms.h"
 #include "algorithms-partition.h"
 #include "traceback.h"
+#include "subopt_traceback.h"
 #include "main.h"
 #include "main-c.h"
 
@@ -50,8 +51,12 @@ enum BOOL BPP; // calculating base pair probabilities
 enum BOOL USERDATA;
 enum BOOL PARAMS;
 enum BOOL LIMIT_DISTANCE;
-#ifdef DYNALLOC
+enum BOOL QUIET;
+
+int delta;
+int num_threads;
 int LENGTH;
+
 unsigned char *RNA1; 
 unsigned char *RNA; /* Contains RNA string in terms of 0, 1, 2, 3 for A, C, G and U respectively*/
 int *structure; /* An array to contain the optimal structure */
@@ -70,29 +75,46 @@ double **Q;   // Q[i][j] in addition to the above quantity QB[i][j], Q[i][j]
 double **QM;  // QM[i][j] is the sum of configuration energies from i to j,
               // assuming that i,j are contained in a multiloop
 double **P;   // P[i][j] The probability that nucleotides i and j form a basepair
-#else
-/* This are previously used variables, now they are not used. */
-unsigned char RNA[LENGTH];
-unsigned char RNA1[LENGTH];
-int structure[LENGTH];
-int VBI[LENGTH][LENGTH];
-int VM[LENGTH][LENGTH];
-int V[(LENGTH-1)*(LENGTH)/2 + 1]; /* int V[LENGTH][LENGTH]; */
-int WM[LENGTH][LENGTH];
-int W[LENGTH];
-int indx [LENGTH];
-#endif
-
-
-
 
 
 /* Function for displaying help */
 void help() {
-	fprintf(
-			stderr,
-			"Usage: gtfold [-ilsa] [-noisolate] [-params setofparameters] [-constraints filename] [-limitCD dist] [-datadir datadirloc] [-basepairprobabilities] filename(sequence)\n\n-ilsa\t\t= Use the Internal Loop Speedup Algorithm for faster calculation\n-noisolate\t= Prevent isolated base pairs from forming\n-params\t\t= Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu\n-constraints\t= Force or prohibit particular pairings\n\tConstraint syntax:\n\t\tF i j k  to force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) to pair\n\t\tP i j k  to prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) from pairing\n\t\tP i 0 k  to make bases from i to i+k-1 single stranded bases.\n-limitCD\t= Limit the 'contact distance' for a base pair to the given distance\n-basepairprobabilities\n\t\t= Calculate and output base pair probabilities of the predicted structure\n\nSequence file has to be in one of the two formats: Single line or FASTA\n\n");
-	//	[-forceNC] 	-forceNC = an option to force pairing of noncanonical bases \nSyntax for forcing noncanonical bases (example):\n\t\tA-A,A-G,U-U\n\n");
+	fprintf(stderr,
+			"Usage: gtfold [OPTION]... FILE\n\n");
+    //[--ilsa] [--noisolate] [--params setofparameters] [--constraints filename] [--limitCD dist] [--datadir datadirloc] [--basepairprobabilities] filename(sequence)\n\n");
+
+    fprintf(stderr,
+            "  FILE is an RNA sequence file.  Single line or FASTA formats are accepted.\n\n");
+
+    fprintf(stderr, "OPTIONS\n");
+    fprintf(stderr,
+            "   -c, --constraints FILE\n                        Load constraints from FILE.  See Constraint syntax below\n");
+    
+    fprintf(stderr,
+            "   -t, --threads num\n                        Limit number of threads used\n");
+    fprintf(stderr,
+            "   -q, --quiet          Run in non-interactive mode\n");
+	fprintf(stderr,
+            "   -d, --limitCD dist   Set a maximum base pair contact distance to dist. If no\n                        limit is given, base pairs can be over any distance\n");
+    fprintf(stderr,
+            "   -n, --noisolate      Prevent isolated base pairs from forming\n");
+
+    fprintf(stderr,
+            "   -h, --help           Output help (this message) and exit\n");
+
+    fprintf(stderr, "\nADVANCED\n");
+    fprintf(stderr,
+            "   --range    			 Calculate suboptimal structures within 'range' kcal/mol of the mfe\n");
+    fprintf(stderr,
+            "   --bpp                Print base pair probabilities for the predicted structure\n");
+    fprintf(stderr,
+            "   --ilsa               Use the Internal Loop Speedup Algorithm (faster)\n");
+    fprintf(stderr,
+            "   --params             Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu [NONFUNCTIONAL]\n");
+
+
+    fprintf(stderr,
+            "\nConstraint syntax:\n\tF i j k  # force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i j k  # prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i 0 k  # make bases from i to i+k-1 single stranded bases.\n");
 	exit(-1);
 }
 
@@ -156,7 +178,6 @@ void init_variables(int len) {
 
 	int i;
 
-#ifdef DYNALLOC
 	LENGTH = len + 1;
 
 	RNA = (unsigned char *) malloc(LENGTH * sizeof(unsigned char));
@@ -237,16 +258,12 @@ void init_variables(int len) {
 		perror("Cannot allocate variable 'constraints'");
 		exit(-1);
 	}
-
-#endif
-	return;
 }
 
 /* deallocate global variables */
 void free_variables() {
 	int i;
 
-#ifdef DYNALLOC
 	free(indx);
 	for (i = 0; i < LENGTH; i++)
 		free(WM[i]);
@@ -263,44 +280,39 @@ void free_variables() {
 	free(structure);
 	free(RNA);
 	free(RNA1);
-
-#endif
-
-	return;
-
 }
 
-void init_partition_function_variables(int bases) {
-    QB = mallocTwoD(bases+1, bases+1);
+void init_partition_function_variables(int length) {
+    QB = mallocTwoD(length+1, length+1);
     if(QB == NULL) {
         fprintf(stderr,"Failed to allocate QB\n");
         exit(-1);
     }
 
-    Q = mallocTwoD(bases+1, bases+1);
+    Q = mallocTwoD(length+1, length+1);
     if(Q == NULL) {
         fprintf(stderr,"Failed to allocate Q\n");
         exit(-1);
     }
 
-    QM = mallocTwoD(bases+1, bases+1);
+    QM = mallocTwoD(length+1, length+1);
     if(QM == NULL) {
         fprintf(stderr,"Failed to allocate QM\n");
         exit(-1);
     }
 
-    P = mallocTwoD(bases+1, bases+1);
+    P = mallocTwoD(length+1, length+1);
     if(P == NULL) {
         fprintf(stderr,"Failed to allocate P\n");
         exit(-1);
     }
 }
 
-void free_partition_function_variables(int bases) {
-    freeTwoD(QB, bases+1, bases+1);
-    freeTwoD(Q, bases+1, bases+1);
-    freeTwoD(QM, bases+1, bases+1);
-    freeTwoD(P, bases+1, bases+1);
+void free_partition_function_variables(int length) {
+    freeTwoD(QB, length+1, length+1);
+    freeTwoD(Q, length+1, length+1);
+    freeTwoD(QM, length+1, length+1);
+    freeTwoD(P, length+1, length+1);
 }
 
 
@@ -315,13 +327,14 @@ void free_partition_function_variables(int bases) {
 int main(int argc, char** argv) {
 	int i;
 	ifstream cf;
-	int bases;
+	int length;
 	string s, seq;
 	int energy;
 	double t1;
 	ILSA = FALSE;
 	NOISOLATE = FALSE;
 	BPP = FALSE;
+	QUIET = FALSE;
 
 	fprintf(stdout,
 			"GTfold: A Scalable Multicore Code for RNA Secondary Structure Prediction\n");
@@ -334,50 +347,58 @@ int main(int argc, char** argv) {
 	if (argc < 2)
 		help();
 
-	int fileIndex = 0, consIndex = 0, dataIndex = 0, paramsIndex=0, lcdIndex = 0; // fNCIndex = 0;
+	int fileIndex = 0, consIndex = 0, dataIndex = 0, paramsIndex=0, lcdIndex = 0; 
+	int rangeIndex = 0, thIndex = 0; 
+
 	i = 1;
 	while (i < argc) {
 		if (argv[i][0] == '-') {
-			if (strcmp(argv[i], "-ilsa") == 0) {
+			if (strcmp(argv[i], "--ilsa") == 0) {
 				ILSA = TRUE;
-			} else if (strcmp(argv[i], "-noisolate") == 0) {
+			} else if (strcmp(argv[i], "--noisolate") == 0) {
 				NOISOLATE = TRUE;
-			} else if (strcmp(argv[i], "-help") == 0) {
+			} else if (strcmp(argv[i], "--quiet") == 0) {
+				QUIET = TRUE;
+			} else if (strcmp(argv[i], "--help") == 0) {
 				help();
-			} else if (strcmp(argv[i], "-constraints") == 0) {
+			} else if (strcmp(argv[i], "--constraints") == 0) {
 				if (i < argc)
 					consIndex = ++i;
 				else
 					help();
-			} else if (strcmp(argv[i], "-params")==0) { 
+			} else if (strcmp(argv[i], "--params")==0) { 
 				PARAMS = TRUE;			  
 				if (i < argc)
 					paramsIndex = ++i;
 				else
 					help();
-			} else if (strcmp(argv[i], "-datadir") == 0) {
+			}
+			else if (strcmp(argv[i], "--threads")==0) { 
+				if (i < argc)
+					thIndex = ++i;
+				else
+					help();
+			} else if (strcmp(argv[i], "--datadir") == 0) {
 				USERDATA = TRUE;
 				if (i < argc)
 					dataIndex = ++i;
 				else
 					help();
-			} else if (strcmp(argv[i], "-limitCD") == 0)
-			{
+			} else if (strcmp(argv[i], "--limitCD") == 0) {
 				if (i < argc)
 					lcdIndex = ++i;
 				else
 					help();	
-			}  else if (strcmp(argv[i], "-basepairprobabilities") == 0)
-			{
+			}  else if (strcmp(argv[i], "--bpp") == 0) {
 				BPP = TRUE;
 			}
-			/*else if (strcmp(argv[i], "-forceNC") == 0)
+			else if (strcmp(argv[i], "--range") == 0)
 			{
-				if (i < argc)
-					fNCIndex = ++i;
+				if (i<argc)
+					rangeIndex = ++i;
 				else
-					help();	
-			}*/
+					help();
+			}
 
 		} else {
 			fileIndex = i;
@@ -429,12 +450,11 @@ int main(int argc, char** argv) {
 	}
 	s = seq;
 
-	bases = s.length();
+	length = s.length();
 
-	init_variables(bases);
+	init_variables(length);
 
-	cout << "Sequence: " << s << endl;
-	fprintf(stdout, "Sequence length: %5d\n\n", bases);
+	fprintf(stdout, "Sequence length: %5d\n\n", length);
 
 	cf.close();
 
@@ -443,17 +463,24 @@ int main(int argc, char** argv) {
 
 	if (consIndex != 0)
 	{
-		GTFOLD_FLAGS r = initialize_constraints(&fbp, &pbp, numpConstraints, numfConstraints, argv[consIndex]);
+		int r = initialize_constraints(&fbp, &pbp, numpConstraints, numfConstraints, argv[consIndex]);
 		if (r == ERR_OPEN_FILE)
 		{
 			free_variables();
 			exit(-1);
 		}
+		else if (r == NO_CONS_FOUND)
+		{
+			fprintf(stdout, "constraints file empty!\n");
+		}
 	}
 	
-	
-	if (handle_IUPAC_code(s, bases)  == FAILURE)
+	if (thIndex > 0)
 	{
+		num_threads = atoi(argv[thIndex]);
+	}
+	
+	if (handle_IUPAC_code(s, length)  == FAILURE) {
 		free_variables();
 		exit(0);
 	}
@@ -465,34 +492,41 @@ int main(int argc, char** argv) {
 	else
 		populate("Turner99",false); /* Defined in loader.cc file to read in the thermodynamic parameter values from the tables in the ../data directory. */
 
-	initTables(bases); /* Initialize global variables */
+	initTables(length); /* Initialize global variables */
 	
-	/*
-	if (fNCIndex != 0)
-	{
-		// Force non canonical base pairing
-		//force_noncanonical_basepair(argv[fNCIndex], bases);
-	}
-	*/
-
 	int lCD = -1;
 	if (lcdIndex != 0)
 	{
 		lCD = atoi(argv[lcdIndex]);
 		fprintf(stdout, "Maximum Contact Distance = %d\n\n", lCD);
-		limit_contact_distance(lCD, bases);
-		
+	}
+	
+	int delta = -1;
+	if (rangeIndex != 0)
+	{	
+		delta = atoi(argv[rangeIndex]);
 	}
 
-	fprintf(stdout,"Computing minimum free energy structure. . . \n");
+	fprintf(stdout,"Computing minimum free energy structure ... \n");
 	fflush(stdout);
 
 	t1 = get_seconds();
-	energy = calculate(bases, fbp, pbp, numfConstraints, numpConstraints); /* Runs the Dynamic programming algorithm to calculate the optimal energy. Defined in algorithms.c file.*/
-    //energy = 0;
+	energy = calculate(length, fbp, pbp, numfConstraints, numpConstraints); 
 	t1 = get_seconds() - t1;
 
-	fprintf(stdout," Done.\n");
+	fprintf(stdout,"Done.\n");
+	fprintf(stdout,"Minimum Free Energy = %9.2f\n", energy/100.00);
+	fprintf(stdout,"MFE running time (in seconds): %9.6f\n\n", t1);
+
+	if (rangeIndex != 0)
+	{
+		fprintf(stdout,"Computing suboptimal structures in range %d ...\n\n", delta);
+		t1 = get_seconds();
+		subopt_traceback(length, delta); /* Traces the optimal structure*/
+		t1 = get_seconds() - t1;
+		fprintf(stdout,"\nTraceback running time (in seconds): %9.6f\n\n", t1);
+		exit(0);	
+	}
 
     // only fill the partition function structures if they are needed for BPP
     if(BPP) {
@@ -500,26 +534,24 @@ int main(int argc, char** argv) {
         fflush(stdout);
 
         // malloc the arrays
-        init_partition_function_variables(bases);
+        init_partition_function_variables(length);
 
         // fill the arrays
-        fill_partition_fn_arrays(bases, QB, Q, QM);
+        fill_partition_fn_arrays(length, QB, Q, QM);
 
-        fprintf(stdout," Done.\n");
+        fprintf(stdout,"Done.\n");
 
-        fprintf(stdout,"Q[1][n]: %f\n\n", Q[1][bases]);
+        fprintf(stdout,"Q[1][n]: %f\n\n", Q[1][length]);
     }
 
-	fprintf(stdout,"Minimum Free Energy = %12.2f\n\n", energy/100.00);
-	fprintf(stdout,"MFE running time (in seconds): %9.6f\n\n", t1);
 
 	t1 = get_seconds();
-	trace(bases); /* Traces the optimal structure*/
+	trace(length); /* Traces the optimal structure*/
 	t1 = get_seconds() - t1;
 
 	std::stringstream ss1, ss2;
 	char suboptfile[1024];
-	ss1 << bases;
+	ss1 << length;
 	ss2 << energy/100.0;
 
 	i = 0;
@@ -531,51 +563,37 @@ int main(int argc, char** argv) {
 
 	fprintf(stdout, "Writing secondary structure to the file: %s\n", suboptfile);
 
-#if 0
-	outfile << bases << " " << energy/100.0;
-	outfile << endl << s;
-
-	for ( i = 1; i <= bases; i++ )
-		outfile << "\n" <<  i << " " << structure[i] ;
-#endif
-	/* Generate the output file containing the optimal secondary structure in .ct format */
-#if 1
-	outfile << bases << "\t  dG = " << energy/100.0;
+	outfile << length << "\t  dG = " << energy/100.0;
 	i = 1;
-	while ( i <= bases ) {
-		outfile << endl << i << "\t" << s[i-1] << "\t" << i-1 << "\t" << (i+1)%(bases+1) << "\t" << structure[i] << "\t" << i;
+	while ( i <= length ) {
+		outfile << endl << i << "\t" << s[i-1] << "\t" << i-1 << "\t" << (i+1)%(length+1) << "\t" << structure[i] << "\t" << i;
 		i++;
 	}
 	outfile << endl;
-#endif
-
-
 	outfile.close();
 
-	fprintf(stdout,"\n\n");
 	fprintf(stdout,"Traceback running time (in seconds): %9.6f\n", t1);
 
-	fprintf(stdout, "\n\nFolding complete\n\n");
-	printSequence(bases);
-	printConstraints(bases);
-	printStructure(bases);
+	fprintf(stdout, "Folding complete\n\n");
+	printSequence(length);
+	printConstraints(length);
+	printStructure(length);
 
     if(BPP) {
-        fillBasePairProbabilities(bases, structure, Q, QB, QM, P);
+        fillBasePairProbabilities(length, structure, Q, QB, QM, P);
 
-        printBasePairProbabilities(bases, structure, P);
+        printBasePairProbabilities(length, structure, P);
 
-        free_partition_function_variables(bases);
+        free_partition_function_variables(length);
     }
 
 	free_variables();
 
 	return 0;
-
 }
 
 
-GTFOLD_FLAGS initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& numfConstraints, const char* constr_file)
+int initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& numfConstraints, const char* constr_file)
 {
 	ifstream cfcons;
 
@@ -662,15 +680,15 @@ GTFOLD_FLAGS initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints
 	return SUCCESS;
 }
 
-GTFOLD_FLAGS handle_IUPAC_code(const std::string& s, const int bases)
+int handle_IUPAC_code(const std::string& s, const int length)
 {
 	int* stack_unidentified_base;
 	int stack_count=0;
 	bool unspecd=0;
-	stack_unidentified_base=new int[bases];
+	stack_unidentified_base=new int[length];
 
 	/* SH: Conversion of the sequence to numerical values. */
-	for(int i = 1; i <= bases; i++) {
+	for(int i = 1; i <= length; i++) {
 		RNA[i] = getBase(s.substr(i-1,1));
 		RNA1[i] = getBase1(s.substr(i-1,1));
 		if (RNA[i]=='X') {
@@ -684,42 +702,31 @@ GTFOLD_FLAGS handle_IUPAC_code(const std::string& s, const int bases)
 		}
 
 	}
-	if(unspecd) {
-		printf("IUPAC codes have been detected at positions:");
-
+	if (unspecd) {
+		printf("IUPAC codes have been detected at positions: ");
+		
 		for(int i=0;i<stack_count;i++)
 		{
 			printf("%d , ",stack_unidentified_base[i]);
 		}
 		printf("\n");
-		printf("You may wish to resubmit the sequence with fully specified positions. Alternatively, GTfold will fold the sequence under the standard assumption that these ambiguous positions do not pair.  Do you wish to continue with the current computation? <Y/N>");
+		
+		if (QUIET == TRUE)
+		{
+			return SUCCESS;
+		}
+		
+		printf("You may wish to resubmit the sequence with fully specified positions. \n");
+		printf("Alternatively, GTfold will fold the sequence under the standard assumption that these ambiguous positions do not pair.\n");
+		printf("Do you wish to continue with the current computation? <Y/N>");
 
 		char reply;
 		scanf("%c",&reply);
-
 		return (reply=='n'||reply=='N')?(FAILURE):(SUCCESS);
 	}
 	else 
 		return SUCCESS;
-
 }
-
-
-void limit_contact_distance(int lCD, int len)
-{
-	for (int ii = 1; ii <= len; ++ii) 
-	{
-		for(int jj = ii+lCD; jj <= len; ++jj)
-		{
-			constraints[ii] = -1;
-			constraints[jj] = -1;
-		//	std::cout << '(' << ii << ',' << jj << ')' << ' ';
-		}
-	}
-	std::cout << std::endl;
-}
-
-
 
 void force_noncanonical_basepair(const char* ncb, int len)
 {
@@ -756,6 +763,5 @@ void force_noncanonical_basepair(const char* ncb, int len)
 			printf("(%c,%c) ",  tokens[i][0], tokens[i][2]) ;
 		}
 	}
-
 	printf("\n\n");
 }

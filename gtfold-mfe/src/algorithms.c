@@ -151,8 +151,6 @@ int checkSS(int i, int j) {
 int calculate(int len, int **forceList, int **prohibitList, int forcelen, int prohibitlen) {
 	int b, i, j, it, k;
 	
-	printf("chPairKey %d ", chPairKey);
-
 	for(i=1;i<=len;i++) 
 	{
 		if(RNA1[i]=='N') 
@@ -194,15 +192,19 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
 		}
 	}
 
+#ifdef _OPENMP
+	if (num_threads > 0)
+		omp_set_num_threads(num_threads);
+#endif
+
 #if 1
 #ifdef _OPENMP
 #pragma omp parallel
 #pragma omp master
 	{
-		fprintf(stdout,"\n\n");
 		fprintf(stdout,"Running with %3d OpenMP thread",omp_get_num_threads());
 		if (omp_get_num_threads()>1) fprintf(stdout,"s");
-		fprintf(stdout,".\n\n");
+		fprintf(stdout,".\n");
 	}
 #endif
 #endif

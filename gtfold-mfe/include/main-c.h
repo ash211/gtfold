@@ -34,6 +34,7 @@ extern int **VM; /* [LENGTH][LENGTH] */
 extern int **WM; /* [LENGTH][LENGTH] */
 extern int *indx; /* [LENGTH] */
 extern int *constraints;
+extern int num_threads;
 #else
 
 #define LENGTH 8500
