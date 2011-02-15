@@ -105,7 +105,7 @@ void help() {
 
     fprintf(stderr, "\nADVANCED\n");
     fprintf(stderr,
-            "   --range    			 Calculate suboptimal structures within 'range' kcal/mol of the mfe\n");
+            "   --subopt range       Calculate suboptimal structures within 'range' kcal/mol of the mfe\n");
     fprintf(stderr,
             "   --bpp                Print base pair probabilities for the predicted structure\n");
     fprintf(stderr,
@@ -391,7 +391,7 @@ int main(int argc, char** argv) {
 					help();	
 			} else if (strcmp(argv[i], "--bpp") == 0) {
 				BPP = TRUE;
-			} else if (strcmp(argv[i], "--range") == 0) {
+			} else if (strcmp(argv[i], "--subopt") == 0) {
 				if (i<argc)
 					rangeIndex = ++i;
 				else
