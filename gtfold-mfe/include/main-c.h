@@ -31,6 +31,7 @@ extern int **VM; /* [LENGTH][LENGTH] */
 extern int **WM; /* [LENGTH][LENGTH] */
 extern int *indx; /* [LENGTH] */
 extern int *constraints;
+extern int num_threads;
 
 #define fourBaseIndex(a, b, c, d) (((a) << 6) + ((b) << 4) + ((c) << 2) + (d))
 
