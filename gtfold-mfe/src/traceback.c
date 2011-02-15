@@ -52,7 +52,7 @@ void trace(int len) {
 
 	traceW(len);
 	
-	printf("SUM of energy of loops = %12.2f\n", total_en/100.0);
+	//printf("SUM of energy of loops = %12.2f\n", total_en/100.0);
 	return;
 }
 
@@ -115,7 +115,7 @@ void traceW(int j) {
 					structure[j] = i;
 				    //printf("before V1, i: %d, j: %d\n", i, j);
 					traceV(i, j);
-					printf("AU Penalty: %12.2f\n",auPen(RNA[i], RNA[j])/100.00);
+					//printf("AU Penalty: %12.2f\n",auPen(RNA[i], RNA[j])/100.00);
 
 					if (flag || checkSS(1,i)) // Added this condition because if constraints are present, flag should be overridden
 						traceW(i - 1);
@@ -127,7 +127,7 @@ void traceW(int j) {
 					structure[j - 1] = i + 1;
 					//printf("before V2, i: %d, j: %d, flag: %d\n", i, j, flag);
 					traceV(i + 1, j - 1);
-					printf("AU Penalty: %12.2f\nEnergy of dangling base on both the sides: %12.2f  %12.2f\n",auPen(RNA[i + 1], RNA[j - 1])/100.00, dangle[RNA[j - 1]][RNA[i + 1]][RNA[i]][1]/100.00, dangle[RNA[j - 1]][RNA[i + 1]][RNA[j]][0]/100.00);
+					//printf("AU Penalty: %12.2f\nEnergy of dangling base on both the sides: %12.2f  %12.2f\n",auPen(RNA[i + 1], RNA[j - 1])/100.00, dangle[RNA[j - 1]][RNA[i + 1]][RNA[i]][1]/100.00, dangle[RNA[j - 1]][RNA[i + 1]][RNA[j]][0]/100.00);
 
 					if (flag || checkSS(1,i))
 						traceW(i - 1);
@@ -138,7 +138,7 @@ void traceW(int j) {
 					structure[j - 1] = i;
 					//printf("before V3, i: %d, j: %d\n", i, j);
 					traceV(i, j - 1);
-					printf("AU Penalty: %12.2f\nEnergy of dangling base: %12.2f\n",auPen(RNA[i], RNA[j - 1])/100.00,dangle[RNA[j - 1]][RNA[i]][RNA[j]][0]/100.00);
+					//printf("AU Penalty: %12.2f\nEnergy of dangling base: %12.2f\n",auPen(RNA[i], RNA[j - 1])/100.00,dangle[RNA[j - 1]][RNA[i]][RNA[j]][0]/100.00);
 
 					if (flag || checkSS(1,i) )
 						traceW(i - 1);
@@ -149,7 +149,7 @@ void traceW(int j) {
 					structure[j] = i + 1;
 					//printf("before V4, i: %d, j: %d\n", i, j);
 					traceV(i + 1, j);
-					printf("AU Penalty: %12.2f\nEnergy of dangling base:  %12.2f\n",auPen(RNA[i + 1], RNA[j])/100.00, dangle[RNA[j]][RNA[i + 1]][RNA[i]][1]/100.00);
+					//printf("AU Penalty: %12.2f\nEnergy of dangling base:  %12.2f\n",auPen(RNA[i + 1], RNA[j])/100.00, dangle[RNA[j]][RNA[i + 1]][RNA[i]][1]/100.00);
 					if (flag || checkSS(1,i))
 						traceW(i - 1);
 					break;
@@ -180,31 +180,32 @@ int traceV(int i, int j) {
 	Vij = MIN(MIN(a, b), MIN(c, d));
 
 	if (Vij == a && Vij != b && Vij != c && Vij != d) { /* If () a hairpin loop */
-		printf("i %5d j %5d Hairpin  Loop %12.2f\n", i, j, eH(i, j)/100.00);
+		//printf("i %5d j %5d Hairpin  Loop %12.2f\n", i, j, eH(i, j)/100.00);
 		total_en += eH(i,j);
 		return Vij;
 	} else if (Vij == b /*&& Vij != a && Vij != c && Vij != d*/) { /* If it forms a stack */
-		printf("i %5d j %5d Stack 	 Loop %12.2f\n", i, j, eS(i, j)/100.00);
+		//printf("i %5d j %5d Stack 	 Loop %12.2f\n", i, j, eS(i, j)/100.00);
 		total_en += eS(i,j);
 		structure[i + 1] = j - 1;
 		structure[j - 1] = i + 1;
 		traceV(i + 1, j - 1);
 		return Vij;
 	} else if (Vij == c /*&& Vij != a && Vij != b && Vij != d*/) { /* If it forms an internal loop */
-		printf("i %5d j %5d Internal Loop", i, j);
+		//printf("i %5d j %5d Internal Loop", i, j);
 		traceVBI(i, j);
 		return Vij;
 	} else if (Vij == d && Vij != a && Vij != b && Vij != c) { /* If it forms a multiloop */
 		int eVM = traceVM(i, j);
-		printf("i %5d j %5d Multi    Loop %12.2f\n", i, j, (Vij-eVM)/100.0);
+		//printf("i %5d j %5d Multi    Loop %12.2f\n", i, j, (Vij-eVM)/100.0);
 		total_en += (Vij-eVM);
 		return Vij;
 	} else { /* It should not be executed */
 		if (Vij == c && Vij == d)
-			printf("Internal Loop and Multiloops are possible\n");
-		printf("i %5d j %5d  More than one structure is possible\n", i, j);
+			//printf("Internal Loop and Multiloops are possible\n");
+		//printf("i %5d j %5d  More than one structure is possible\n", i, j);
 		return 0;
 	}
+	return 0;
 }
 
 /* Traces VBI[i][j] */
@@ -236,7 +237,7 @@ int traceVBI(int i, int j) {
 
 	structure[ifinal] = jfinal;
 	structure[jfinal] = ifinal;
-	printf(" %12.2f\n", eL(i, j, ifinal, jfinal)/100.00);
+	//printf(" %12.2f\n", eL(i, j, ifinal, jfinal)/100.00);
 	total_en += eL(i, j, ifinal, jfinal);
 
 	int eVI = traceV(ifinal, jfinal);

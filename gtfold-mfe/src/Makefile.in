@@ -49,8 +49,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_gtfold_OBJECTS = main.$(OBJEXT) loader.$(OBJEXT) \
-	algorithms.$(OBJEXT) algorithms-partition.$(OBJEXT) \
-	traceback.$(OBJEXT)
+	subopt_traceback.$(OBJEXT) algorithms.$(OBJEXT) \
+	algorithms-partition.$(OBJEXT) traceback.$(OBJEXT)
 gtfold_OBJECTS = $(am_gtfold_OBJECTS)
 gtfold_DEPENDENCIES =
 gtfold_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(gtfold_LDFLAGS) \
@@ -182,6 +182,7 @@ AM_CXXFLAGS = -DDATADIR='$(datadir)/@PACKAGE@'
 gtfold_SOURCES = \
 	main.cc\
 	loader.cc\
+	subopt_traceback.cc\
 	algorithms.c\
 	algorithms-partition.c\
 	traceback.c
@@ -274,6 +275,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/algorithms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/subopt_traceback.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/traceback.Po@am__quote@
 
 .c.o:

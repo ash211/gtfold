@@ -341,12 +341,12 @@ int initMiscloopValues(string fileName) {
 		if (index == 1) {
 			cf >> currentWord;
 			prelog = 100 * atof(currentWord);
-			cout << "prelog = " << prelog << endl;
+			//cout << "prelog = " << prelog << endl;
 		}
 		if (index == 2) {
 			cf >> currentWord;
 			maxpen = int(atof(currentWord) * 100.0 + .5);
-			cout << "maxpen = " << maxpen << endl;
+			//cout << "maxpen = " << maxpen << endl;
 		}
 		if (index == 3) {
 			for (int count = 1; count <= 4; count++) {
