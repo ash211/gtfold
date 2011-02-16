@@ -223,6 +223,7 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
 			j = i + b;
 			//if (constraints[i] == -1 && constraints[j] == -1)
 			//	continue;
+			if (j-i >= contact_dist) continue;
 			if (chPair(RNA[i], RNA[j])) /* Check if bases i and j pair up or not */
 				calcVWM(i, j, INFINITY_, INFINITY_); /* Calculates V and WM array for element (i,j)*/
 			else
@@ -239,6 +240,7 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
             j = i + b;
             //if (constraints[i] == -1 && constraints[j] == -1)
             //	continue;
+			if (j-i >= contact_dist) continue;
             if (chPair(RNA[i], RNA[j])) {
                 calcVBI(i, j); /* Calculates VBI element at (i,j) */
                 calcVWM(i, j, VBI[i][j], INFINITY_); /* Calculates V and WM arrays*/
@@ -256,6 +258,7 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
             //printf("%d %d: %d %d\n", i, j, constraints[i], constraints[j]);
             //if (constraints[i] == -1 && constraints[j] == -1)
             //	continue;
+			if (j-i >= contact_dist) continue;
             if (chPair(RNA[i], RNA[j])) {
                 calcVBIVMVWM(i, j); /* Calculates VBI, VM, V and WM elements at (i,j) */
             } else
@@ -297,6 +300,7 @@ void calcVBI(int i, int j) {
 	thres1 = MAX((j - 1) + (ip - i - 1) - MAXLOOP, ip + 4); /* Minimum size of the hairpin loop which the enclosed base pair (ip,jp) can close is 3 that results in the minimum value of jp = ip+4 */
 	for (jp = thres1; jp <= j - 2; jp++) {
 		//May need to check the constraint condition here
+		if (jp-ip >= contact_dist) continue;
 		if (chPair(RNA[ip], RNA[jp])) {
 			if (checkSS(i, ip) || checkSS(jp, j))
 				continue;
@@ -310,6 +314,7 @@ void calcVBI(int i, int j) {
 		thres1 = MAX((j - 1) + (ip - i - 1) - MAXLOOP, ip + 4); /* Minimum size of a hairpin loop is 3, so start jp from ip+4*/
 		//May need to check for forced constraints here
 		for (jp = thres1; jp <= j - 1; jp++) {
+			if (jp-ip >= contact_dist) continue;
 			if (chPair(RNA[ip], RNA[jp])) {
 				if (checkSS(i, ip) || checkSS(jp, j))
 					continue;
@@ -341,6 +346,7 @@ void calcVBIS(int i, int j) {
 	/* Having ip = i+1 and jp=j-1 creates a stack which is considered separately in eS function. So here the max value of jp could be j-2*/
 	ip = i + 1;
 	for (jp = ip + 4; jp <= j - 2; jp++) {
+		if (jp-ip >= contact_dist) continue;
 		if (chPair(RNA[ip], RNA[jp])) {
 			E = eL(i, j, ip, jp) + V[indx[ip] + jp];
 			if (VBIij > E)
@@ -350,6 +356,7 @@ void calcVBIS(int i, int j) {
 
 	for (ip = i + 2; ip <= i + c; ip++) {
 		for (jp = ip + 4; jp <= j - 1; jp++) { /* Minimum size of a hairpin loop is 3.*/
+			if (jp-ip >= contact_dist) continue;
 			if (chPair(RNA[ip], RNA[jp])) {
 				E = eL(i, j, ip, jp) + V[indx[ip] + jp];
 				if (VBIij > E)
@@ -361,6 +368,7 @@ void calcVBIS(int i, int j) {
 	/*Case 2: When the first side is greater or equal to c but the second side is smaller */
 	for (ip = i + c + 1; ip < j - 1; ip++) {
 		for (jp = j - c; jp <= j - 1 && jp >= ip + 4; jp++) { /* Minimum size of a hairpin loop is 3.*/
+			if (jp-ip >= contact_dist) continue;
 			if (chPair(RNA[ip], RNA[jp])) {
 				E = eL(i, j, ip, jp) + V[indx[ip] + jp];
 				if (VBIij > E)
@@ -881,6 +889,7 @@ void calcVBIVMVWM(int i, int j) {
 	ip = i + 1;
 	thres1 = MAX((j - 1) + (ip - i - 1) - MAXLOOP, ip + 4); /* Minimum size of a hairpin loop is 3. So, start jp from ip+4 */
 	for (jp = thres1; jp <= j - 2; jp++) {
+		if (jp-ip >= contact_dist) continue;
 		if (chPair(RNA[ip], RNA[jp])) {
 			if (checkSS(i, ip) || checkSS(jp, j))
 				continue;
@@ -896,6 +905,7 @@ void calcVBIVMVWM(int i, int j) {
 	for (ip = i + 2; ip <= i + MAXLOOP + 1; ip++) {
 		thres1 = MAX((j - 1) + (ip - i - 1) - MAXLOOP, ip + 4);
 		for (jp = thres1; jp <= j - 1; jp++) {
+			if (jp-ip >= contact_dist) continue;
 			if (chPair(RNA[ip], RNA[jp])) {
 				if (checkSS(i, ip) || checkSS(jp, j))
 					continue;

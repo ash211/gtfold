@@ -32,6 +32,7 @@ extern int **WM; /* [LENGTH][LENGTH] */
 extern int *indx; /* [LENGTH] */
 extern int *constraints;
 extern int num_threads;
+extern int contact_dist;
 
 #define fourBaseIndex(a, b, c, d) (((a) << 6) + ((b) << 4) + ((c) << 2) + (d))
 

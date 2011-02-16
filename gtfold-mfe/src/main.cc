@@ -54,6 +54,7 @@ enum BOOL QUIET;
 
 int num_threads;
 int LENGTH;
+int contact_dist;
 
 unsigned char *RNA1;
 unsigned char *RNA; /* Contains RNA string in terms of 0, 1, 2, 3 for A, C, G and U respectively*/
@@ -490,11 +491,11 @@ int main(int argc, char** argv) {
         fprintf(stdout, "- using constraint file: %s\n", argv[consIndex]);
         standardRun = FALSE;
     }
-
-    int lCD = -1;
+	
+	contact_dist = length+1;
     if (lcdIndex != 0) {
-        lCD = atoi(argv[lcdIndex]);
-        fprintf(stdout, "- maximum contact distance: %d\n", lCD);
+        contact_dist = atoi(argv[lcdIndex]);
+        fprintf(stdout, "- maximum contact distance: %d\n", contact_dist);
         standardRun = FALSE;
     }
 
