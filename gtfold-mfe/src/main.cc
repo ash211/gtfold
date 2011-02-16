@@ -87,16 +87,14 @@ void help() {
     fprintf(stderr, "OPTIONS\n");
     fprintf(stderr,
             "   -c, --constraints FILE\n                        Load constraints from FILE.  See Constraint syntax below\n");
-
-    fprintf(stderr,
-            "   -t, --threads num\n                        Limit number of threads used\n");
-    fprintf(stderr,
-            "   -q, --quiet          Run in non-interactive mode\n");
 	fprintf(stderr,
             "   -d, --limitCD dist   Set a maximum base pair contact distance to dist. If no\n                        limit is given, base pairs can be over any distance\n");
     fprintf(stderr,
             "   -n, --noisolate      Prevent isolated base pairs from forming\n");
-
+    fprintf(stderr,
+            "   -q, --quiet          Run in non-interactive mode\n");
+    fprintf(stderr,
+            "   -t, --threads num    Limit number of threads used\n");
     fprintf(stderr,
             "   -h, --help           Output help (this message) and exit\n");
 
