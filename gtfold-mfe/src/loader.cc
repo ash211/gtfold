@@ -82,7 +82,7 @@ string EN_DATADIR;
 
 void populate(const char *userdatadir,bool userdatalogic) {
 
-	cout << "Loading in GTfold data files from ";
+	cout << "Thermodynamic parameters: ";
 
 #ifndef GENBIN
 	if (!userdatalogic) {
@@ -102,7 +102,7 @@ void populate(const char *userdatadir,bool userdatalogic) {
 	}
 
 
-	cout << EN_DATADIR << endl;
+	cout << EN_DATADIR << endl << endl;
 
 	initMiscloopValues("miscloop.dat");
 	// miscloop.dat - Miscellaneous loop file
@@ -124,8 +124,6 @@ void populate(const char *userdatadir,bool userdatalogic) {
 	// int22.dat - free energies for 2 x 2 interior loops
 	initInt11Values("int11.dat");
 	// int11.dat - free energies for 1 x 1 interior loops
-
-	cout << "Done loading data files." << endl << endl;
 }
 
 char baseToDigit(std::string base) {

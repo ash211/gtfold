@@ -515,16 +515,15 @@ int main(int argc, char** argv) {
     ///// end run config output /////
 
 
-    fprintf(stdout,"\nComputing minimum free energy structure ... \n");
+    fprintf(stdout,"\nComputing minimum free energy structure ... \n\n");
     fflush(stdout);
 
     t1 = get_seconds();
     energy = calculate(length, fbp, pbp, numfConstraints, numpConstraints);
     t1 = get_seconds() - t1;
 
-    fprintf(stdout,"Done.\n");
     fprintf(stdout,"Minimum Free Energy: %9.2f\n", energy/100.00);
-    fprintf(stdout,"MFE running time (in seconds): %9.6f\n\n", t1);
+    fprintf(stdout,"MFE runtime (seconds): %9.6f\n\n", t1);
 
     if (rangeIndex != 0)
     {
@@ -532,13 +531,13 @@ int main(int argc, char** argv) {
         t1 = get_seconds();
         subopt_traceback(length, delta); /* Traces the optimal structure*/
         t1 = get_seconds() - t1;
-        fprintf(stdout,"\nTraceback running time (in seconds): %9.6f\n\n", t1);
+        fprintf(stdout,"\nTraceback runtime (seconds): %9.6f\n\n", t1);
         exit(0);	
     }
 
     // only fill the partition function structures if they are needed for BPP
     if(BPP) {
-        fprintf(stdout,"Filling Partition Function structure. . . \n");
+        fprintf(stdout,"Filling Partition Function structure. . . \n\n");
         fflush(stdout);
 
         // malloc the arrays
@@ -546,8 +545,6 @@ int main(int argc, char** argv) {
 
         // fill the arrays
         fill_partition_fn_arrays(length, QB, Q, QM);
-
-        fprintf(stdout,"Done.\n");
 
         fprintf(stdout,"Q[1][n]: %f\n\n", Q[1][length]);
     }
@@ -585,7 +582,7 @@ int main(int argc, char** argv) {
     ofstream outfile;
     outfile.open ( outputfile.c_str() );
 
-    fprintf(stdout, "Writing secondary structure to the file: %s\n", outputfile.c_str());
+    fprintf(stdout, "Writing secondary structure: %s\n", outputfile.c_str());
 
     outfile << length << "\t  dG = " << energy/100.0;
     i = 1;
@@ -596,9 +593,8 @@ int main(int argc, char** argv) {
     outfile << endl;
     outfile.close();
 
-    fprintf(stdout,"Traceback running time (in seconds): %9.6f\n", t1);
+    fprintf(stdout,"Traceback runtime (seconds): %9.6f\n\n", t1);
 
-    fprintf(stdout, "Folding complete\n\n");
     printSequence(length);
     printConstraints(length);
     printStructure(length);
