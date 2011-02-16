@@ -533,18 +533,25 @@ int main(int argc, char** argv) {
 	t1 = get_seconds() - t1;
 
 	std::stringstream ss1, ss2;
-	char suboptfile[1024];
+
 	ss1 << length;
 	ss2 << energy/100.0;
 
 	i = 0;
 
-	strcpy (suboptfile, argv[fileIndex]);
-	strcat ( suboptfile, ".ct");
-	ofstream outfile;
-	outfile.open ( suboptfile );
+	string suboptfile;
+	suboptfile += argv[fileIndex];
 
-	fprintf(stdout, "Writing secondary structure to the file: %s\n", suboptfile);
+	// if an extension exists, replace it with ct
+	if(suboptfile.find(".") != string::npos)
+		suboptfile.erase(suboptfile.rfind("."));
+
+	suboptfile += ".ct";
+
+	ofstream outfile;
+	outfile.open ( suboptfile.c_str() );
+
+	fprintf(stdout, "Writing secondary structure to the file: %s\n", suboptfile.c_str());
 
 	outfile << length << "\t  dG = " << energy/100.0;
 	i = 1;
