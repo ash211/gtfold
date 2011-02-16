@@ -107,7 +107,7 @@ void help() {
     fprintf(stderr,
             "   --bpp                Print base pair probabilities for the predicted structure\n");
     fprintf(stderr,
-            "   --params             Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu [NONFUNCTIONAL]\n");
+            "   --params version     Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu [NONFUNCTIONAL]\n");
 
 
     fprintf(stderr,
