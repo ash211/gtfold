@@ -56,7 +56,7 @@ int delta;
 int num_threads;
 int LENGTH;
 
-unsigned char *RNA1; 
+unsigned char *RNA1;
 unsigned char *RNA; /* Contains RNA string in terms of 0, 1, 2, 3 for A, C, G and U respectively*/
 int *structure; /* An array to contain the optimal structure */
 int *V; /* int V[LENGTH][LENGTH]; */
@@ -88,7 +88,7 @@ void help() {
     fprintf(stderr, "OPTIONS\n");
     fprintf(stderr,
             "   -c, --constraints FILE\n                        Load constraints from FILE.  See Constraint syntax below\n");
-    
+
     fprintf(stderr,
             "   -t, --threads num\n                        Limit number of threads used\n");
     fprintf(stderr,
@@ -505,7 +505,7 @@ int main(int argc, char** argv) {
 	fflush(stdout);
 
 	t1 = get_seconds();
-	energy = calculate(length, fbp, pbp, numfConstraints, numpConstraints); 
+	energy = calculate(length, fbp, pbp, numfConstraints, numpConstraints);
 	t1 = get_seconds() - t1;
 
 	fprintf(stdout,"Done.\n");
@@ -714,7 +714,7 @@ int handle_IUPAC_code(const std::string& s, const int length) {
 		scanf("%c",&reply);
 		return (reply=='n'||reply=='N')?(FAILURE):(SUCCESS);
 	}
-	else 
+	else
 		return SUCCESS;
 }
 
