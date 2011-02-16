@@ -389,6 +389,10 @@ int main(int argc, char** argv) {
 					rangeIndex = ++i;
 				else
 					help();
+			} else {
+				fprintf(stderr, "Unrecognized option: `%s'\n", argv[i]);
+				fprintf(stderr, "Try: `%s --help' for more information.\n", argv[0]);
+				exit(1);
 			}
 
 		} else {
