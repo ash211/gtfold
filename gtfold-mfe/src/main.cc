@@ -537,7 +537,7 @@ int main(int argc, char** argv) {
 
     // only fill the partition function structures if they are needed for BPP
     if(BPP) {
-        fprintf(stdout,"Filling Partition Function structure. . . \n\n");
+        fprintf(stdout,"Filling Partition Function structure... \n\n");
         fflush(stdout);
 
         // malloc the arrays
