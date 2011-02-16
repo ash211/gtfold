@@ -406,20 +406,10 @@ int main(int argc, char** argv) {
 
     if (fileIndex == 0)
         help();
-    if (NOISOLATE == TRUE)
-        fprintf(stdout, "Not allowing isolated base pairs\n");
-    else
-        fprintf(stdout, "Allowing isolated base pairs\n");
-    if (consIndex != 0)
-        fprintf(stdout, "Constraint file index: %d\n", consIndex);
-    if (BPP == TRUE)
-        fprintf(stdout, "Calculating base pair probabilities\n");
 
-    fprintf(stdout, "Opening file: %s\n", argv[fileIndex]);
+    fprintf(stdout, "File: %s\n", argv[fileIndex]);
     cf.open(argv[fileIndex], ios::in);
-    if (cf != NULL)
-        fprintf(stdout, "File opened.\n\n");
-    else {
+    if (cf == NULL) {
         fprintf(stdout, "File open failed.\n\n");
         exit(-1);
     }
@@ -485,18 +475,47 @@ int main(int argc, char** argv) {
 
     initTables(length); /* Initialize global variables */
 
+    ///// Run Configuration Output /////
+
+    fprintf(stdout, "Run Configuration:\n");
+    bool standardRun = TRUE;
+
+    if (NOISOLATE == TRUE) {
+        fprintf(stdout, "- preventing isolated base pairs\n");
+        standardRun = FALSE;
+    }
+
+    if (consIndex != 0) {
+        fprintf(stdout, "- using constraint file: %s\n", argv[consIndex]);
+        standardRun = FALSE;
+    }
+
     int lCD = -1;
     if (lcdIndex != 0) {
         lCD = atoi(argv[lcdIndex]);
-        fprintf(stdout, "Maximum Contact Distance = %d\n\n", lCD);
+        fprintf(stdout, "- maximum contact distance: %d\n", lCD);
+        standardRun = FALSE;
+    }
+
+    if (BPP == TRUE) {
+        fprintf(stdout, "+ calculating base pair probabilities\n");
+        standardRun = FALSE;
     }
 
     int delta = -1;
     if (rangeIndex != 0) {	
         delta = atoi(argv[rangeIndex]);
+        fprintf(stdout, "+ calculating suboptimal structures within %d kcal/mol of MFE\n", delta);
+        standardRun = FALSE;
     }
 
-    fprintf(stdout,"Computing minimum free energy structure ... \n");
+    if(standardRun)
+        fprintf(stdout, "- standard\n");
+
+    ///// end run config output /////
+
+
+    fprintf(stdout,"\nComputing minimum free energy structure ... \n");
     fflush(stdout);
 
     t1 = get_seconds();
