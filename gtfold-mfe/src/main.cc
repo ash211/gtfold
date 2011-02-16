@@ -1,21 +1,21 @@
 /*
- GTfold: compute minimum free energy of RNA secondary structure
- Copyright (C) 2008  David A. Bader
- http://www.cc.gatech.edu/~bader
+GTfold: compute minimum free energy of RNA secondary structure
+Copyright (C) 2008  David A. Bader
+http://www.cc.gatech.edu/~bader
 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 /* Authored by Amrita Mathuriya August 2007 - January 2009.*/
 /* Modified by Sonny Hernandez May 2007 - Aug 2007. All comments added marked by "SH: "*/
@@ -67,19 +67,19 @@ int *indx; /* This array is used to index V array. Here V array is mapped from 2
 int *constraints;
 
 double **QB;  // QB[i][j] is the sum over all possible loops closed by (i,j),
-              // including the summed contributions of their subloops
+// including the summed contributions of their subloops
 double **Q;   // Q[i][j] in addition to the above quantity QB[i][j], Q[i][j]
-              // also includes all configurations with (i,j) not paired
+// also includes all configurations with (i,j) not paired
 double **QM;  // QM[i][j] is the sum of configuration energies from i to j,
-              // assuming that i,j are contained in a multiloop
+// assuming that i,j are contained in a multiloop
 double **P;   // P[i][j] The probability that nucleotides i and j form a basepair
 
 /**
  * Print the hep message and quit.
  */
 void help() {
-	fprintf(stderr,
-			"Usage: gtfold [OPTION]... FILE\n\n");
+    fprintf(stderr,
+            "Usage: gtfold [OPTION]... FILE\n\n");
 
     fprintf(stderr,
             "  FILE is an RNA sequence file.  Single line or FASTA formats are accepted.\n\n");
@@ -87,7 +87,7 @@ void help() {
     fprintf(stderr, "OPTIONS\n");
     fprintf(stderr,
             "   -c, --constraints FILE\n                        Load constraints from FILE.  See Constraint syntax below\n");
-	fprintf(stderr,
+    fprintf(stderr,
             "   -d, --limitCD dist   Set a maximum base pair contact distance to dist. If no\n                        limit is given, base pairs can be over any distance\n");
     fprintf(stderr,
             "   -n, --noisolate      Prevent isolated base pairs from forming\n");
@@ -109,171 +109,171 @@ void help() {
 
     fprintf(stderr,
             "\nConstraint syntax:\n\tF i j k  # force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i j k  # prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i 0 k  # make bases from i to i+k-1 single stranded bases.\n");
-	exit(-1);
+    exit(-1);
 }
 
 /* Function for calculating time */
 double get_seconds() {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	return (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0;
 }
 
 /*Function for printing the sequence*/
 void printSequence(int len) {
-	int i = 1;
-	for (i = 1; i <= len; i++) {
-		if (RNA1[i] == 0)
-			printf("A");
-		else if (RNA1[i] == 1)
-			printf("C");
-		else if (RNA1[i] == 2)
-			printf("G");
-		else if (RNA1 [i] == 3)
-			printf("T");
-		else
-			printf("N");
-	}
-	printf("\n");
+    int i = 1;
+    for (i = 1; i <= len; i++) {
+        if (RNA1[i] == 0)
+            printf("A");
+        else if (RNA1[i] == 1)
+            printf("C");
+        else if (RNA1[i] == 2)
+            printf("G");
+        else if (RNA1 [i] == 3)
+            printf("T");
+        else
+            printf("N");
+    }
+    printf("\n");
 }
 
 /*Function for printing the input constraints*/
 void printConstraints(int len) {
-	int i = 1;
-	for (i = 1; i <= len; i++) {
-		if (constraints[i] > 0 && constraints[i] > i)
-			printf("(");
-		else if (constraints[i] > 0 && constraints[i] < i)
-			printf(")");
-		else if (constraints[i] < 0)
-			printf("x");
-		else
-			printf(".");
-	}
-	printf("\n");
+    int i = 1;
+    for (i = 1; i <= len; i++) {
+        if (constraints[i] > 0 && constraints[i] > i)
+            printf("(");
+        else if (constraints[i] > 0 && constraints[i] < i)
+            printf(")");
+        else if (constraints[i] < 0)
+            printf("x");
+        else
+            printf(".");
+    }
+    printf("\n");
 }
 
 /*Function for printing the predicted structure*/
 void printStructure(int len) {
-	int i = 1;
-	for (i = 1; i <= len; i++) {
-		if (structure[i] > 0 && structure[i] > i)
-			printf("(");
-		else if (structure[i] > 0 && structure[i] < i)
-			printf(")");
-		else
-			printf(".");
-	}
-	printf("\n");
+    int i = 1;
+    for (i = 1; i <= len; i++) {
+        if (structure[i] > 0 && structure[i] > i)
+            printf("(");
+        else if (structure[i] > 0 && structure[i] < i)
+            printf(")");
+        else
+            printf(".");
+    }
+    printf("\n");
 }
 
 /* Initialize global variables. */
 void init_variables(int len) {
 
-	int i;
+    int i;
 
-	LENGTH = len + 1;
+    LENGTH = len + 1;
 
-	RNA = (unsigned char *) malloc(LENGTH * sizeof(unsigned char));
-	if (RNA == NULL) {
-		perror("Cannot allocate variable 'RNA'");
-		exit(-1);
-	}
-	RNA1 = (unsigned char *) malloc(LENGTH * sizeof(unsigned char));
-	if (RNA1 == NULL) {
-		perror("Cannot allocate variable 'RNA'");
-		exit(-1);
-	}
-	structure = (int *) malloc(LENGTH * sizeof(int));
-	if (structure == NULL) {
-		perror("Cannot allocate variable 'structure'");
-		exit(-1);
-	}
+    RNA = (unsigned char *) malloc(LENGTH * sizeof(unsigned char));
+    if (RNA == NULL) {
+        perror("Cannot allocate variable 'RNA'");
+        exit(-1);
+    }
+    RNA1 = (unsigned char *) malloc(LENGTH * sizeof(unsigned char));
+    if (RNA1 == NULL) {
+        perror("Cannot allocate variable 'RNA'");
+        exit(-1);
+    }
+    structure = (int *) malloc(LENGTH * sizeof(int));
+    if (structure == NULL) {
+        perror("Cannot allocate variable 'structure'");
+        exit(-1);
+    }
 
-	V = (int *) malloc(((LENGTH - 1) * (LENGTH) / 2 + 1) * sizeof(int));
-	if (V == NULL) {
-		perror("Cannot allocate variable 'V'");
-		exit(-1);
-	}
+    V = (int *) malloc(((LENGTH - 1) * (LENGTH) / 2 + 1) * sizeof(int));
+    if (V == NULL) {
+        perror("Cannot allocate variable 'V'");
+        exit(-1);
+    }
 
-	W = (int *) malloc(LENGTH * sizeof(int));
-	if (W == NULL) {
-		perror("Cannot allocate variable 'W'");
-		exit(-1);
-	}
+    W = (int *) malloc(LENGTH * sizeof(int));
+    if (W == NULL) {
+        perror("Cannot allocate variable 'W'");
+        exit(-1);
+    }
 
-	VBI = (int **) malloc(LENGTH * sizeof(int *));
-	if (VBI == NULL) {
-		perror("Cannot allocate variable 'VBI'");
-		exit(-1);
-	}
-	for (i = 0; i < LENGTH; i++) {
-		VBI[i] = (int *) malloc(LENGTH * sizeof(int));
-		if (VBI[i] == NULL) {
-			perror("Cannot allocate variable 'VBI[i]'");
-			exit(-1);
-		}
-	}
+    VBI = (int **) malloc(LENGTH * sizeof(int *));
+    if (VBI == NULL) {
+        perror("Cannot allocate variable 'VBI'");
+        exit(-1);
+    }
+    for (i = 0; i < LENGTH; i++) {
+        VBI[i] = (int *) malloc(LENGTH * sizeof(int));
+        if (VBI[i] == NULL) {
+            perror("Cannot allocate variable 'VBI[i]'");
+            exit(-1);
+        }
+    }
 
-	VM = (int **) malloc(LENGTH * sizeof(int *));
-	if (VM == NULL) {
-		perror("Cannot allocate variable 'VM'");
-		exit(-1);
-	}
-	for (i = 0; i < LENGTH; i++) {
-		VM[i] = (int *) malloc(LENGTH * sizeof(int));
-		if (VM[i] == NULL) {
-			perror("Cannot allocate variable 'VM[i]'");
-			exit(-1);
-		}
-	}
+    VM = (int **) malloc(LENGTH * sizeof(int *));
+    if (VM == NULL) {
+        perror("Cannot allocate variable 'VM'");
+        exit(-1);
+    }
+    for (i = 0; i < LENGTH; i++) {
+        VM[i] = (int *) malloc(LENGTH * sizeof(int));
+        if (VM[i] == NULL) {
+            perror("Cannot allocate variable 'VM[i]'");
+            exit(-1);
+        }
+    }
 
-	WM = (int **) malloc(LENGTH * sizeof(int *));
-	if (WM == NULL) {
-		perror("Cannot allocate variable 'WM'");
-		exit(-1);
-	}
-	for (i = 0; i < LENGTH; i++) {
-		WM[i] = (int *) malloc(LENGTH * sizeof(int));
-		if (WM[i] == NULL) {
-			perror("Cannot allocate variable 'WM[i]'");
-			exit(-1);
-		}
-	}
+    WM = (int **) malloc(LENGTH * sizeof(int *));
+    if (WM == NULL) {
+        perror("Cannot allocate variable 'WM'");
+        exit(-1);
+    }
+    for (i = 0; i < LENGTH; i++) {
+        WM[i] = (int *) malloc(LENGTH * sizeof(int));
+        if (WM[i] == NULL) {
+            perror("Cannot allocate variable 'WM[i]'");
+            exit(-1);
+        }
+    }
 
-	indx = (int *) malloc(LENGTH * sizeof(int));
-	if (indx == NULL) {
-		perror("Cannot allocate variable 'indx'");
-		exit(-1);
-	}
+    indx = (int *) malloc(LENGTH * sizeof(int));
+    if (indx == NULL) {
+        perror("Cannot allocate variable 'indx'");
+        exit(-1);
+    }
 
-	constraints = (int*) malloc((len + 1) * sizeof(int));
-	if (constraints == NULL) {
-		perror("Cannot allocate variable 'constraints'");
-		exit(-1);
-	}
+    constraints = (int*) malloc((len + 1) * sizeof(int));
+    if (constraints == NULL) {
+        perror("Cannot allocate variable 'constraints'");
+        exit(-1);
+    }
 }
 
 /* deallocate global variables */
 void free_variables() {
-	int i;
+    int i;
 
-	free(indx);
-	for (i = 0; i < LENGTH; i++)
-		free(WM[i]);
-	free(WM);
-	for (i = 0; i < LENGTH; i++)
-		free(VM[i]);
-	free(VM);
-	for (i = 0; i < LENGTH; i++)
-		free(VBI[i]);
-	free(VBI);
-	free(W);
-	free(V);
-	free(constraints);
-	free(structure);
-	free(RNA);
-	free(RNA1);
+    free(indx);
+    for (i = 0; i < LENGTH; i++)
+        free(WM[i]);
+    free(WM);
+    for (i = 0; i < LENGTH; i++)
+        free(VM[i]);
+    free(VM);
+    for (i = 0; i < LENGTH; i++)
+        free(VBI[i]);
+    free(VBI);
+    free(W);
+    free(V);
+    free(constraints);
+    free(structure);
+    free(RNA);
+    free(RNA1);
 }
 
 void init_partition_function_variables(int length) {
@@ -319,56 +319,56 @@ void free_partition_function_variables(int length) {
  *  6) Then it generates .ct file from the 1D array structure.
  *  */
 int main(int argc, char** argv) {
-	int i;
-	ifstream cf;
-	int length;
-	string s, seq;
-	int energy;
-	double t1;
-	NOISOLATE = FALSE;
-	BPP = FALSE;
-	QUIET = FALSE;
+    int i;
+    ifstream cf;
+    int length;
+    string s, seq;
+    int energy;
+    double t1;
+    NOISOLATE = FALSE;
+    BPP = FALSE;
+    QUIET = FALSE;
 
-	fprintf(stdout,
-			"GTfold: A Scalable Multicore Code for RNA Secondary Structure Prediction\n");
-	fprintf(
-			stdout,
-			"(c) 2007-2010  D.A. Bader, S. Mallidi, A. Mathuriya, C.E. Heitsch, S.C. Harvey\n");
-	fprintf(stdout, "Georgia Institute of Technology\n\n");
+    fprintf(stdout,
+            "GTfold: A Scalable Multicore Code for RNA Secondary Structure Prediction\n");
+    fprintf(
+            stdout,
+            "(c) 2007-2010  D.A. Bader, S. Mallidi, A. Mathuriya, C.E. Heitsch, S.C. Harvey\n");
+    fprintf(stdout, "Georgia Institute of Technology\n\n");
 
-	/* Reading command line arguments */
-	if (argc < 2)
-		help();
+    /* Reading command line arguments */
+    if (argc < 2)
+        help();
 
-	int fileIndex = 0, consIndex = 0, dataIndex = 0, lcdIndex = 0;
-	int rangeIndex = 0, thIndex = 0, outputFileIndex = 0;
+    int fileIndex = 0, consIndex = 0, dataIndex = 0, lcdIndex = 0;
+    int rangeIndex = 0, thIndex = 0, outputFileIndex = 0;
 
-	i = 1;
+    i = 1;
     while (i < argc) {
         if (argv[i][0] == '-') {
             if        (strcmp(argv[i], "--noisolate") == 0 ||
-                       strcmp(argv[i], "-n") == 0) {
+                    strcmp(argv[i], "-n") == 0) {
                 NOISOLATE = TRUE;
             } else if (strcmp(argv[i], "--output") == 0 ||
-                       strcmp(argv[i], "-o") == 0) {
+                    strcmp(argv[i], "-o") == 0) {
                 if (i < argc)
                     outputFileIndex = ++i;
                 else
                     help();
             } else if (strcmp(argv[i], "--quiet") == 0 ||
-                       strcmp(argv[i], "-q") == 0) {
+                    strcmp(argv[i], "-q") == 0) {
                 QUIET = TRUE;
             } else if (strcmp(argv[i], "--help") == 0 ||
-                       strcmp(argv[i], "-h") == 0) {
+                    strcmp(argv[i], "-h") == 0) {
                 help();
             } else if (strcmp(argv[i], "--constraints") == 0 ||
-                       strcmp(argv[i], "-c") == 0) {
+                    strcmp(argv[i], "-c") == 0) {
                 if (i < argc)
                     consIndex = ++i;
                 else
                     help();
             } else if (strcmp(argv[i], "--threads") == 0 ||
-                       strcmp(argv[i], "-t") == 0) {
+                    strcmp(argv[i], "-t") == 0) {
                 if (i < argc)
                     thIndex = ++i;
                 else
@@ -380,7 +380,7 @@ int main(int argc, char** argv) {
                 else
                     help();
             } else if (strcmp(argv[i], "--limitCD") == 0 ||
-                       strcmp(argv[i], "-d") == 0) {
+                    strcmp(argv[i], "-d") == 0) {
                 if (i < argc)
                     lcdIndex = ++i;
                 else
@@ -404,118 +404,118 @@ int main(int argc, char** argv) {
         i++;
     }
 
-	if (fileIndex == 0)
-		help();
-	if (NOISOLATE == TRUE)
-		fprintf(stdout, "Not allowing isolated base pairs\n");
-	else
-		fprintf(stdout, "Allowing isolated base pairs\n");
-	if (consIndex != 0)
-		fprintf(stdout, "Constraint file index: %d\n", consIndex);
-	if (BPP == TRUE)
-		fprintf(stdout, "Calculating base pair probabilities\n");
+    if (fileIndex == 0)
+        help();
+    if (NOISOLATE == TRUE)
+        fprintf(stdout, "Not allowing isolated base pairs\n");
+    else
+        fprintf(stdout, "Allowing isolated base pairs\n");
+    if (consIndex != 0)
+        fprintf(stdout, "Constraint file index: %d\n", consIndex);
+    if (BPP == TRUE)
+        fprintf(stdout, "Calculating base pair probabilities\n");
 
-	fprintf(stdout, "Opening file: %s\n", argv[fileIndex]);
-	cf.open(argv[fileIndex], ios::in);
-	if (cf != NULL)
-		fprintf(stdout, "File opened.\n\n");
-	else {
-		fprintf(stdout, "File open failed.\n\n");
-		exit(-1);
-	}
+    fprintf(stdout, "Opening file: %s\n", argv[fileIndex]);
+    cf.open(argv[fileIndex], ios::in);
+    if (cf != NULL)
+        fprintf(stdout, "File opened.\n\n");
+    else {
+        fprintf(stdout, "File open failed.\n\n");
+        exit(-1);
+    }
 
-	seq = "";
-	s = "";
+    seq = "";
+    s = "";
 
-	//Handle FASTA input
-	char ss[10000];
-	cf.getline(ss, 10000);
-	if (ss[0] != '>') {
-		char *fline;
-		fline = strtok(ss, " ");
-		while (fline != NULL) {
-			seq.append(fline);
-			fline = strtok(NULL, " ");
-		}
-	}
+    //Handle FASTA input
+    char ss[10000];
+    cf.getline(ss, 10000);
+    if (ss[0] != '>') {
+        char *fline;
+        fline = strtok(ss, " ");
+        while (fline != NULL) {
+            seq.append(fline);
+            fline = strtok(NULL, " ");
+        }
+    }
 
-	while (!cf.eof()) {
-		cf >> s;
-		seq.append(s);
-		s = "";
-	}
-	s = seq;
+    while (!cf.eof()) {
+        cf >> s;
+        seq.append(s);
+        s = "";
+    }
+    s = seq;
 
-	length = s.length();
+    length = s.length();
 
-	init_variables(length);
+    init_variables(length);
 
-	cout << "Sequence: " << s << endl;
-	fprintf(stdout, "Sequence length: %5d\n\n", length);
+    cout << "Sequence: " << s << endl;
+    fprintf(stdout, "Sequence length: %5d\n\n", length);
 
-	cf.close();
+    cf.close();
 
-	int **fbp = NULL, **pbp = NULL;
-	int numfConstraints = 0, numpConstraints = 0;
+    int **fbp = NULL, **pbp = NULL;
+    int numfConstraints = 0, numpConstraints = 0;
 
-	if (consIndex != 0) {
-		int r = initialize_constraints(&fbp, &pbp, numpConstraints, numfConstraints, argv[consIndex]);
-		if (r == ERR_OPEN_FILE) {
-			free_variables();
-			exit(-1);
-		}
-		else if (r == NO_CONS_FOUND) {
-			fprintf(stdout, "constraints file empty!\n");
-		}
-	}
-	
-	if (thIndex > 0) {
-		num_threads = atoi(argv[thIndex]);
-	}
-	
-	if (handle_IUPAC_code(s, length)  == FAILURE) {
-		free_variables();
-		exit(0);
-	}
-		
-	if(USERDATA==TRUE)
-		populate(argv[dataIndex],true);
-	else
-		populate("Turner99",false); /* Defined in loader.cc file to read in the thermodynamic parameter values from the tables in the ../data directory. */
+    if (consIndex != 0) {
+        int r = initialize_constraints(&fbp, &pbp, numpConstraints, numfConstraints, argv[consIndex]);
+        if (r == ERR_OPEN_FILE) {
+            free_variables();
+            exit(-1);
+        }
+        else if (r == NO_CONS_FOUND) {
+            fprintf(stdout, "constraints file empty!\n");
+        }
+    }
 
-	initTables(length); /* Initialize global variables */
-	
-	int lCD = -1;
-	if (lcdIndex != 0) {
-		lCD = atoi(argv[lcdIndex]);
-		fprintf(stdout, "Maximum Contact Distance = %d\n\n", lCD);
-	}
-	
-	int delta = -1;
-	if (rangeIndex != 0) {	
-		delta = atoi(argv[rangeIndex]);
-	}
+    if (thIndex > 0) {
+        num_threads = atoi(argv[thIndex]);
+    }
 
-	fprintf(stdout,"Computing minimum free energy structure ... \n");
-	fflush(stdout);
+    if (handle_IUPAC_code(s, length)  == FAILURE) {
+        free_variables();
+        exit(0);
+    }
 
-	t1 = get_seconds();
-	energy = calculate(length, fbp, pbp, numfConstraints, numpConstraints);
-	t1 = get_seconds() - t1;
+    if(USERDATA==TRUE)
+        populate(argv[dataIndex],true);
+    else
+        populate("Turner99",false); /* Defined in loader.cc file to read in the thermodynamic parameter values from the tables in the ../data directory. */
 
-	fprintf(stdout,"Done.\n");
-	fprintf(stdout,"Minimum Free Energy = %9.2f\n", energy/100.00);
-	fprintf(stdout,"MFE running time (in seconds): %9.6f\n\n", t1);
+    initTables(length); /* Initialize global variables */
 
-	if (rangeIndex != 0)
-	{
-		fprintf(stdout,"Computing suboptimal structures in range %d ...\n\n", delta);
-		t1 = get_seconds();
-		subopt_traceback(length, delta); /* Traces the optimal structure*/
-		t1 = get_seconds() - t1;
-		fprintf(stdout,"\nTraceback running time (in seconds): %9.6f\n\n", t1);
-		exit(0);	
-	}
+    int lCD = -1;
+    if (lcdIndex != 0) {
+        lCD = atoi(argv[lcdIndex]);
+        fprintf(stdout, "Maximum Contact Distance = %d\n\n", lCD);
+    }
+
+    int delta = -1;
+    if (rangeIndex != 0) {	
+        delta = atoi(argv[rangeIndex]);
+    }
+
+    fprintf(stdout,"Computing minimum free energy structure ... \n");
+    fflush(stdout);
+
+    t1 = get_seconds();
+    energy = calculate(length, fbp, pbp, numfConstraints, numpConstraints);
+    t1 = get_seconds() - t1;
+
+    fprintf(stdout,"Done.\n");
+    fprintf(stdout,"Minimum Free Energy = %9.2f\n", energy/100.00);
+    fprintf(stdout,"MFE running time (in seconds): %9.6f\n\n", t1);
+
+    if (rangeIndex != 0)
+    {
+        fprintf(stdout,"Computing suboptimal structures in range %d ...\n\n", delta);
+        t1 = get_seconds();
+        subopt_traceback(length, delta); /* Traces the optimal structure*/
+        t1 = get_seconds() - t1;
+        fprintf(stdout,"\nTraceback running time (in seconds): %9.6f\n\n", t1);
+        exit(0);	
+    }
 
     // only fill the partition function structures if they are needed for BPP
     if(BPP) {
@@ -534,19 +534,19 @@ int main(int argc, char** argv) {
     }
 
 
-	t1 = get_seconds();
-	trace(length); /* Traces the optimal structure*/
-	t1 = get_seconds() - t1;
+    t1 = get_seconds();
+    trace(length); /* Traces the optimal structure*/
+    t1 = get_seconds() - t1;
 
-	std::stringstream ss1, ss2;
+    std::stringstream ss1, ss2;
 
-	ss1 << length;
-	ss2 << energy/100.0;
+    ss1 << length;
+    ss2 << energy/100.0;
 
-	i = 0;
+    i = 0;
 
     // the output filename
-	string outputfile;
+    string outputfile;
 
     // use given output file
     if( outputFileIndex != 0)
@@ -566,23 +566,23 @@ int main(int argc, char** argv) {
     ofstream outfile;
     outfile.open ( outputfile.c_str() );
 
-	fprintf(stdout, "Writing secondary structure to the file: %s\n", outputfile.c_str());
+    fprintf(stdout, "Writing secondary structure to the file: %s\n", outputfile.c_str());
 
-	outfile << length << "\t  dG = " << energy/100.0;
-	i = 1;
-	while ( i <= length ) {
-		outfile << endl << i << "\t" << s[i-1] << "\t" << i-1 << "\t" << (i+1)%(length+1) << "\t" << structure[i] << "\t" << i;
-		i++;
-	}
-	outfile << endl;
-	outfile.close();
+    outfile << length << "\t  dG = " << energy/100.0;
+    i = 1;
+    while ( i <= length ) {
+        outfile << endl << i << "\t" << s[i-1] << "\t" << i-1 << "\t" << (i+1)%(length+1) << "\t" << structure[i] << "\t" << i;
+        i++;
+    }
+    outfile << endl;
+    outfile.close();
 
-	fprintf(stdout,"Traceback running time (in seconds): %9.6f\n", t1);
+    fprintf(stdout,"Traceback running time (in seconds): %9.6f\n", t1);
 
-	fprintf(stdout, "Folding complete\n\n");
-	printSequence(length);
-	printConstraints(length);
-	printStructure(length);
+    fprintf(stdout, "Folding complete\n\n");
+    printSequence(length);
+    printConstraints(length);
+    printStructure(length);
 
     if(BPP) {
         fillBasePairProbabilities(length, structure, Q, QB, QM, P);
@@ -592,170 +592,170 @@ int main(int argc, char** argv) {
         free_partition_function_variables(length);
     }
 
-	free_variables();
+    free_variables();
 
-	return 0;
+    return 0;
 }
 
 
 int initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& numfConstraints, const char* constr_file) {
-	ifstream cfcons;
+    ifstream cfcons;
 
-	fprintf(stdout, "Running with constraints\n");
-	//fprintf(stdout, "Opening constraint file: %s\n", argv[consIndex]);
-	fprintf(stdout, "Opening constraint file: %s\n", constr_file);
+    fprintf(stdout, "Running with constraints\n");
+    //fprintf(stdout, "Opening constraint file: %s\n", argv[consIndex]);
+    fprintf(stdout, "Opening constraint file: %s\n", constr_file);
 
-	cfcons.open(constr_file, ios::in);
-	if (cfcons != NULL)
-		fprintf(stdout, "Constraint file opened.\n");
-	else {
-		fprintf(stderr, "Error opening constraint file\n\n");
-		cfcons.close();
-		return ERR_OPEN_FILE; //exit(-1);
-	}
+    cfcons.open(constr_file, ios::in);
+    if (cfcons != NULL)
+        fprintf(stdout, "Constraint file opened.\n");
+    else {
+        fprintf(stderr, "Error opening constraint file\n\n");
+        cfcons.close();
+        return ERR_OPEN_FILE; //exit(-1);
+    }
 
-	char cons[100];
+    char cons[100];
 
-	while (!cfcons.eof()) {
-		cfcons.getline(cons, 100);
-		if (cons[0] == 'F' || cons[0] == 'f')
-			numfConstraints++;
-		if (cons[0] == 'P' || cons[0] == 'p')
-			numpConstraints++;
-	}
-	cfcons.close();
+    while (!cfcons.eof()) {
+        cfcons.getline(cons, 100);
+        if (cons[0] == 'F' || cons[0] == 'f')
+            numfConstraints++;
+        if (cons[0] == 'P' || cons[0] == 'p')
+            numpConstraints++;
+    }
+    cfcons.close();
 
-	fprintf(stdout, "Number of Constraints given: %d\n\n", numfConstraints
-			+ numpConstraints);
-	if (numfConstraints + numpConstraints != 0)
-		fprintf(stdout, "Reading Constraints.\n");
-	else {
-		fprintf(stderr, "No Constraints found.\n\n");
-		return NO_CONS_FOUND;
-	}
+    fprintf(stdout, "Number of Constraints given: %d\n\n", numfConstraints
+            + numpConstraints);
+    if (numfConstraints + numpConstraints != 0)
+        fprintf(stdout, "Reading Constraints.\n");
+    else {
+        fprintf(stderr, "No Constraints found.\n\n");
+        return NO_CONS_FOUND;
+    }
 
-	*fbp = (int**) malloc(numfConstraints * sizeof(int*));
-	*pbp = (int**) malloc(numpConstraints * sizeof(int*));
+    *fbp = (int**) malloc(numfConstraints * sizeof(int*));
+    *pbp = (int**) malloc(numpConstraints * sizeof(int*));
 
-	int fit = 0, pit = 0, it = 0;
+    int fit = 0, pit = 0, it = 0;
 
-	for (it = 0; it < numfConstraints; it++) {
-		(*fbp)[it] = (int*) malloc(2* sizeof (int));
-	}
-	for(it=0; it<numpConstraints; it++) {
-		(*pbp)[it] = (int*)malloc(2*sizeof(int));
-	}
-	cfcons.open(constr_file, ios::in);
+    for (it = 0; it < numfConstraints; it++) {
+        (*fbp)[it] = (int*) malloc(2* sizeof (int));
+    }
+    for(it=0; it<numpConstraints; it++) {
+        (*pbp)[it] = (int*)malloc(2*sizeof(int));
+    }
+    cfcons.open(constr_file, ios::in);
 
-	while(!cfcons.eof()) {
-		cfcons.getline(cons,100);
-		char *p=strtok(cons, " ");
-		p = strtok(NULL, " ");
-		if(cons[0]=='F' || cons[0]=='f') {
-			int fit1=0;
-			while(p!=NULL) {
-				(*fbp)[fit][fit1++] = atoi(p);
-				p = strtok(NULL, " ");
-			}
-			fit++;
-		}
-		if( cons[0]=='P' || cons[0]=='p') {
-			int pit1=0;
-			while(p!=NULL) {
-				(*pbp)[pit][pit1++] = atoi(p);
-				p = strtok(NULL, " ");
-			}
-			pit++;
-		}
-	}
+    while(!cfcons.eof()) {
+        cfcons.getline(cons,100);
+        char *p=strtok(cons, " ");
+        p = strtok(NULL, " ");
+        if(cons[0]=='F' || cons[0]=='f') {
+            int fit1=0;
+            while(p!=NULL) {
+                (*fbp)[fit][fit1++] = atoi(p);
+                p = strtok(NULL, " ");
+            }
+            fit++;
+        }
+        if( cons[0]=='P' || cons[0]=='p') {
+            int pit1=0;
+            while(p!=NULL) {
+                (*pbp)[pit][pit1++] = atoi(p);
+                p = strtok(NULL, " ");
+            }
+            pit++;
+        }
+    }
 
-	fprintf(stdout, "Forced base pairs: ");
-	for(it=0; it<numfConstraints; it++) {
-		for(int k=1;k<= (*fbp)[it][2];k++)
-			fprintf(stdout, "(%d,%d) ", (*fbp)[it][0]+k-1, (*fbp)[it][1]-k+1);
-	}
-	fprintf(stdout, "\nProhibited base pairs: ");
-	for(it=0; it<numpConstraints; it++) {
-		for(int k=1;k<= (*pbp)[it][2];k++)
-			fprintf(stdout, "(%d,%d) ", (*pbp)[it][0]+k-1, (*pbp)[it][1]-k+1);
-	}
-	fprintf(stdout, "\n\n");
-	
-	return SUCCESS;
+    fprintf(stdout, "Forced base pairs: ");
+    for(it=0; it<numfConstraints; it++) {
+        for(int k=1;k<= (*fbp)[it][2];k++)
+            fprintf(stdout, "(%d,%d) ", (*fbp)[it][0]+k-1, (*fbp)[it][1]-k+1);
+    }
+    fprintf(stdout, "\nProhibited base pairs: ");
+    for(it=0; it<numpConstraints; it++) {
+        for(int k=1;k<= (*pbp)[it][2];k++)
+            fprintf(stdout, "(%d,%d) ", (*pbp)[it][0]+k-1, (*pbp)[it][1]-k+1);
+    }
+    fprintf(stdout, "\n\n");
+
+    return SUCCESS;
 }
 
 int handle_IUPAC_code(const std::string& s, const int length) {
-	int* stack_unidentified_base;
-	int stack_count=0;
-	bool unspecd=0;
-	stack_unidentified_base=new int[length];
+    int* stack_unidentified_base;
+    int stack_count=0;
+    bool unspecd=0;
+    stack_unidentified_base=new int[length];
 
-	/* SH: Conversion of the sequence to numerical values. */
-	for(int i = 1; i <= length; i++) {
-		RNA[i] = getBase(s.substr(i-1,1));
-		RNA1[i] = getBase1(s.substr(i-1,1));
-		if (RNA[i]=='X') {
-			fprintf(stderr,"ERROR: Base unrecognized\n");
-			return FAILURE; //exit(0);
-		}
-		else if(RNA[i]!='X' && RNA1[i]=='N'){
-			unspecd=1;
-			stack_unidentified_base[stack_count]=i;
-			stack_count++;
-		}
+    /* SH: Conversion of the sequence to numerical values. */
+    for(int i = 1; i <= length; i++) {
+        RNA[i] = getBase(s.substr(i-1,1));
+        RNA1[i] = getBase1(s.substr(i-1,1));
+        if (RNA[i]=='X') {
+            fprintf(stderr,"ERROR: Base unrecognized\n");
+            return FAILURE; //exit(0);
+        }
+        else if(RNA[i]!='X' && RNA1[i]=='N'){
+            unspecd=1;
+            stack_unidentified_base[stack_count]=i;
+            stack_count++;
+        }
 
-	}
-	if (unspecd) {
-		printf("IUPAC codes have been detected at positions: ");
-		
-		for(int i=0;i<stack_count;i++) {
-			printf("%d , ",stack_unidentified_base[i]);
-		}
-		printf("\n");
-		
-		if (QUIET == TRUE) {
-			return SUCCESS;
-		}
-		
-		printf("You may wish to resubmit the sequence with fully specified positions. \n");
-		printf("Alternatively, GTfold will fold the sequence under the standard assumption that these ambiguous positions do not pair.\n");
-		printf("Do you wish to continue with the current computation? <Y/N>");
+    }
+    if (unspecd) {
+        printf("IUPAC codes have been detected at positions: ");
 
-		char reply;
-		scanf("%c",&reply);
-		return (reply=='n'||reply=='N')?(FAILURE):(SUCCESS);
-	}
-	else
-		return SUCCESS;
+        for(int i=0;i<stack_count;i++) {
+            printf("%d , ",stack_unidentified_base[i]);
+        }
+        printf("\n");
+
+        if (QUIET == TRUE) {
+            return SUCCESS;
+        }
+
+        printf("You may wish to resubmit the sequence with fully specified positions. \n");
+        printf("Alternatively, GTfold will fold the sequence under the standard assumption that these ambiguous positions do not pair.\n");
+        printf("Do you wish to continue with the current computation? <Y/N>");
+
+        char reply;
+        scanf("%c",&reply);
+        return (reply=='n'||reply=='N')?(FAILURE):(SUCCESS);
+    }
+    else
+        return SUCCESS;
 }
 
 void force_noncanonical_basepair(const char* ncb, int len) {
-	if (ncb == 0 || ncb[0] == '\0') return;
-	
-	printf("Permitted noncanonical base pairs : \n");	
+    if (ncb == 0 || ncb[0] == '\0') return;
 
-	std::string ncb1(ncb);
-	
-	for (unsigned int i =0 ; i < ncb1.size(); ++i) {
-		ncb1[i] = toupper(ncb1[i]);
-	}
-	
-	std::vector<std::string> tokens;
-	tokenize(ncb1, tokens, ",");	
-	
-	for (unsigned int i = 0; i < tokens.size(); ++i) {
-		trim_spaces(tokens[i]);
-		if (tokens.size() != 3 && tokens[i][1] != '-')
-			// ignore
-			continue;
+    printf("Permitted noncanonical base pairs : \n");	
 
-		char b1 = getBase(tokens[i].substr(0,1));
-		char b2 = getBase(tokens[i].substr(2,1));
+    std::string ncb1(ncb);
 
-		int r1=0;
-		r1 = update_chPair(b1, b2);			
-		if (r1 == 1)
-			printf("(%c,%c) ",  tokens[i][0], tokens[i][2]) ;
-	}
-	printf("\n\n");
+    for (unsigned int i =0 ; i < ncb1.size(); ++i) {
+        ncb1[i] = toupper(ncb1[i]);
+    }
+
+    std::vector<std::string> tokens;
+    tokenize(ncb1, tokens, ",");	
+
+    for (unsigned int i = 0; i < tokens.size(); ++i) {
+        trim_spaces(tokens[i]);
+        if (tokens.size() != 3 && tokens[i][1] != '-')
+            // ignore
+            continue;
+
+        char b1 = getBase(tokens[i].substr(0,1));
+        char b2 = getBase(tokens[i].substr(2,1));
+
+        int r1=0;
+        r1 = update_chPair(b1, b2);			
+        if (r1 == 1)
+            printf("(%c,%c) ",  tokens[i][0], tokens[i][2]) ;
+    }
+    printf("\n\n");
 }
