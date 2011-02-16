@@ -104,8 +104,6 @@ void help() {
     fprintf(stderr,
             "   --bpp                Print base pair probabilities for the predicted structure\n");
     fprintf(stderr,
-            "   --params version     Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu [NONFUNCTIONAL]\n");
-    fprintf(stderr,
             "   --subopt range       Calculate suboptimal structures within 'range' kcal/mol of the mfe\n");
 
 
@@ -342,7 +340,7 @@ int main(int argc, char** argv) {
 	if (argc < 2)
 		help();
 
-	int fileIndex = 0, consIndex = 0, dataIndex = 0, paramsIndex=0, lcdIndex = 0;
+	int fileIndex = 0, consIndex = 0, dataIndex = 0, lcdIndex = 0;
 	int rangeIndex = 0, thIndex = 0;
 
 	i = 1;
@@ -361,12 +359,6 @@ int main(int argc, char** argv) {
                        strcmp(argv[i], "-c") == 0) {
                 if (i < argc)
                     consIndex = ++i;
-                else
-                    help();
-            } else if (strcmp(argv[i], "--params")==0) {
-                PARAMS = TRUE;
-                if (i < argc)
-                    paramsIndex = ++i;
                 else
                     help();
             } else if (strcmp(argv[i], "--threads") == 0 ||
@@ -482,8 +474,6 @@ int main(int argc, char** argv) {
 		
 	if(USERDATA==TRUE)
 		populate(argv[dataIndex],true);
-	else if (PARAMS == TRUE)
-		populate(argv[paramsIndex],false);
 	else
 		populate("Turner99",false); /* Defined in loader.cc file to read in the thermodynamic parameter values from the tables in the ../data directory. */
 
