@@ -450,7 +450,6 @@ int main(int argc, char** argv) {
 
     init_variables(length);
 
-    cout << "Sequence: " << s << endl;
     fprintf(stdout, "Sequence length: %5d\n\n", length);
 
     cf.close();
