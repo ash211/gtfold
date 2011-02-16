@@ -52,7 +52,6 @@ enum BOOL PARAMS;
 enum BOOL LIMIT_DISTANCE;
 enum BOOL QUIET;
 
-int delta;
 int num_threads;
 int LENGTH;
 
