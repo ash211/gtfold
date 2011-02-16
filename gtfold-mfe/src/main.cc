@@ -102,9 +102,10 @@ void help() {
 
     fprintf(stderr, "\nBETA OPTIONS\n");
     fprintf(stderr,
-            "   --bpp                Print base pair probabilities for the predicted structure\n");
+            "   --bpp                Calculate base pair probabilities\n");
     fprintf(stderr,
-            "   --subopt range       Calculate suboptimal structures within 'range' kcal/mol of the mfe\n");
+            "   --subopt range       Calculate suboptimal structures within 'range' kcal/mol\n");
+    fprintf(stderr, "                        of the mfe\n");
 
 
     fprintf(stderr,
