@@ -40,7 +40,6 @@ void fill_partition_fn_arrays(int len, double** QB, double** Q, double** QM) {
     // loop iterators
     int i,j,d,e,l;
 
-    fprintf(stdout, "Initializing PF arrays. . .");
     // initialize arrays
     for(i=0; i<len; ++i) {
         for(j=0; j<len; ++j) {
@@ -54,12 +53,8 @@ void fill_partition_fn_arrays(int len, double** QB, double** Q, double** QM) {
     for(i=1; i<len; ++i)
         Q[i][i-1] = 1;
 
-    fprintf(stdout, " done.\n");
-    fprintf(stdout, "Filling PF arrays. . .");
-
     // fill in values in the array
     for(l=1; l<=len; ++l) {
-        fprintf(stdout, "Running with l=%d\n", l);
         for(i=1; i<= len-l+1; ++i) {
 
             int j = i+l-1;
@@ -161,7 +156,8 @@ void fillBasePairProbabilities(int length, int *structure, double **Q, double **
                 }
             }
 
-            printf("P[%d][%d]: %f\n", h, l, P[h][l]);
+            // Print the entire matrix
+            //printf("P[%d][%d]: %f\n", h, l, P[h][l]);
 		}
 	}
 }
