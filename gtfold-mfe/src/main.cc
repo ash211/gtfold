@@ -92,6 +92,8 @@ void help() {
     fprintf(stderr,
             "   -n, --noisolate      Prevent isolated base pairs from forming\n");
     fprintf(stderr,
+            "   -o, --output FILE    Output to FILE (default output is to a .ct extension)\n");
+    fprintf(stderr,
             "   -q, --quiet          Run in non-interactive mode\n");
     fprintf(stderr,
             "   -t, --threads num    Limit number of threads used\n");
@@ -339,7 +341,7 @@ int main(int argc, char** argv) {
 		help();
 
 	int fileIndex = 0, consIndex = 0, dataIndex = 0, lcdIndex = 0;
-	int rangeIndex = 0, thIndex = 0;
+	int rangeIndex = 0, thIndex = 0, outputFileIndex = 0;
 
 	i = 1;
     while (i < argc) {
@@ -347,6 +349,12 @@ int main(int argc, char** argv) {
             if        (strcmp(argv[i], "--noisolate") == 0 ||
                        strcmp(argv[i], "-n") == 0) {
                 NOISOLATE = TRUE;
+            } else if (strcmp(argv[i], "--output") == 0 ||
+                       strcmp(argv[i], "-o") == 0) {
+                if (i < argc)
+                    outputFileIndex = ++i;
+                else
+                    help();
             } else if (strcmp(argv[i], "--quiet") == 0 ||
                        strcmp(argv[i], "-q") == 0) {
                 QUIET = TRUE;
@@ -537,19 +545,28 @@ int main(int argc, char** argv) {
 
 	i = 0;
 
-	string suboptfile;
-	suboptfile += argv[fileIndex];
+    // the output filename
+	string outputfile;
 
-	// if an extension exists, replace it with ct
-	if(suboptfile.find(".") != string::npos)
-		suboptfile.erase(suboptfile.rfind("."));
+    // use given output file
+    if( outputFileIndex != 0)
+        outputfile += argv[outputFileIndex];
 
-	suboptfile += ".ct";
+    // or build off the input file
+    else {
+        outputfile += argv[fileIndex];
 
-	ofstream outfile;
-	outfile.open ( suboptfile.c_str() );
+        // if an extension exists, replace it with ct
+        if(outputfile.find(".") != string::npos)
+            outputfile.erase(outputfile.rfind("."));
 
-	fprintf(stdout, "Writing secondary structure to the file: %s\n", suboptfile.c_str());
+        outputfile += ".ct";
+    }
+
+    ofstream outfile;
+    outfile.open ( outputfile.c_str() );
+
+	fprintf(stdout, "Writing secondary structure to the file: %s\n", outputfile.c_str());
 
 	outfile << length << "\t  dG = " << energy/100.0;
 	i = 1;
