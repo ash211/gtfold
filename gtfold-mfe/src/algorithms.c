@@ -200,9 +200,7 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
 #pragma omp parallel
 #pragma omp master
 	{
-		fprintf(stdout,"Running with %3d OpenMP thread",omp_get_num_threads());
-		if (omp_get_num_threads()>1) fprintf(stdout,"s");
-		fprintf(stdout,".\n");
+		fprintf(stdout,"Thread count: %3d\n",omp_get_num_threads());
 	}
 #endif
 #endif

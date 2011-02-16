@@ -523,7 +523,7 @@ int main(int argc, char** argv) {
     t1 = get_seconds() - t1;
 
     fprintf(stdout,"Done.\n");
-    fprintf(stdout,"Minimum Free Energy = %9.2f\n", energy/100.00);
+    fprintf(stdout,"Minimum Free Energy: %9.2f\n", energy/100.00);
     fprintf(stdout,"MFE running time (in seconds): %9.6f\n\n", t1);
 
     if (rangeIndex != 0)
