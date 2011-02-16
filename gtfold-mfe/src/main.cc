@@ -45,7 +45,6 @@
 using namespace std;
 
 /* GLOBAL VARIABLES */
-enum BOOL ILSA; /* A boolean variable to know if we are executing with Internal loop speedup algorithm (ILA) or not. ILSA finds the optimal internal loop by exploring all possibilities. */
 enum BOOL NOISOLATE;
 enum BOOL BPP; // calculating base pair probabilities
 enum BOOL USERDATA;
@@ -82,7 +81,6 @@ double **P;   // P[i][j] The probability that nucleotides i and j form a basepai
 void help() {
 	fprintf(stderr,
 			"Usage: gtfold [OPTION]... FILE\n\n");
-    //[--ilsa] [--noisolate] [--params setofparameters] [--constraints filename] [--limitCD dist] [--datadir datadirloc] [--basepairprobabilities] filename(sequence)\n\n");
 
     fprintf(stderr,
             "  FILE is an RNA sequence file.  Single line or FASTA formats are accepted.\n\n");
@@ -108,8 +106,6 @@ void help() {
             "   --subopt range       Calculate suboptimal structures within 'range' kcal/mol of the mfe\n");
     fprintf(stderr,
             "   --bpp                Print base pair probabilities for the predicted structure\n");
-    fprintf(stderr,
-            "   --ilsa               Use the Internal Loop Speedup Algorithm (faster)\n");
     fprintf(stderr,
             "   --params             Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu [NONFUNCTIONAL]\n");
 
@@ -332,7 +328,6 @@ int main(int argc, char** argv) {
 	string s, seq;
 	int energy;
 	double t1;
-	ILSA = FALSE;
 	NOISOLATE = FALSE;
 	BPP = FALSE;
 	QUIET = FALSE;
@@ -354,9 +349,7 @@ int main(int argc, char** argv) {
 	i = 1;
 	while (i < argc) {
 		if (argv[i][0] == '-') {
-			if (strcmp(argv[i], "--ilsa") == 0) {
-				ILSA = TRUE;
-			} else if (strcmp(argv[i], "--noisolate") == 0) {
+			if (strcmp(argv[i], "--noisolate") == 0) {
 				NOISOLATE = TRUE;
 			} else if (strcmp(argv[i], "--quiet") == 0) {
 				QUIET = TRUE;
@@ -406,8 +399,6 @@ int main(int argc, char** argv) {
 
 	if (fileIndex == 0)
 		help();
-	if (ILSA == TRUE)
-		fprintf(stdout, "Running with Internal Loop Speedup Algorithm\n");
 	if (NOISOLATE == TRUE)
 		fprintf(stdout, "Not allowing isolated base pairs\n");
 	else

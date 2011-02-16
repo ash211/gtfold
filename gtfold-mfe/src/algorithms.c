@@ -232,76 +232,38 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
 		}
 	}
 
-	/* Please note that computations of internal loops using speedup algorithm has to be done for every closing base pair (i,j) even if it is not capable of pairing up.
-	 * To take care of this, both cases have been separated using a boolean variable ILSA*/
+    /* For b=7 to 10, base pair (i,j) is not able to form multiloops. */
+    for (b = 7; b <= 10; b++) {
+#ifdef _OPENMP
+#pragma omp parallel for private (i,j) schedule(guided)
+#endif
+        for (i = 1; i <= len - b; i++) {
+            j = i + b;
+            //if (constraints[i] == -1 && constraints[j] == -1)
+            //	continue;
+            if (chPair(RNA[i], RNA[j])) {
+                calcVBI(i, j); /* Calculates VBI element at (i,j) */
+                calcVWM(i, j, VBI[i][j], INFINITY_); /* Calculates V and WM arrays*/
+            } else
+                calcWM(i, j); /* Calculates WM element at (i,j) */
+        }
+    }
 
-	if (ILSA == FALSE) { /* If we are executing internal loop speedup algorithm (ILSA) */
-		/* For b=7 to 10, base pair (i,j) is not able to form multiloops. */
-		for (b = 7; b <= 10; b++) {
+    for (b = 11; b <= len - 1; b++) {
 #ifdef _OPENMP
 #pragma omp parallel for private (i,j) schedule(guided)
 #endif
-			for (i = 1; i <= len - b; i++) {
-				j = i + b;
-				//if (constraints[i] == -1 && constraints[j] == -1)
-				//	continue;
-				if (chPair(RNA[i], RNA[j])) {
-					calcVBI(i, j); /* Calculates VBI element at (i,j) */
-					calcVWM(i, j, VBI[i][j], INFINITY_); /* Calculates V and WM arrays*/
-				} else
-					calcWM(i, j); /* Calculates WM element at (i,j) */
-			}
-		}
-
-		for (b = 11; b <= len - 1; b++) {
-#ifdef _OPENMP
-#pragma omp parallel for private (i,j) schedule(guided)
-#endif
-			for (i = 1; i <= len - b; i++) {
-				j = i + b;
-                //printf("%d %d: %d %d\n", i, j, constraints[i], constraints[j]);
-				//if (constraints[i] == -1 && constraints[j] == -1)
-				//	continue;
-				if (chPair(RNA[i], RNA[j])) {
-					calcVBIVMVWM(i, j); /* Calculates VBI, VM, V and WM elements at (i,j) */
-				} else
-					calcWM(i, j); /* Calculates WM element at (i,j) */
-			}
-		}
-	} else { /* If we are executing with ILSA - Internal loop speedup algorithm */
-		for (b = 7; b <= 10; b++) {
-#ifdef _OPENMP
-#pragma omp parallel for private (i,j) schedule(guided)
-#endif
-			for (i = 1; i <= len - b; i++) {
-				j = i + b;
-				calcVBIS(i, j); /* Calculates VBI[i][j] array with Internal loop speedup algorithm (ILSA) */
-				//if (constraints[i] == -1 && constraints[j] == -1)
-				//	continue;
-				if (chPair(RNA[i], RNA[j])) {
-					calcVWM(i, j, VBI[i][j], INFINITY_); /* Calculates V and WM element at (i,j) */
-				} else {
-					calcWM(i, j);
-				} /* Calculates WM element at (i,j) */
-			}
-		}
-
-		for (b = 11; b <= len - 1; b++) {
-#ifdef _OPENMP
-#pragma omp parallel for private (i,j) schedule(guided)
-#endif
-			for (i = 1; i <= len - b; i++) {
-				j = i + b;
-				calcVBIS(i, j); /* Calculation of VBI array at (i,j) - Done in both cases whether (i,j) pairs up or not*/
-				//if (constraints[i] == -1 && constraints[j] == -1)
-				//	continue;
-				if (chPair(RNA[i], RNA[j])) {
-					calcVMVWM(i, j); /* Calculation of VM, V, WM in Order at (i,j)*/
-				} else
-					calcWM(i, j); /* Calculation of WM at (i,j)*/
-			}
-		}
-	}
+        for (i = 1; i <= len - b; i++) {
+            j = i + b;
+            //printf("%d %d: %d %d\n", i, j, constraints[i], constraints[j]);
+            //if (constraints[i] == -1 && constraints[j] == -1)
+            //	continue;
+            if (chPair(RNA[i], RNA[j])) {
+                calcVBIVMVWM(i, j); /* Calculates VBI, VM, V and WM elements at (i,j) */
+            } else
+                calcWM(i, j); /* Calculates WM element at (i,j) */
+        }
+    }
 
 /*
     for(j=2; j<=len; j++){
