@@ -464,7 +464,8 @@ int main(int argc, char** argv) {
             exit(-1);
         }
         else if (r == NO_CONS_FOUND) {
-            fprintf(stdout, "constraints file empty!\n");
+            fprintf(stdout, "constraints file empty! Quitting...\n");
+            exit(1);
         }
     }
 
