@@ -101,7 +101,7 @@ void help() {
     fprintf(stderr,
             "   -h, --help           Output help (this message) and exit\n");
 
-    fprintf(stderr, "\nADVANCED\n");
+    fprintf(stderr, "\nBETA OPTIONS\n");
     fprintf(stderr,
             "   --subopt range       Calculate suboptimal structures within 'range' kcal/mol of the mfe\n");
     fprintf(stderr,
