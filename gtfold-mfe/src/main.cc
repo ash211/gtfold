@@ -103,11 +103,11 @@ void help() {
 
     fprintf(stderr, "\nBETA OPTIONS\n");
     fprintf(stderr,
-            "   --subopt range       Calculate suboptimal structures within 'range' kcal/mol of the mfe\n");
-    fprintf(stderr,
             "   --bpp                Print base pair probabilities for the predicted structure\n");
     fprintf(stderr,
             "   --params version     Choose thermodynamic parameters to use: Turner99 or Turner04 or Andronescu [NONFUNCTIONAL]\n");
+    fprintf(stderr,
+            "   --subopt range       Calculate suboptimal structures within 'range' kcal/mol of the mfe\n");
 
 
     fprintf(stderr,
@@ -343,63 +343,69 @@ int main(int argc, char** argv) {
 	if (argc < 2)
 		help();
 
-	int fileIndex = 0, consIndex = 0, dataIndex = 0, paramsIndex=0, lcdIndex = 0; 
-	int rangeIndex = 0, thIndex = 0; 
+	int fileIndex = 0, consIndex = 0, dataIndex = 0, paramsIndex=0, lcdIndex = 0;
+	int rangeIndex = 0, thIndex = 0;
 
 	i = 1;
-	while (i < argc) {
-		if (argv[i][0] == '-') {
-			if (strcmp(argv[i], "--noisolate") == 0) {
-				NOISOLATE = TRUE;
-			} else if (strcmp(argv[i], "--quiet") == 0) {
-				QUIET = TRUE;
-			} else if (strcmp(argv[i], "--help") == 0) {
-				help();
-			} else if (strcmp(argv[i], "--constraints") == 0) {
-				if (i < argc)
-					consIndex = ++i;
-				else
-					help();
-			} else if (strcmp(argv[i], "--params")==0) { 
-				PARAMS = TRUE;			  
-				if (i < argc)
-					paramsIndex = ++i;
-				else
-					help();
-			} else if (strcmp(argv[i], "--threads")==0) { 
-				if (i < argc)
-					thIndex = ++i;
-				else
-					help();
-			} else if (strcmp(argv[i], "--datadir") == 0) {
-				USERDATA = TRUE;
-				if (i < argc)
-					dataIndex = ++i;
-				else
-					help();
-			} else if (strcmp(argv[i], "--limitCD") == 0) {
-				if (i < argc)
-					lcdIndex = ++i;
-				else
-					help();	
-			} else if (strcmp(argv[i], "--bpp") == 0) {
-				BPP = TRUE;
-			} else if (strcmp(argv[i], "--subopt") == 0) {
-				if (i<argc)
-					rangeIndex = ++i;
-				else
-					help();
-			} else {
-				fprintf(stderr, "Unrecognized option: `%s'\n", argv[i]);
-				fprintf(stderr, "Try: `%s --help' for more information.\n", argv[0]);
-				exit(1);
-			}
+    while (i < argc) {
+        if (argv[i][0] == '-') {
+            if        (strcmp(argv[i], "--noisolate") == 0 ||
+                       strcmp(argv[i], "-n") == 0) {
+                NOISOLATE = TRUE;
+            } else if (strcmp(argv[i], "--quiet") == 0 ||
+                       strcmp(argv[i], "-q") == 0) {
+                QUIET = TRUE;
+            } else if (strcmp(argv[i], "--help") == 0 ||
+                       strcmp(argv[i], "-h") == 0) {
+                help();
+            } else if (strcmp(argv[i], "--constraints") == 0 ||
+                       strcmp(argv[i], "-c") == 0) {
+                if (i < argc)
+                    consIndex = ++i;
+                else
+                    help();
+            } else if (strcmp(argv[i], "--params")==0) {
+                PARAMS = TRUE;
+                if (i < argc)
+                    paramsIndex = ++i;
+                else
+                    help();
+            } else if (strcmp(argv[i], "--threads") == 0 ||
+                       strcmp(argv[i], "-t") == 0) {
+                if (i < argc)
+                    thIndex = ++i;
+                else
+                    help();
+            } else if (strcmp(argv[i], "--datadir") == 0) {
+                USERDATA = TRUE;
+                if (i < argc)
+                    dataIndex = ++i;
+                else
+                    help();
+            } else if (strcmp(argv[i], "--limitCD") == 0 ||
+                       strcmp(argv[i], "-d") == 0) {
+                if (i < argc)
+                    lcdIndex = ++i;
+                else
+                    help();
+            } else if (strcmp(argv[i], "--bpp") == 0) {
+                BPP = TRUE;
+            } else if (strcmp(argv[i], "--subopt") == 0) {
+                if (i<argc)
+                    rangeIndex = ++i;
+                else
+                    help();
+            } else {
+                fprintf(stderr, "Unrecognized option: `%s'\n", argv[i]);
+                fprintf(stderr, "Try: `%s --help' for more information.\n", argv[0]);
+                exit(1);
+            }
 
-		} else {
-			fileIndex = i;
-		}
-		i++;
-	}
+        } else {
+            fileIndex = i;
+        }
+        i++;
+    }
 
 	if (fileIndex == 0)
 		help();
