@@ -95,7 +95,7 @@ void help() {
     fprintf(stderr,
             "   -o, --output FILE    Output to FILE (default output is to a .ct extension)\n");
     fprintf(stderr,
-            "   -v, --verbose        Run in versbose mode\n");
+            "   -v, --verbose        Run in verbose mode\n");
     
 	fprintf(stderr,
             "   -t, --threads num    Limit number of threads used\n");
