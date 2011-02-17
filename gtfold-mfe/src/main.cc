@@ -94,13 +94,14 @@ void help() {
             "   -n, --noisolate      Prevent isolated base pairs from forming\n");
     fprintf(stderr,
             "   -o, --output FILE    Output to FILE (default output is to a .ct extension)\n");
-    fprintf(stderr,
-            "   -v, --verbose        Run in verbose mode\n");
-    
 	fprintf(stderr,
             "   -t, --threads num    Limit number of threads used\n");
+
+    fprintf(stderr, "\n");
     fprintf(stderr,
             "   -h, --help           Output help (this message) and exit\n");
+    fprintf(stderr,
+            "   -v, --verbose        Run in verbose mode\n");
 
     fprintf(stderr, "\nBETA OPTIONS\n");
     fprintf(stderr,
