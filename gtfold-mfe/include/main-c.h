@@ -34,6 +34,13 @@ extern int *constraints;
 extern int num_threads;
 extern int contact_dist;
 
+enum BOOL {
+	FALSE=0, TRUE
+};
+
+extern enum BOOL ILSA;
+extern enum BOOL VERBOSE;
+
 #define fourBaseIndex(a, b, c, d) (((a) << 6) + ((b) << 4) + ((c) << 2) + (d))
 
 #endif

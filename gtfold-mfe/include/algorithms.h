@@ -43,17 +43,11 @@ extern "C" {
 }
 #endif
 
-//void progArrays();
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 	int calculate(int len, int **forceList, int **prohibitList, int forcelen,
 			int prohibitlen);
-	enum BOOL {
-		FALSE, TRUE
-	};
-	extern enum BOOL ILSA;
 	
 	int eS(int i, int j);
 	int eH(int i, int j);

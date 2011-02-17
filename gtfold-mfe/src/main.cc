@@ -50,7 +50,7 @@ enum BOOL BPP; // calculating base pair probabilities
 enum BOOL USERDATA;
 enum BOOL PARAMS;
 enum BOOL LIMIT_DISTANCE;
-enum BOOL QUIET;
+enum BOOL VERBOSE;
 
 int num_threads;
 int LENGTH;
@@ -89,14 +89,15 @@ void help() {
     fprintf(stderr,
             "   -c, --constraints FILE\n                        Load constraints from FILE.  See Constraint syntax below\n");
     fprintf(stderr,
-            "   -d, --limitCD dist   Set a maximum base pair contact distance to dist. If no\n                        limit is given, base pairs can be over any distance\n");
+            "   -d, --limitCD num    Set a maximum base pair contact distance to num. If no\n                        limit is given, base pairs can be over any distance\n");
     fprintf(stderr,
             "   -n, --noisolate      Prevent isolated base pairs from forming\n");
     fprintf(stderr,
             "   -o, --output FILE    Output to FILE (default output is to a .ct extension)\n");
     fprintf(stderr,
-            "   -q, --quiet          Run in non-interactive mode\n");
-    fprintf(stderr,
+            "   -v, --verbose        Run in versbose mode\n");
+    
+	fprintf(stderr,
             "   -t, --threads num    Limit number of threads used\n");
     fprintf(stderr,
             "   -h, --help           Output help (this message) and exit\n");
@@ -329,7 +330,8 @@ int main(int argc, char** argv) {
     double t1;
     NOISOLATE = FALSE;
     BPP = FALSE;
-    QUIET = FALSE;
+    VERBOSE = FALSE;
+	int delta = -1;
 
     fprintf(stdout,
             "GTfold: A Scalable Multicore Code for RNA Secondary Structure Prediction\n");
@@ -357,9 +359,9 @@ int main(int argc, char** argv) {
                     outputFileIndex = ++i;
                 else
                     help();
-            } else if (strcmp(argv[i], "--quiet") == 0 ||
-                    strcmp(argv[i], "-q") == 0) {
-                QUIET = TRUE;
+            } else if (strcmp(argv[i], "--verbose") == 0 ||
+                    strcmp(argv[i], "-v") == 0) {
+                VERBOSE = TRUE;
             } else if (strcmp(argv[i], "--help") == 0 ||
                     strcmp(argv[i], "-h") == 0) {
                 help();
@@ -390,10 +392,10 @@ int main(int argc, char** argv) {
             } else if (strcmp(argv[i], "--bpp") == 0) {
                 BPP = TRUE;
             } else if (strcmp(argv[i], "--subopt") == 0) {
-                if (i<argc)
+				if (i<argc)
                     rangeIndex = ++i;
-                else
-                    help();
+				else
+					help();
             } else {
                 fprintf(stderr, "Unrecognized option: `%s'\n", argv[i]);
                 fprintf(stderr, "Try: `%s --help' for more information.\n", argv[0]);
@@ -504,12 +506,11 @@ int main(int argc, char** argv) {
         standardRun = FALSE;
     }
 
-    int delta = -1;
     if (rangeIndex != 0) {	
         delta = atoi(argv[rangeIndex]);
         fprintf(stdout, "+ calculating suboptimal structures within %d kcal/mol of MFE\n", delta);
         standardRun = FALSE;
-    }
+	}
 
     if(standardRun)
         fprintf(stdout, "- standard\n");
@@ -617,9 +618,11 @@ int main(int argc, char** argv) {
 
     fprintf(stdout,"Traceback runtime (seconds): %9.6f\n\n", t1);
 
-    printSequence(length);
-    printConstraints(length);
-    printStructure(length);
+	printSequence(length);
+	if (consIndex != 0) { 
+		printConstraints(length);
+	}
+	printStructure(length);
 
     if(BPP) {
         fillBasePairProbabilities(length, structure, Q, QB, QM, P);
@@ -635,11 +638,12 @@ int main(int argc, char** argv) {
 }
 
 
-int initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& numfConstraints, const char* constr_file) {
+int initialize_constraints(int*** fbp, int ***pbp, 
+						   int& numpConstraints, int& numfConstraints, 
+						   const char* constr_file, enum BOOL verbose) {
     ifstream cfcons;
 
     fprintf(stdout, "Running with constraints\n");
-    //fprintf(stdout, "Opening constraint file: %s\n", argv[consIndex]);
     fprintf(stdout, "Opening constraint file: %s\n", constr_file);
 
     cfcons.open(constr_file, ios::in);
@@ -706,93 +710,90 @@ int initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& nu
         }
     }
 
-    fprintf(stdout, "Forced base pairs: ");
-    for(it=0; it<numfConstraints; it++) {
-        for(int k=1;k<= (*fbp)[it][2];k++)
-            fprintf(stdout, "(%d,%d) ", (*fbp)[it][0]+k-1, (*fbp)[it][1]-k+1);
-    }
-    fprintf(stdout, "\nProhibited base pairs: ");
-    for(it=0; it<numpConstraints; it++) {
-        for(int k=1;k<= (*pbp)[it][2];k++)
-            fprintf(stdout, "(%d,%d) ", (*pbp)[it][0]+k-1, (*pbp)[it][1]-k+1);
-    }
-    fprintf(stdout, "\n\n");
+	if (VERBOSE == TRUE)
+	{
+		fprintf(stdout, "Forced base pairs: ");
+		for(it=0; it<numfConstraints; it++) {
+			for(int k=1;k<= (*fbp)[it][2];k++)
+				fprintf(stdout, "(%d,%d) ", (*fbp)[it][0]+k-1, (*fbp)[it][1]-k+1);
+		}
+		fprintf(stdout, "\nProhibited base pairs: ");
+		for(it=0; it<numpConstraints; it++) {
+			for(int k=1;k<= (*pbp)[it][2];k++)
+				fprintf(stdout, "(%d,%d) ", (*pbp)[it][0]+k-1, (*pbp)[it][1]-k+1);
+		}
+		fprintf(stdout, "\n\n");
+	}
 
     return SUCCESS;
 }
 
 int handle_IUPAC_code(const std::string& s, const int length) {
-    int* stack_unidentified_base;
-    int stack_count=0;
-    bool unspecd=0;
-    stack_unidentified_base=new int[length];
+	int* stack_unidentified_base;
+	int stack_count=0;
+	bool unspecd=0;
+	stack_unidentified_base=new int[length];
 
-    /* SH: Conversion of the sequence to numerical values. */
-    for(int i = 1; i <= length; i++) {
-        RNA[i] = getBase(s.substr(i-1,1));
-        RNA1[i] = getBase1(s.substr(i-1,1));
-        if (RNA[i]=='X') {
-            fprintf(stderr,"ERROR: Base unrecognized\n");
-            return FAILURE; //exit(0);
-        }
-        else if(RNA[i]!='X' && RNA1[i]=='N'){
-            unspecd=1;
-            stack_unidentified_base[stack_count]=i;
-            stack_count++;
-        }
+	// Conversion of the sequence to numerical values. 
+	for(int i = 1; i <= length; i++) {
+		RNA[i] = getBase(s.substr(i-1,1));
+		RNA1[i] = getBase1(s.substr(i-1,1));
+		if (RNA[i]=='X') {
+			fprintf(stderr,"ERROR: Base unrecognized\n");
+			return FAILURE; 
+		}
+		else if(RNA[i]!='X' && RNA1[i]=='N'){
+			unspecd=1;
+			stack_unidentified_base[stack_count]=i;
+			stack_count++;
+		}
 
-    }
-    if (unspecd) {
-        printf("IUPAC codes have been detected at positions: ");
+	}
+	if (unspecd) {
+		printf("IUPAC codes have been detected at positions: ");
 
-        for(int i=0;i<stack_count;i++) {
-            printf("%d , ",stack_unidentified_base[i]);
-        }
-        printf("\n");
+		for(int i = 0; i < stack_count; i++) {
+			printf("%d",stack_unidentified_base[i]);
+			if (i < stack_count -1) printf(", ");
+		}
+		printf("\n");
 
-        if (QUIET == TRUE) {
-            return SUCCESS;
-        }
+		printf("You may wish to resubmit the sequence with fully specified positions.\n");
+		printf("Aborting the current computation.\n\n");
 
-        printf("You may wish to resubmit the sequence with fully specified positions. \n");
-        printf("Alternatively, GTfold will fold the sequence under the standard assumption that these ambiguous positions do not pair.\n");
-        printf("Do you wish to continue with the current computation? <Y/N>");
-
-        char reply;
-        scanf("%c",&reply);
-        return (reply=='n'||reply=='N')?(FAILURE):(SUCCESS);
-    }
-    else
-        return SUCCESS;
+		return FAILURE;
+	}
+	return SUCCESS;
 }
 
-void force_noncanonical_basepair(const char* ncb, int len) {
-    if (ncb == 0 || ncb[0] == '\0') return;
 
-    printf("Permitted noncanonical base pairs : \n");	
-
-    std::string ncb1(ncb);
-
-    for (unsigned int i =0 ; i < ncb1.size(); ++i) {
-        ncb1[i] = toupper(ncb1[i]);
-    }
-
-    std::vector<std::string> tokens;
-    tokenize(ncb1, tokens, ",");	
-
-    for (unsigned int i = 0; i < tokens.size(); ++i) {
-        trim_spaces(tokens[i]);
-        if (tokens.size() != 3 && tokens[i][1] != '-')
-            // ignore
-            continue;
-
-        char b1 = getBase(tokens[i].substr(0,1));
-        char b2 = getBase(tokens[i].substr(2,1));
-
-        int r1=0;
-        r1 = update_chPair(b1, b2);			
-        if (r1 == 1)
-            printf("(%c,%c) ",  tokens[i][0], tokens[i][2]) ;
-    }
-    printf("\n\n");
-}
+//void force_noncanonical_basepair(const char* ncb, int len) {
+//    if (ncb == 0 || ncb[0] == '\0') return;
+//
+//    printf("Permitted noncanonical base pairs : \n");	
+//
+//   std::string ncb1(ncb);
+//
+//   for (unsigned int i =0 ; i < ncb1.size(); ++i) {
+//       ncb1[i] = toupper(ncb1[i]);
+//   }
+//
+//    std::vector<std::string> tokens;
+//    tokenize(ncb1, tokens, ",");	
+//
+//    for (unsigned int i = 0; i < tokens.size(); ++i) {
+//       trim_spaces(tokens[i]);
+//       if (tokens.size() != 3 && tokens[i][1] != '-')
+//           // ignore
+//           continue;
+//
+//      char b1 = getBase(tokens[i].substr(0,1));
+//      char b2 = getBase(tokens[i].substr(2,1));
+//
+//      int r1=0;
+//      r1 = update_chPair(b1, b2);			
+//     if (r1 == 1)
+//         printf("(%c,%c) ",  tokens[i][0], tokens[i][2]) ;
+// }
+// printf("\n\n");
+//}  

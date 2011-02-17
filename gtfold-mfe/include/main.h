@@ -27,15 +27,15 @@
 
 using namespace std;
 
-//void traverse_wholeData(int[], int, int);
-
 enum {FAILURE = 0, SUCCESS, NO_CONS_FOUND, ERR_OPEN_FILE};
 
-int initialize_constraints(int*** fbp, int*** pbp, int& numpConstraints, int& numfConstraints, const char* constr_file);
+int initialize_constraints(int*** fbp, int*** pbp, 
+						   int& numpConstraints, int& numfConstraints, 
+						   const char* constr_file, enum BOOL verbose=FALSE);
 
 int handle_IUPAC_code(const std::string& s, const int bases);
 void limit_contact_distance(int lCD, int length);
-void force_noncanonical_basepair(const char* nc_basepairs, int length);
+//void force_noncanonical_basepair(const char* nc_basepairs, int length);
 
 bool is_valid_base(char c)
 {	
