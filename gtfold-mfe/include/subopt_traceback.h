@@ -212,18 +212,26 @@ struct pstruct
 	}
 };
 
-typedef pstruct PS;
-typedef std::stack<pstruct> PSSTACK;
-typedef std::map<std::string, pstruct> PSMAP;
+/* partial structure */
+typedef pstruct ps_t;
 
-void push_to_gstack(PSSTACK& gs, const PS& v);
-void subopt_traceback(int len, int gap);
-void traceV(int i, int j, PS& ps, PSSTACK& gs, int energy); 
-void traceVBI( int i, int j, PS& ps, PSSTACK& gs, int energy);
-void traceW( int i, int j, PS& ps, PSSTACK& gs, int energy);
-void traceVM( int i, int j, PS& ps, PSSTACK& gs, int energy);
-void traceWM(PS& ps, PSMAP& filter);
+/* partial structure stack */
+typedef std::stack<pstruct> ps_stack_t;
 
-//enum label {lW=0, lV, lVBI, lVM, lWM};
+/*  partial structure map */
+typedef std::map<std::string, pstruct> ps_map_t;
+
+/* secondary structure map */
+typedef std::map<std::string, int> ss_map_t;	
+
+void push_to_gstack(ps_stack_t & gs, const ps_t& v);
+
+ss_map_t subopt_traceback(int len, int gap);
+
+void traceV(int i, int j, ps_t & ps, ps_stack_t & gs, int energy); 
+void traceVBI(int i, int j, ps_t & ps, ps_stack_t & gs, int energy);
+void traceW(int i, int j, ps_t & ps, ps_stack_t & gs, int energy);
+void traceVM(int i, int j, ps_t & ps, ps_stack_t & gs, int energy);
+void traceWM(ps_t& ps, ps_map_t& filter);
 
 #endif

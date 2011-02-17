@@ -527,15 +527,35 @@ int main(int argc, char** argv) {
     fprintf(stdout,"Minimum Free Energy: %9.2f\n", energy/100.00);
     fprintf(stdout,"MFE runtime (seconds): %9.6f\n\n", t1);
 
-    if (rangeIndex != 0)
-    {
-        fprintf(stdout,"Computing suboptimal structures in range %d ...\n\n", delta);
-        t1 = get_seconds();
-        subopt_traceback(length, delta); /* Traces the optimal structure*/
-        t1 = get_seconds() - t1;
-        fprintf(stdout,"\nTraceback runtime (seconds): %9.6f\n\n", t1);
-        exit(0);	
-    }
+	if (rangeIndex != 0)
+	{
+		fprintf(stdout,"Computing suboptimal structures in range %d ...\n", delta);
+		t1 = get_seconds();
+		// Traces the optimal structure
+		ss_map_t suboptdata =  subopt_traceback(length, delta); 
+		t1 = get_seconds() - t1;
+		fprintf(stdout,"Traceback runtime (seconds): %9.6f\n\n", t1);
+
+		std::string suboptfile;
+		suboptfile += argv[fileIndex];
+
+		// if an extension exists, replace it with ct
+		if(suboptfile.find(".") != string::npos)
+			suboptfile.erase(suboptfile.rfind("."));
+		suboptfile += ".struct";
+		ofstream subopt_fp;
+		
+		fprintf(stdout, "Writing suboptimal structures: %s\n", suboptfile.c_str());
+		subopt_fp.open (suboptfile.c_str());
+
+		ss_map_t::iterator it;
+		for (it = suboptdata.begin(); it != suboptdata.end(); ++it)
+			subopt_fp << it->first << ' ' << it->second << std::endl;
+
+		subopt_fp.close();
+
+		exit(0);	
+	}
 
     // only fill the partition function structures if they are needed for BPP
     if(BPP) {
