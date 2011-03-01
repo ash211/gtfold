@@ -205,7 +205,6 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
 #endif
 #endif
 
-    //printf("starting.......\n");
 
 	/* Here b-1 is the length of the segment closed with (i,j) base pair. We assume the minimum size of a hairpin loop closed with (i,j) equal to 3.*/
 
@@ -266,18 +265,8 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
         }
     }
 
-/*
-    for(j=2; j<=len; j++){
-        for (i=j-1; i>0; i--){
-		    printf("%d, (%d,%d), WM: %d\n", j-i, i, j, WM[i][j]);
-        }
-    }
-*/            
-
 	for (j = 5; j <= len; j++) /* Recurssion relation for W array does not depend upon any other array, so can be done after the computation of other arrays are finished.*/
 		calcW(j);
-
-	//printV(len);
 
 	return W[len];
 }
@@ -1218,10 +1207,6 @@ void calcW(int j) {
 
 	W[j] = Wj;
 
-	//printf(",W%dset: %d\n", j, W[j]);
-
-	//  if(j==11 || j==35 || j==36)
-	// printf("\n*****\nMust branch: %d, W%d: %d\n*****\n", must_branch, j, W[j]);
 	return;
 }
 
