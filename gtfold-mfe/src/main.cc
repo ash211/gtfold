@@ -538,10 +538,15 @@ int main(int argc, char** argv) {
 		t1 = get_seconds() - t1;
 		fprintf(stdout,"Traceback runtime (seconds): %9.6f\n\n", t1);
 
+		size_t pos = 0;
 		std::string suboptfile;
 		suboptfile += argv[fileIndex];
+		
+		if ((pos=suboptfile.find_last_of('/')) > 0) {
+			suboptfile = suboptfile.substr(pos+1);
+		}
 
-		// if an extension exists, replace it with ct
+		// if an extension exists, replace it with struct
 		if(suboptfile.find(".") != string::npos)
 			suboptfile.erase(suboptfile.rfind("."));
 		suboptfile += ".struct";
@@ -594,7 +599,12 @@ int main(int argc, char** argv) {
 
     // or build off the input file
     else {
+		size_t pos;
         outputfile += argv[fileIndex];
+		
+		if ((pos=outputfile.find_last_of('/')) > 0) {
+			outputfile = outputfile.substr(pos+1);
+		}
 
         // if an extension exists, replace it with ct
         if(outputfile.find(".") != string::npos)
