@@ -37,6 +37,7 @@
 #include "algorithms.h"
 #include "traceback.h"
 
+#define TURN 3
 int total_en = 0;
 
 void trace(int len) {
@@ -68,6 +69,7 @@ void traceW(int j) {
 	if (j == 0 || j == 1) return;
 
 	for (i = 1; i < j && !done; i++) {
+		if (j-i < TURN) continue;
 		wim1 = MIN ( 0, W[i-1] );
 		flag = 1;
 		if (wim1 != W[i-1]) flag = 0;
@@ -140,6 +142,7 @@ void traceW(int j) {
 /* Trace the structure inside V[i][j]. This function traces "which type of loop (i,j) base pair is closing" */
 int traceV(int i, int j) {
 	int a, b, c, d, Vij;
+	if (j-i < TURN)  return INFINITY_;
 
 	a = eH(i, j);
 	b = eS(i, j) + V[indx[i + 1] + j - 1];
