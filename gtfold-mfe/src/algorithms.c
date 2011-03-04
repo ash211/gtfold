@@ -19,17 +19,29 @@
 
 /* AUTHORED by Amrita Mathuriya August 2007 - January 2009. Implemented multiloop energy function, internal loop energy function using heuristic and internal loop speedup algorithm, parallelization, corrected numerous bugs and commented whole GTfold.
 
- * Amrita: Please note that, in this file same recursion formulas is being calculated in more than one functions.
- * This is done for performance improvement to reduce the redundant computations for various cases. The duplicate codes are not documented again at some places.
- * The arrays to be calculated are VBI, VM, V and WM for every  point (i,j) where j > i. Then W(j) needs to be calculated for j= 1 to N.
- * NOTE that the WM(i,j) can be calculated only after V(i,j) and array VBI and VM should be calculated before V array for point (i,j). So, the order of computation has been kept as VBI, VM, V, WM for any point (i,j)
- * Also Note that, a valid base pair has j > i. Therefore, the portion of the 2D arrays containing j < i is not useful.
- * Minimum size of a hairpin loop is assumed as 3. This assumption is taken into effect at many places.
- * I am not sure of what these eparam values are at various places except for multiloops.
+ * Amrita:
+ * - Please note that, in this file same recursion formulas is being calculated
+ *   in more than one functions.
+ * - This is done for performance improvement to reduce the redundant
+ *   computations for various cases. The duplicate codes are not documented
+ *   again at some places.
+ * - The arrays to be calculated are VBI, VM, V and WM for every  point (i,j)
+ *   where j > i. Then W(j) needs to be calculated for j= 1 to N.
+ * - NOTE that the WM(i,j) can be calculated only after V(i,j) and array VBI
+ *   and VM should be calculated before V array for point (i,j). So, the order
+ *   of computation has been kept as VBI, VM, V, WM for any point (i,j)
+ * - Also Note that, a valid base pair has j > i. Therefore, the portion of the
+ *   2D arrays containing j < i is not useful.
+ * - Minimum size of a hairpin loop is assumed as 3. This assumption is taken
+ *   into effect at many places.
+ * - I am not sure of what these eparam values are at various places except for
+ *   multiloops.
  * */
 
-/* Modified by Sainath Mallidi August 2009 -  "*/
-/* Added constraint support that can force a base pair, prohibit a base pair and make single stranded regions */
+/* Modified by Sainath Mallidi August 2009 - 
+ * Added constraint support that can force a base pair, prohibit a base pair
+ * and make single stranded regions
+ */
 
 #include <stdio.h>
 #include <math.h>
@@ -38,7 +50,7 @@
 #include "constants.h"
 #include "main-c.h"
 #include "algorithms.h"
-#ifdef _OPENMP   /* The compiler automatically recognizes openmp support and includes the file accordingly*/
+#ifdef _OPENMP   /* defined by the compiler */
 #include "omp.h"
 #endif
 
@@ -52,7 +64,11 @@ unsigned int chPairKey;
 int plen = 0, flen = 0, sslen = 0;
 int *pbpi, *pbpj, *fbpi, *fbpj, *ss;
 
-/* This function calculates chPairKey to be processed by function chPair. Defined by Professor Bader. */
+/**
+ * Calculates chPairKey to be processed by function chPair()
+ *
+ * @author Professor Bader.
+ */
 void init_chPair() {
 	int i, j;
 
@@ -78,15 +94,16 @@ int update_chPair(int i, int j)
 }
 
 
-/* This pragma returns 1 if  base b1 and b2 can pair up, otherwise returns 0, using chPairKey calculated in init_chPair function. Here b1 and b2 are 0-3 to represent one of the four nucleotides A, C, G and U. */
-#if 0
-inline
-int chPair(int b1, int b2) {
-	return (chPairKey & (1 << ((b1<<2) + b2)));
-}
-#else
-#define chPair(a, b)  (chPairKey & (1 << (((a)<<2) + (b))))  /* Please try to run this, to understand this statement. Defined by Professor Bader. */
-#endif
+/*
+ * Whether a and b can pair or not.
+ *
+ * @param a Encoding of a nucleotide: A=0, C=1, G=2, U=3
+ * @param b Encoding of a nucleotide: A=0, C=1, G=2, U=3
+ * @return 1 if a and b can pair, 0 otherwise
+ *
+ * @author Professor Bader
+ */
+#define chPair(a, b)  (chPairKey & (1 << (((a)<<2) + (b))))
 
 /* Initialize variables.*/
 void initTables(int len) {
