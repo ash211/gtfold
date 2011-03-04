@@ -86,7 +86,7 @@ int update_chPair(int i, int j)
 
     if (!(chPairKey & (1 << ((i << 2) + j))))
     {
-        chPairKey += 1 << ((i << 2) + j);   
+        chPairKey += 1 << ((i << 2) + j);
         r = 1;
     }
 
@@ -295,43 +295,78 @@ void calcVBI(int i, int j) {
 
     VBIij = INFINITY_;
 
-    if ((constraints[i] > 0 && constraints[i] != j) || (constraints[j] > 0
-            && constraints[j] != i) || constraints[i] == -1 || constraints[j]
-                                                                           == -1)
+    // skip entirely if not permitted by constraints
+    if ((constraints[i] > 0 && constraints[i] != j) ||
+        (constraints[j] > 0 && constraints[j] != i) ||
+         constraints[i] == -1 ||
+         constraints[j] == -1)
         return;
 
-    /* Having ip = i+1 and jp = j-1, creates a stack loop. Stack loops are taken care separately in the calculation of V  using eS() function. Therefore, for ip=i+1, the jp value should be lesser than or equal to j-2.*/
+    // Having ip = i+1 and jp = j-1 creates a stack loop, which is taken care
+    // of in V and not here
+    // Therefore for ip=i+1, the jp value should be less than or equal to j-2.
     ip = i + 1;
-    thres1 = MAX((j - 1) + (ip - i - 1) - MAXLOOP, ip + 4); /* Minimum size of the hairpin loop which the enclosed base pair (ip,jp) can close is 3 that results in the minimum value of jp = ip+4 */
+
+    // Minimum size of the hairpin loop which the enclosed base pair (ip,jp)
+    // can close is 3.  So the minimum value of jp is ip+4
+    thres1 = MAX((j - 1) + (ip - i - 1) - MAXLOOP, ip + 4);
     for (jp = thres1; jp <= j - 2; jp++) {
-        //May need to check the constraint condition here
+
+        // limit side of internal loop to contact_dist
         if (jp-ip >= contact_dist) continue;
+
+        // May need to check the constraint condition here...
+
         if (chPair(RNA[ip], RNA[jp])) {
+
+            // disallow this pair if prohibited by the constraints
             if (checkSS(i, ip) || checkSS(jp, j))
                 continue;
-            temp = eL(i, j, ip, jp) + V[indx[ip] + jp]; /* Energy of internal loop closed by (i,j) and (ip,jp) + the optimal energy of the substructure closed by (ip,jp)*/
-            if (VBIij > temp)
+
+            // Energy of internal loop closed by (i,j) and (ip,jp),
+            // plus the optimal energy of the substructure closed by (ip,jp)
+            temp = eL(i, j, ip, jp) + V[indx[ip] + jp];
+
+            // update if this is better than the best considered so far
+            if (temp < VBIij)
                 VBIij = temp;
         }
     }
 
+    // having now considered the ip = i+1 case, we consider all others,
+    // starting at ip = i+2
     for (ip = i + 2; ip <= i + MAXLOOP + 1; ip++) {
-        thres1 = MAX((j - 1) + (ip - i - 1) - MAXLOOP, ip + 4); /* Minimum size of a hairpin loop is 3, so start jp from ip+4*/
-        //May need to check for forced constraints here
+
+        // Minimum size of a hairpin loop is 3, so start jp at ip+4
+        thres1 = MAX((j - 1) + (ip - i - 1) - MAXLOOP, ip + 4);
+
+        // May need to check for forced constraints here...
+
+        // consider all jp possibilities for the current ip
         for (jp = thres1; jp <= j - 1; jp++) {
+
+            // prohibit inner loops larger than contact_dist
             if (jp-ip >= contact_dist) continue;
+
             if (chPair(RNA[ip], RNA[jp])) {
+
+                // disallow this pair if prohibited by the constraints
                 if (checkSS(i, ip) || checkSS(jp, j))
                     continue;
-                temp = eL(i, j, ip, jp) + V[indx[ip] + jp]; /* Energy of internal loop closed by (i,j) and (ip,jp) + the optimal energy of the substructure closed by (ip,jp)*/
+
+                // Energy of internal loop closed by (i,j) and (ip,jp), plus
+                // the optimal energy of the substructure closed by (ip,jp)
+                temp = eL(i, j, ip, jp) + V[indx[ip] + jp];
+
+                // update if this is better than the best considered so far
                 if (VBIij > temp)
                     VBIij = temp;
             }
         }
     }
 
+    // save the final VBIij into the table
     VBI[i][j] = VBIij;
-    return;
 }
 
 /* Amrita: - Internal loop speedup algorithm */
