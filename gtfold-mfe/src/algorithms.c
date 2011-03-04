@@ -280,8 +280,14 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
     return W[len];
 }
 
-/* This function calculates the optimal energy of internal loops closed with base pair (i,j) using a heuristic, which limits their size to a constant value - MAXLOOP
- An internal loop contains one closing base pair (i,j) and one enclosed base pair (ip,jp). This function searches for the best enclosed base pair for the closing base pair (i,j) within the given window limited by MAXLOOP
+/**
+ * Calculates the optimal energy of internal loops closed with base pair (i,j)
+ *
+ * Limits internal loop sizes to a constant -- MAXLOOP
+ *
+ * An internal loop contains one closing base pair (i,j) and one enclosed base
+ * pair (ip,jp). This function searches for the best enclosed base pair for the
+ * closing base pair (i,j) within the given window limited by MAXLOOP
  */
 void calcVBI(int i, int j) {
 
