@@ -1262,9 +1262,9 @@ void calcW(int j) {
             besti = i;
         }
 
-        if(Wj < INFINITY_ && (Wj == Wij && constraints[i] == j ||
-                              Wj == Widjd && constraints[i+1] == j-1 ||
-                              Wj == Wijd && constraints[i] == j-1 ||
+        if(Wj < INFINITY_ && ((Wj == Wij && constraints[i] == j) ||
+                              (Wj == Widjd && constraints[i+1] == j-1) ||
+                              (Wj == Wijd && constraints[i] == j-1) ||
                               constraints[i+1] == j))
             must_branch = 1;
     }
