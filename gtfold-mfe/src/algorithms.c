@@ -187,14 +187,12 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
         omp_set_num_threads(num_threads);
 #endif
 
-#if 1
 #ifdef _OPENMP
 #pragma omp parallel
 #pragma omp master
     {
         fprintf(stdout,"Thread count: %3d\n",omp_get_num_threads());
     }
-#endif
 #endif
 
     //printf("starting.......\n");
@@ -698,15 +696,9 @@ void calcVMVWM(int i, int j) {
         a1 = WM[i][h];
         WMip1hm1 = WM[i + 1][h - 1];
         WMip2hm1 = WM[i + 2][h - 1];
-#if 0
-        WMhjm1 = WM[h][j-1];
-        WMhjm2 = WM[h][j-2];
-        WMhp1j = WM[h+1][j];
-#else
         WMhjm1 = WM(h,j-1); /* Preprocessor will convert this into WM[j-1][h]. According to the algorithm, the expression should be WM[h][j-1]  -- in which case, as the value of h changes, this will access elements from a column of the WM matrix. To improve run time performance WM array is made symmetric and so WM[h][j-1] = WM[j-1][h] and it will have accesses in a row.*/
         WMhjm2 = WM(h,j-2); /* Same reason as above */
         WMhp1j = WM(h+1,j); /* Same reason as above */
-#endif
 
         /* WM starts */
         a1 += WMhp1j;
@@ -733,18 +725,12 @@ void calcVMVWM(int i, int j) {
             VMidjd = A_temp;
     }
 
-#if 0
-    VMidj += dangle[rnai][rnaj][RNA[i+1]][0];
-    VMijd += dangle[rnai][rnaj][RNA[j-1]][1];
-    VMidjd += dangle[rnai][rnaj][RNA[i+1]][0] + dangle[rnai][rnaj][RNA[j-1]][1];
-#else
     tmp1 = dangle[rnai][rnaj][RNA[i + 1]][0]; /* Dangling energy of base pair (i,j) with single base i+1 at 5' end */
     tmp2 = dangle[rnai][rnaj][RNA[j - 1]][1]; /* Dangling energy of base pair (i,j) with single base j-1 at 3' end */
     VMidj += (tmp1 + c);
     VMidjd += (tmp1 + c);
     VMijd += (tmp2 + c);
     VMidjd += (tmp2 + c);
-#endif
 
     /* Manoj ends */
 
@@ -948,15 +934,9 @@ void calcVBIVMVWM(int i, int j) {
         a1 = WM[i][h];
         WMip1hm1 = WM[i + 1][h - 1];
         WMip2hm1 = WM[i + 2][h - 1];
-#if 0
-        WMhjm1 = WM[h][j-1];
-        WMhjm2 = WM[h][j-2];
-        WMhp1j = WM[h+1][j];
-#else
         WMhjm1 = WM(h,j-1);
         WMhjm2 = WM(h,j-2);
         WMhp1j = WM(h+1,j);
-#endif
 
         /* WM starts */
         a1 += WMhp1j;
@@ -987,11 +967,6 @@ void calcVBIVMVWM(int i, int j) {
 
     }
 
-#if 0
-    VMidj += dangle[rnai][rnaj][RNA[i+1]][0];
-    VMijd += dangle[rnai][rnaj][RNA[j-1]][1];
-    VMidjd += dangle[rnai][rnaj][RNA[i+1]][0] + dangle[rnai][rnaj][RNA[j-1]][1];
-#else
     tmp1 = dangle[rnai][rnaj][RNA[i + 1]][0];
     tmp2 = dangle[rnai][rnaj][RNA[j - 1]][1];
 
@@ -999,10 +974,6 @@ void calcVBIVMVWM(int i, int j) {
     VMidjd += tmp1;
     VMijd += tmp2;
     VMidjd += tmp2;
-#endif
-
-    //if(i==28 && j==42)
-    //  printf("after for: (%d,%d,%d), VMij: %d, VMidj: %d, VMijd: %d, VMidjd: %d\n", i,h,j, VMij, VMijd, VMidj, VMidjd);
 
     /* Manoj ends */
     VMij = MIN(MIN(VMij, VMidj), MIN(VMijd, VMidjd));
@@ -1137,16 +1108,7 @@ void calcW(int j) {
 
         Wij = Widjd = Wijd = Widj = INFINITY_;
 
-        // printf("i: %d, j: %d\n", i, j);
-
-# if 0
-        Wim1=W[i-1];
-#endif
-#if 1
         Wim1 = MIN(0, W[i - 1]); /* If W[i-1] >=0, this means that there is a branch contained in the sequence from 1 to i-1. Otherwise W[i-1] will be INFINITY. Here Wim1 is defined in this manner, to make the energy of unfolded sequence as INFINITY. */
-#endif
-
-        //Wim1 = W[i - 1];
 
         rnai = RNA[i];
 
@@ -1172,11 +1134,6 @@ void calcW(int j) {
             must_branch = 0;
             besti = i;
         }
-
-        // if(i==46 && j==395){
-        //      printf("V(%d, %d): %d, WM: %d\n", 46, j, V[indx[46]+j], WM[46][j]);
-        //      printf("Wij: %d, Widjd: %d, Wijd: %d, Widj: %d\n\n", Wij, Widjd, Wijd, Widj);
-        //}
 
         if (Wj < INFINITY_) {
             if (Wj == Wij) {
