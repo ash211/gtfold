@@ -151,7 +151,8 @@ void initTables(int len) {
 //check if single stranded region is allowed with the given constraints
 int checkSS(int i, int j) {
 
-    for (int it = i + 1; it < j; it++)
+    int it;
+    for (it = i + 1; it < j; it++)
         if (constraints[it] > 0)
             return 1;
 
