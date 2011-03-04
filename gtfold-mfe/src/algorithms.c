@@ -165,6 +165,7 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
         if(RNA1[i]=='N') 
             constraints[i] = -1;
 
+    // initialize constraints that prohibit pairing
     if (prohibitlen != 0) 
         for (it = 0; it < prohibitlen; it++) 
             for(k= 1; k <= prohibitList[it][2];k++) {
@@ -173,6 +174,7 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
                     constraints[prohibitList[it][1]+1-k] = -1;
             }
 
+    // initialize constraints that force pairing
     if (forcelen != 0) {
         printf("Running with constraints\n");
         for (it = 0; it < forcelen; it++) {
@@ -189,6 +191,7 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
     }
 
 #ifdef _OPENMP
+    // use the user-specified thread count
     if (num_threads > 0)
         omp_set_num_threads(num_threads);
 #endif
