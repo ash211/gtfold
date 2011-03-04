@@ -749,26 +749,35 @@ void calcVWM(int i, int j, int VBIij, int VMij) {
     WM(i,j) = WMij; /* extra instruction */
 }
 
-/* Function for calculating VM, V, and WM at point (i,j) in the order . Calculation of V at (i,j) requires VBI and VM. Also, calculation of final value of WM(i,j) requires V at (i,j) */
-
+/**
+ * Calculate VM, V, and WM (in that order)
+ *
+ * Some table entries must be filled before others can be filled as well: V
+ * requires VBI and VM, and WM requires V.
+ */
 void calcVMVWM(int i, int j) {
 
-    int a = multConst[0] /*offset penalty for multiloops*/,
-    b = multConst[2]/*penalty per branch for multiloops*/, c =
-        multConst[1]/* Penalty per single base in the multiloop*/,
-        a1, h, es;
+    int a = multConst[0]; // offset penalty for multiloops
+    int b = multConst[2]; // penalty per branch for multiloops
+    int c = multConst[1]; // Penalty per single base in the multiloop
+    int a1, h, es;
+
     int aupen;
+
     int WMijp, WMidjd, WMidj, WMijd, WMij;
     int VMij, VMijd, VMidj, VMidjd, A_temp;
-    int WMip1hm1 /* WM value at i+1 and j-1 */,
-    WMip2hm1/* WM value at i+2 and h-1*/,
-    WMhjm1/* WM value at h and j-1*/, WMhjm2/* WM value at h and j-2*/,
-    WMhp1j /*WM value at h+1 and j*/;
-    int rnai, rnaj;
-    int tmp1, tmp2;
 
+    int WMip1hm1; // WM value at i+1 and j-1
+    int WMip2hm1; // WM value at i+2 and h-1
+    int WMhjm1;   // WM value at h and j-1
+    int WMhjm2;   // WM value at h and j-2
+    int WMhp1j;   // WM value at h+1 and j
+
+    int rnai, rnaj;
     rnai = RNA[i];
     rnaj = RNA[j];
+
+    int tmp1, tmp2;
 
     WMidjd = INFINITY_;
     WMidj = INFINITY_;
@@ -789,14 +798,23 @@ void calcVMVWM(int i, int j) {
     if (a1 <= WMijp)
         WMijp = a1;
 
-    /* Here we are doing the calculation of VM and WM at point (i,j) concurrently. This for loop calculates the values of VMij, VMidj, VMijd, VMidjd with the value of WMijp. The value of WMijp is needed for calculating the value of WM at (i,j). However, it should be noted that the final value of WM[i][j] requires value of V at (i,j) and will be calculated in the end. */
+    // Here we are doing the calculation of VM and WM at point (i,j)
+    // concurrently. This for loop calculates the values of VMij, VMidj, VMijd,
+    // VMidjd with the value of WMijp. The value of WMijp is needed for
+    // calculating the value of WM at (i,j). However, it should be noted that
+    // the final value of WM[i][j] requires value of V at (i,j) and will be
+    // calculated in the end.
 
-    /* There are four possibilities for the multiloop closing base pair for the inclusion of dangling energies.
-     * 1) Including the dangling energy of i+1 base and also for base j-1 with the base pair (i,j) closing the multiloop - VMidjd
-     * 2) Including the danlging energy of i+1 base and NOT including the dangling energy of base j-1 with the closing base pair (i,j) - VMidj
-     * 3) NOT including the danlging energy of i+1 base and including the dangling energy of base j-1 with the closing base pair (i,j) - VMijd
-     * 4) NOT including the danlging energy of i+1 base and NOT including the dangling energy of base j-1 with the closing base pair (i,j)-VMij
-     * */
+    // There are four possibilities for the multiloop closing base pair for the
+    // inclusion of dangling energies:
+    // 1) Including the dangling energy of i+1 base and also for base j-1 with
+    //    the base pair (i,j) closing the multiloop - VMidjd
+    // 2) Including the danlging energy of i+1 base and NOT including the
+    //    dangling energy of base j-1 with the closing base pair (i,j) - VMidj
+    // 3) NOT including the danlging energy of i+1 base and including the
+    //    dangling energy of base j-1 with the closing base pair (i,j) - VMijd
+    // 4) NOT including the danlging energy of i+1 base and NOT including the
+    //    dangling energy of base j-1 with the closing base pair (i,j)-VMij
     for (h = i + 6; h <= j - 5; h++) {
 
         a1 = WM[i][h];
@@ -826,8 +844,9 @@ void calcVMVWM(int i, int j) {
             VMijd = A_temp;
 
         A_temp = WMip2hm1 + WMhjm2;
-        if (A_temp <= VMidjd && constraints[i + 1] <= 0 && constraints[j - 1]
-                                                                       <= 0)
+        if (A_temp <= VMidjd &&
+            constraints[i + 1] <= 0 &&
+            constraints[j - 1] <= 0)
             VMidjd = A_temp;
     }
 
