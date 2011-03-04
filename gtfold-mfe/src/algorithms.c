@@ -111,13 +111,6 @@ void initTables(int len) {
 	int i, j;
 	int LLL;
 
-#if 0
-	int z = (len)*(len+1)/2 + 1;
-
-	V = new int[z];
-	indx = new int[len+1];
-#endif
-
 #if DEBUG
 	if (len != LENGTH-1)
 		fprintf(stderr,"ERROR: in initTables, len (%5d) != LENGTH-1 (%5d)\n",len,LENGTH-1);
@@ -128,10 +121,6 @@ void initTables(int len) {
 	for (i = 0; i < LENGTH; i++) {
 		W[i] = INFINITY_; /* Initializing W array with INFINITY make sure that an unfolded sequence will have a large +ve value for free energy - INIFINITY*/
 		constraints[i] = 0;
-#if 0
-		indx[i] = (LENGTH-1)*(i-1) - (i*(i-1))/2;
-		indx[i] = (len)*(i-1) - (i*(i-1))/2;
-#endif
 		for (j = 0; j < LENGTH; j++) {
 			VBI[i][j] = INFINITY_;
 			VM[i][j] = INFINITY_;
@@ -144,23 +133,23 @@ void initTables(int len) {
 	for (i = 0; i < LLL; i++)
 		V[i] = INFINITY_;
 
-	/*The array V is mapped from 2D to 1D and indexed using the indx array. This mapping helps removing the space wasted for j < i*/
+    /*
+     * The array V is mapped from 2D to 1D and indexed using the indx array.
+     * This mapping helps removing the space wasted for j < i
+     */
 	for (i = 0; i <= LENGTH - 1; i++)
 		indx[i] = (len) * (i - 1) - (i * (i - 1)) / 2;
-
-	return;
 }
 
 //check if single stranded region is allowed with the given constraints
 int checkSS(int i, int j) {
 
 	int it;
-	for (it = i + 1; it < j; it++) {
+	for (it = i + 1; it < j; it++)
 		if (constraints[it] > 0)
 			return 1;
-	}
-	return 0;
 
+	return 0;
 }
 
 int calculate(int len, int **forceList, int **prohibitList, int forcelen, int prohibitlen) {
