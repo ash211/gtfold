@@ -1214,7 +1214,9 @@ void calcVBIVMVWM(int i, int j) {
 }
 
 //problems in this function.. i think this should fix it..
-/* Function to calculate the value of W[j]. */
+/**
+ * Calculate entry in W array
+ */
 void calcW(int j) {
 
     int i;
@@ -1260,43 +1262,19 @@ void calcW(int j) {
             besti = i;
         }
 
-        if (Wj < INFINITY_) {
-            if (Wj == Wij) {
-                if (constraints[i] == j) {
-                    must_branch = 1;
-                }
-            } else if (Wj == Widjd) {
-                if (constraints[i + 1] == j - 1) {
-                    must_branch = 1;
-                }
-            } else if (Wj == Wijd) {
-                if (constraints[i] == j - 1) {
-                    must_branch = 1;
-                }
-            } else {
-                if (constraints[i + 1] == j) {
-                    must_branch = 1;
-                }
-            }
-        }
-
+        if(Wj < INFINITY_ && (Wj == Wij && constraints[i] == j ||
+                              Wj == Widjd && constraints[i+1] == j-1 ||
+                              Wj == Wijd && constraints[i] == j-1 ||
+                              constraints[i+1] == j))
+            must_branch = 1;
     }
-
-    //printf("W%dcal: %d, must_branch: %d, best_i: %d", j, Wj, must_branch, besti);
 
     /* If jth base is not contributing in the energy calculation of W[j] */
-    if (!must_branch) {
+    if (!must_branch)
         if (Wj > W[j - 1])
             Wj = W[j - 1];
-    }
 
     W[j] = Wj;
-
-    //printf(",W%dset: %d\n", j, W[j]);
-
-    //  if(j==11 || j==35 || j==36)
-    // printf("\n*****\nMust branch: %d, W%d: %d\n*****\n", must_branch, j, W[j]);
-    return;
 }
 
 /* For details on calculating energy of different types of Internal loops, please look at the chapter 3 of MS thesis of Mirela Stefania Andronescu.
