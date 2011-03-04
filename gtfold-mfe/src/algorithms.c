@@ -124,7 +124,9 @@ void initTables(int len) {
     init_chPair();
 
     for (i = 0; i < LENGTH; i++) {
-        W[i] = INFINITY_; /* Initializing W array with INFINITY make sure that an unfolded sequence will have a large +ve value for free energy - INIFINITY*/
+        // Initializing W array with INFINITY_ ensures that unfolded sequences
+        // have a large positive value for free energy
+        W[i] = INFINITY_;
         constraints[i] = 0;
         for (j = 0; j < LENGTH; j++) {
             VBI[i][j] = INFINITY_;
@@ -133,15 +135,15 @@ void initTables(int len) {
         }
     }
 
-    LLL = (LENGTH - 1) * (LENGTH) / 2 + 1;
+    // The array V is mapped from 2D to 1D and indexed using the indx array.
+    // This mapping helps removing the space wasted for j < i
 
+    // initialize all to INFINITY_
+    LLL = (LENGTH - 1) * (LENGTH) / 2 + 1;
     for (i = 0; i < LLL; i++)
         V[i] = INFINITY_;
 
-    /*
-     * The array V is mapped from 2D to 1D and indexed using the indx array.
-     * This mapping helps removing the space wasted for j < i
-     */
+    // create the mapping
     for (i = 0; i <= LENGTH - 1; i++)
         indx[i] = (len) * (i - 1) - (i * (i - 1)) / 2;
 }
@@ -149,8 +151,7 @@ void initTables(int len) {
 //check if single stranded region is allowed with the given constraints
 int checkSS(int i, int j) {
 
-    int it;
-    for (it = i + 1; it < j; it++)
+    for (int it = i + 1; it < j; it++)
         if (constraints[it] > 0)
             return 1;
 
