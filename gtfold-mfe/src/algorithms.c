@@ -62,6 +62,7 @@
 
 #define WM(i,j) WM[j][i]  /* This pragma is defined for readability purpose.*/
 
+/** A mask used to speed up testing nucleotides for pairing */
 unsigned int chPairKey;
 
 //Constraint arrays
