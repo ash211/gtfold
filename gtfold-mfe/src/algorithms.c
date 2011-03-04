@@ -544,20 +544,30 @@ void calcVBIS(int i, int j) {
     VBI[i][j] = VBIij;
 }
 
-/* Function for calculating the value of WM(i,j)*/
+/**
+ * Calculates WM(i,j)
+ */
 void calcWM(int i, int j) {
 
-    int b = multConst[2], c = multConst[1]; /* b is the branch penalty and c is penalty for single bases for multiloops*/
+    int b = multConst[2]; // branch penalty
+    int c = multConst[1]; // penalty for single bases for multiloops
     int h;
-    /* WMidjd = dangling base on both ith and jth side.  WMidj = dangling base on ith side. WMijd = dangling base on jth side. WMij = no dangling base on both sides  */
-    int WMidjd, WMidj, WMijd, WMij, WMijp;
+
+    int WMidjd; // dangling bases on both i and j side
+    int WMidj;  // dangling base on i side
+    int WMijd;  // dangling base on j side
+    int WMij;   // no dangling base on either side
+
+    int WMijp;
+
+    // Read the values of RNA[i] and RNA[j] into registers for speed
     int rnai, rnaj;
-    rnai = RNA[i]; /* Read the value of RNA[i] and RNA[j] in register to make the program execute faster.*/
+    rnai = RNA[i];
     rnaj = RNA[j];
 
-    WMijp = INFINITY_; /* See, the data flow through the function - how it has been calculated. */
+    WMijp = INFINITY_;
 
-    /* Minimum size of a hairpin loop is 3, that makes the starting limit of h=i+4 and end limit of j-5*/
+    // Because a hairpin's minimum size is 3, start h at i+4 and end at j-5
     for (h = i + 4; h < j - 4; h++) {
         int temp = WM[i][h] + WM(h+1,j);
         if (temp <= WMijp)
@@ -569,27 +579,35 @@ void calcWM(int i, int j) {
     WMijd = INFINITY_;
     WMij = INFINITY_;
 
-    /* If base i and j pair up. */
+    // i and j pair
     WMij = V[indx[i] + j] + auPen(rnai, rnaj) + b;
-    /* If base i+1 and j pair up. Add the dangling interaction energy of base pair (i+1,j) with base i being on the 3' end */
+
+    // i+1 and j pair. Add the dangling interaction energy of base pair (i+1,j)
+    // with base i being on the 3' end
     if (constraints[i] <= 0)
-        WMidj = V[indx[i + 1] + j] + dangle[rnaj][RNA[i + 1]][rnai][1] + auPen(
-                RNA[i + 1], rnaj) + b + c;
-    /* If base i and j-1 pair up. Add the dangling interaction energy of base pair (i,j-1) with base j being on the 5' end */
+        WMidj = V[indx[i + 1] + j] +
+                dangle[rnaj][RNA[i + 1]][rnai][1] +
+                auPen(RNA[i + 1], rnaj) +
+                b + c;
+
+    // i and j-1 pair. Add the dangling interaction energy of base pair (i,j-1)
+    // with base j being on the 5' end
     if (constraints[j] <= 0)
-        WMijd = V[indx[i] + j - 1] + dangle[RNA[j - 1]][rnai][rnaj][0] + auPen(
-                rnai, RNA[j - 1]) + b + c;
-    /* If base i+1 and j-1 pair up. Add the dangling interaction energy of base pair (i+1,j-1) with base i on the 3' and base j on the 5' end.*/
+        WMijd = V[indx[i] + j - 1] +
+                dangle[RNA[j - 1]][rnai][rnaj][0] +
+                auPen(rnai, RNA[j - 1]) +
+                b + c;
+
+    // i+1 and j-1 pair. Add the dangling interaction energy of base pair
+    // (i+1,j-1) with base i on the 3' and base j on the 5' end.
     if (constraints[i] <= 0 && constraints[j] <= 0)
-        WMidjd = V[indx[i + 1] + j - 1]
-                   + dangle[RNA[j - 1]][RNA[i + 1]][rnai][1]
-                                                          + dangle[RNA[j - 1]][RNA[i + 1]][rnaj][0] + auPen(RNA[i + 1],
-                                                                  RNA[j - 1]) + b + 2* c ;
+        WMidjd = V[indx[i + 1] + j - 1] +
+                 dangle[RNA[j - 1]][RNA[i + 1]][rnai][1] +
+                 dangle[RNA[j - 1]][RNA[i + 1]][rnaj][0] +
+                 auPen(RNA[i + 1],RNA[j - 1]) +
+                 b + 2*c;
 
-    //  if(i==6 && j==11)
-    //    printf("(%d,%d), WMij: %d, WMidj: %d, WMijd: %d, WMidjd: %d, constraints: (%d,%d)\n", i, j, WMij, WMidj, WMijd, WMidjd, constraints[i], constraints[j]);
-
-    /* Take the minimum of all of the terms */
+    // take the minimum of all WMxxx terms
     WMij = MIN(MIN(WMij, WMidj), MIN(WMijd, WMidjd));
 
     int WMsip1j = INFINITY_;
@@ -605,11 +623,11 @@ void calcWM(int i, int j) {
     WMij = MIN(MIN(WMsip1j + c, WMsijm1 + c), WMij);
     WMij = MIN(WMijp, WMij);
 
-    //printf("%d, (%d,%d), WM: %d\n", j-i, i, j, WMij);
-
     WM[i][j] = WMij;
-    WM(i,j) = WMij; /* Extra instruction. NOTE that - by having this instruction we are making WM array symmetric. The macro will convert this instruction into WM[j][i] = WM[i][j] making WM array symmetric.*/
-    return;
+
+    // The WM(i,j) macro is equivalent to WM[j][i].  This extra insertion into
+    // the WM table keeps it symmetric
+    WM(i,j) = WMij;
 }
 
 /* Function used for calculating the value of V and WM for a given i,j pair. Calculation of WM at (i,j) requires value of V at (i,j)*/
