@@ -630,12 +630,22 @@ void calcWM(int i, int j) {
     WM(i,j) = WMij;
 }
 
-/* Function used for calculating the value of V and WM for a given i,j pair. Calculation of WM at (i,j) requires value of V at (i,j)*/
+/**
+ * Calculate i,j entry in V and WM
+ *
+ * WM[i][j] requires having V[i][j] first
+ */
 void calcVWM(int i, int j, int VBIij, int VMij) {
     int a, b, c, h, Vij, eh, es;
-    int WMidjd, WMidj, WMijd, WMij, WMijp;
-    int rnai, rnaj;
 
+    int WMidjd; // dangling bases on both i and j side
+    int WMidj;  // dangling base on i side
+    int WMijd;  // dangling base on j side
+    int WMij;   // no dangling base on either side
+    int WMijp;
+
+    // Read the values of RNA[i] and RNA[j] into registers for speed
+    int rnai, rnaj;
     rnai = RNA[i];
     rnaj = RNA[j];
 
@@ -645,21 +655,22 @@ void calcVWM(int i, int j, int VBIij, int VMij) {
     WMij = INFINITY_;
 
     /* V starts */
-    eh = eH(i, j); /* Energy of a hairpin loop */
-    es = eS(i, j); /* Energy of a stack, with (i,j) and (i-1,j+1) base pairs.*/
-    if (es == 0) {
+    eh = eH(i, j); // Energy of a hairpin loop
+    es = eS(i, j); // Energy of a stack, with (i,j) and (i-1,j+1) base pairs
+
+    if (es == 0)
         es = INFINITY_;
-    } else
+    else
         es += V[indx[i + 1] + j - 1];
 
     Vij = MIN(MIN(eh, es), MIN(VBIij, VMij));
 
-    if ((constraints[i] > 0 && constraints[i] != j) || (constraints[j] > 0
-            && constraints[j] != i) || constraints[i] == -1 || constraints[j]
-                                                                           == -1)
+    // skip entirely if not permitted by constraints
+    if ((constraints[i] > 0 && constraints[i] != j) ||
+        (constraints[j] > 0 && constraints[j] != i) ||
+        constraints[i] == -1 ||
+        constraints[j] == -1)
         Vij = INFINITY_;
-
-    // printf("%d, V(%d,%d): eh: %d, es: %d, vbi: %d, vm: %d, v: %d\n", j-i, i, j, eh, es, VBIij, VMij, Vij);
 
     V[indx[i] + j] = Vij;
 
@@ -671,12 +682,10 @@ void calcVWM(int i, int j, int VBIij, int VMij) {
             //Isolated base pairs look ahead
             int eHL = eH(i - 1, j + 1);
             int eSL = eS(i - 1, j + 1) + V[indx[i] + j];
-            if (i - 1 == 0) {
-                eSL = 0;
-                eHL = 0;
-            }
-            int Vijl = (eHL < eSL) ? eHL : eSL;
-            // printf("(%d,%d): Hairpin: %d, Stack: %d, Lookahead: %d\n", i, j, eHL, eSL, Vijl);
+            if (i == 1)
+                eSL = eHL = 0;
+
+            int Vijl = MIN(eHL, eSL);
 
             if (Vijl > INFINITY_ - SMALLINFTY_)
                 //isolated base pair found.. setting energy to infinity
@@ -705,18 +714,23 @@ void calcVWM(int i, int j, int VBIij, int VMij) {
     WMij = Vij + auPen(rnai, rnaj) + b;
 
     if (constraints[i] <= 0)
-        WMidj = V[indx[i + 1] + j] + dangle[rnaj][RNA[i + 1]][rnai][1] + auPen(
-                RNA[i + 1], rnaj) + b + c;
+        WMidj = V[indx[i + 1] + j] +
+                dangle[rnaj][RNA[i + 1]][rnai][1] +
+                auPen(RNA[i + 1], rnaj) +
+                b + c;
 
     if (constraints[j] <= 0)
-        WMijd = V[indx[i] + j - 1] + dangle[RNA[j - 1]][rnai][rnaj][0] + auPen(
-                rnai, RNA[j - 1]) + b + c;
+        WMijd = V[indx[i] + j - 1] +
+                dangle[RNA[j - 1]][rnai][rnaj][0] +
+                auPen(rnai, RNA[j - 1]) +
+                b + c;
 
     if (constraints[i] <= 0 && constraints[j] <= 0)
-        WMidjd = V[indx[i + 1] + j - 1]
-                   + dangle[RNA[j - 1]][RNA[i + 1]][rnai][1]
-                                                          + dangle[RNA[j - 1]][RNA[i + 1]][rnaj][0] + auPen(RNA[i + 1],
-                                                                  RNA[j - 1]) + b + 2* c ;
+        WMidjd = V[indx[i + 1] + j - 1] +
+                 dangle[RNA[j - 1]][RNA[i + 1]][rnai][1] +
+                 dangle[RNA[j - 1]][RNA[i + 1]][rnaj][0] +
+                 auPen(RNA[i + 1], RNA[j - 1]) +
+                 b + 2*c;
 
     WMij = MIN(MIN(WMij, WMidj), MIN(WMijd, WMidjd));
 
@@ -729,15 +743,10 @@ void calcVWM(int i, int j, int VBIij, int VMij) {
     if (constraints[j] <= 0)
         WMsijm1 = WM[i][j - 1];
 
-    WMij = MIN(MIN(WMsip1j + c, WMsijm1 + c), WMij);
-    WMij = MIN(WMijp, WMij);
-
-    //printf("%d, (%d,%d), WM: %d\n", j-i, i, j, WMij);
+    WMij = MIN(WMij, MIN(WMsip1j + c, MIN(WMsijm1 + c, MIN(WMijp, WMij))));
 
     WM[i][j] = WMij;
     WM(i,j) = WMij; /* extra instruction */
-    /* WM ends */
-    return;
 }
 
 /* Function for calculating VM, V, and WM at point (i,j) in the order . Calculation of V at (i,j) requires VBI and VM. Also, calculation of final value of WM(i,j) requires V at (i,j) */
