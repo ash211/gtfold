@@ -156,35 +156,22 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
     int b, i, j, it, k;
     
     for(i=1;i<=len;i++) 
-    {
         if(RNA1[i]=='N') 
             constraints[i] = -1;
-    }   
 
     if (prohibitlen != 0) 
-    {
         for (it = 0; it < prohibitlen; it++) 
-        {
-            for(k= 1; k <= prohibitList[it][2];k++)
-            {
+            for(k= 1; k <= prohibitList[it][2];k++) {
                 constraints[prohibitList[it][0]+k-1] = -1;
-                if(prohibitList[it][1]!=0)
-                {
+                if(prohibitList[it][1] != 0)
                     constraints[prohibitList[it][1]+1-k] = -1;
-                }
             }
-        }
-    }
 
-    if (forcelen != 0) 
-    {
+    if (forcelen != 0) {
         printf("Running with constraints\n");
-        for (it = 0; it < forcelen; it++) 
-        {
-            for(k=1; k <= forceList[it][2];k++)
-            {
-                if (!chPair(RNA[forceList[it][0]+k-1], RNA[forceList[it][1]-k+1])) 
-                {
+        for (it = 0; it < forcelen; it++) {
+            for(k=1; k <= forceList[it][2];k++) {
+                if (!chPair(RNA[forceList[it][0]+k-1], RNA[forceList[it][1]-k+1])) {
                     printf("Can't constrain (%d,%d)\n", forceList[it][0]+k-1,
                             forceList[it][1]-k+1);
                     continue;
@@ -192,7 +179,6 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
                 constraints[forceList[it][0]+k-1] = forceList[it][1]+1-k;
                 constraints[forceList[it][1]+1-k] = forceList[it][0]+k-1;
             }
-                //printf("(%d,%d)\n", forceList[it][0], forceList[it][1]);
         }
     }
 
