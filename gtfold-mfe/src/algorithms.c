@@ -17,7 +17,11 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* AUTHORED by Amrita Mathuriya August 2007 - January 2009. Implemented multiloop energy function, internal loop energy function using heuristic and internal loop speedup algorithm, parallelization, corrected numerous bugs and commented whole GTfold.
+/*
+ * AUTHORED by Amrita Mathuriya August 2007 - January 2009
+ * Implemented multiloop energy function, internal loop energy function using
+ * heuristic and internal loop speedup algorithm, parallelization, corrected
+ * numerous bugs and commented whole GTfold.
 
  * Amrita:
  * - Please note that, in this file same recursion formulas is being calculated
@@ -36,9 +40,9 @@
  *   into effect at many places.
  * - I am not sure of what these eparam values are at various places except for
  *   multiloops.
- * */
+ */
 
-/* Modified by Sainath Mallidi August 2009 - 
+/* Modified by Sainath Mallidi August 2009 - December 2010
  * Added constraint support that can force a base pair, prohibit a base pair
  * and make single stranded regions
  */
