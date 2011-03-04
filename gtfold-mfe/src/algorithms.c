@@ -369,21 +369,33 @@ void calcVBI(int i, int j) {
     VBI[i][j] = VBIij;
 }
 
-/* Amrita: - Internal loop speedup algorithm */
-/* Calculation of internal loops using internal loop speedup algorithm. The algorithm calculates the optimal loop closed with base pair (i,j) */
+/*
+ * Calculates VBI using the Internal Loop Speedup Algorithm
+ *
+ * @author Amrita
+ */
 void calcVBIS(int i, int j) {
 
-    int ip, jp, E, VBIij, c = 3, b, len = LENGTH - 1, E1, E2, g; /* ip and jp form enclosed base pairs and c is a small constant currently taken as 3. The loops having one or both sides smaller than c are calculated as special cases. */
+    /* ip and jp form enclosed base pairs and c is a small constant currently
+     * taken as 3. The loops having one or both sides smaller than c are
+     * calculated as special cases. */
+    int ip, jp, E, VBIij, c = 3, b, len = LENGTH - 1, E1, E2, g;
 
-    if ((constraints[i] > 0 && constraints[i] != j) || (constraints[j] > 0
-            && constraints[j] != i) || constraints[i] == -1 || constraints[j]
-                                                                           == -1)
+    // skip entirely if not permitted by constraints
+    if ((constraints[i] > 0 && constraints[i] != j) ||
+        (constraints[j] > 0 && constraints[j] != i) ||
+         constraints[i] == -1 ||
+         constraints[j] == -1)
         return;
 
     VBIij = VBI[i][j];
 
-    /*Case1: Loops having first side shorter than c and second side has all allowable sizes */
-    /* Having ip = i+1 and jp=j-1 creates a stack which is considered separately in eS function. So here the max value of jp could be j-2*/
+    // Case 1: Loops having first side shorter than c and second side has all
+    // allowable sizes
+
+    // Having ip = i+1 and jp = j-1 creates a stack loop, which is taken care
+    // of in V and not here
+    // Therefore for ip=i+1, the jp value should be less than or equal to j-2.
     ip = i + 1;
     for (jp = ip + 4; jp <= j - 2; jp++) {
         if (jp-ip >= contact_dist) continue;
@@ -394,8 +406,9 @@ void calcVBIS(int i, int j) {
         }
     }
 
+    // now consider the non-special cases where ip starts at i+2
     for (ip = i + 2; ip <= i + c; ip++) {
-        for (jp = ip + 4; jp <= j - 1; jp++) { /* Minimum size of a hairpin loop is 3.*/
+        for (jp = ip + 4; jp <= j - 1; jp++) { // Minimum size of a hairpin loop is 3.
             if (jp-ip >= contact_dist) continue;
             if (chPair(RNA[ip], RNA[jp])) {
                 E = eL(i, j, ip, jp) + V[indx[ip] + jp];
@@ -405,9 +418,10 @@ void calcVBIS(int i, int j) {
         }
     }
 
-    /*Case 2: When the first side is greater or equal to c but the second side is smaller */
+    // Case 2: When the first side is greater or equal to c but the second side
+    // is smaller
     for (ip = i + c + 1; ip < j - 1; ip++) {
-        for (jp = j - c; jp <= j - 1 && jp >= ip + 4; jp++) { /* Minimum size of a hairpin loop is 3.*/
+        for (jp = j - c; jp <= j - 1 && jp >= ip + 4; jp++) { // Minimum size of a hairpin loop is 3.
             if (jp-ip >= contact_dist) continue;
             if (chPair(RNA[ip], RNA[jp])) {
                 E = eL(i, j, ip, jp) + V[indx[ip] + jp];
@@ -417,35 +431,48 @@ void calcVBIS(int i, int j) {
         }
     }
 
-    /* Case 3: General Case - when both sides of internal loops are greater than or equal to c */
-    /*Base cases for this (i,j) are g=j-i-2c-3 and j-i-2c-4, gap values should always be greater than or equal to 3*/
-    /* First base case - both sides of the loop are  equal to c.*/
+    // Case 3: General Case - when both sides of internal loops are greater
+    // than or equal to c
+
+    // Base cases for this (i,j) are g=j-i-2c-3 and g=j-i-2c-4,
+    // Also, gap values (count of nucleotides enclosed by the inner base pair)
+    // should always be greater than or equal to 3
+
+    // First base case - both sides of the loop are equal to c.
     ip = i + c + 1;
     jp = j - c - 1;
 
+    // g is the number of nucleotides inclosed by the inner loop
     g = jp - ip - 1;
+
+    // if g is less than 3, then the inner base pair is too short -- don't
+    // extend this value. In this case the second base case of g-1 == j-i-2c-4
+    // will also not make a valid gap value.
     if (g < 3) {
         VBI[i][j] = VBIij;
         return;
-    } /* if g is lesser than 3, then you don't extend this value. In this case the second base case of g-1=j-i-2c-4 will also not make a valid gap value. */
+    }
 
+    // but for valid inner loops, calculate their energy and update into VBIij
     E = eL(i, j, ip, jp) + V[indx[ip] + jp];
     if (VBIij > E)
         VBIij = E;
 
-    /* Extend this base case for all closing base pairs of the form ( i-b, j+b ) */
-
+    // Extend this base case for all closing base pairs of the form (i-b, j+b)
     for (b = 1; b <= MIN(i - 1, len - j); b++) {
 
         E = eL(i - b, j + b, ip, jp) + V[indx[ip] + jp];
 
-        /* Two more options for base pair (i-b,j+b), which are introduced by having one of the side of the resultant internal loop exactly equal to c */
-        /* Second side is c - with closing base pair (i-b,j+b)*/
+        // Two more options for base pair (i-b,j+b), which are introduced by
+        // having one of the side of the resultant internal loop exactly equal
+        // to c
+
+        // Second side is c - with closing base pair (i-b,j+b)
         int ip1 = i + c + 1 + b;
         int jp1 = (j + b) - c - 1;
         E1 = eL(i - b, j + b, ip1, jp1) + V[indx[ip1] + jp1];
 
-        /* First side is c - with closing base pair (i-b,j+b)*/
+        // First side is c - with closing base pair (i-b,j+b)
         int ip2 = (i - b) + c + 1;
         int jp2 = j - c - 1 - b;
         E2 = eL(i - b, j + b, ip2, jp2) + V[indx[ip2] + jp2];
@@ -465,10 +492,12 @@ void calcVBIS(int i, int j) {
         }
     }
 
+    // For exactly three enclosed nucleotides, no more possibilities
     if (g == 3) {
         VBI[i][j] = VBIij;
         return;
-    } /* In this case the gap g-1=2, which should not be extended.*/
+    }
+
     ip = i + c + 2;
     jp = j - c - 1;
     E1 = eL(i, j, ip, jp) + V[indx[ip] + jp];
