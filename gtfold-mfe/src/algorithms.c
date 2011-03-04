@@ -197,27 +197,38 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
 
     //printf("starting.......\n");
 
-    /* Here b-1 is the length of the segment closed with (i,j) base pair. We assume the minimum size of a hairpin loop closed with (i,j) equal to 3.*/
+    // Here b-1 is the length of the segment closed with (i,j) base pair. We
+    // assume the minimum size of a hairpin loop closed with (i,j) equal to 3.
 
-    /* For b = 4 to 6, hairpin loops and at b = 6 stack loops are possible. So, only WM, and V array are needs to be calculated.
-     * If (i,j) can not pair up then only WM needs to be calculated.
-     * */
+    /* For b = 4 to 6, hairpin loops and at b = 6 stack loops are possible. So,
+     * only WM, and V array are needs to be calculated.  If (i,j) can not pair
+     * up then only WM needs to be calculated.  */
     for (b = 4; b <= 6; b++) {
 #ifdef _OPENMP
 #pragma omp parallel for private (i,j) schedule(guided)
-        /* OpenMP syntex to parallelize the for loop. Guided scheduling strategy works better because there may not be equla amount of work for every (i,j)
-         * Please look at the conference paper on GTfold for information regarding how to parallelize the code. Also, note that the for every value of b calculation has to go sequentially. However, the calculation for a perticular value of b, which corresponds to calculating on a single diagonal.
-         * */
+        /* - OpenMP syntax to parallelize the for loop. Guided scheduling
+         *   strategy works better because there may not be an equal amount of
+         *   work for every (i,j)
+         * - Please look at the conference paper on GTfold for information
+         *   regarding how to parallelize the code. Also, note that the for
+         *   every value of b calculation must be sequential. However, the
+         *   calculation for a particular value of b, which corresponds to
+         *   calculating on a single diagonal, can be parallelized.
+         */
 #endif
         for (i = 1; i <= len - b; i++) {
             j = i + b;
-            //if (constraints[i] == -1 && constraints[j] == -1)
-            //  continue;
+
+            // don't allow pairing past the contact distance
             if (j-i >= contact_dist) continue;
-            if (chPair(RNA[i], RNA[j])) /* Check if bases i and j pair up or not */
-                calcVWM(i, j, INFINITY_, INFINITY_); /* Calculates V and WM array for element (i,j)*/
+
+            // if i and j pair
+            if (chPair(RNA[i], RNA[j]))
+                // calculate V and WM
+                calcVWM(i, j, INFINITY_, INFINITY_);
             else
-                calcWM(i, j); /* Calculates WM array for element (i,j)*/
+                // calculate just WM
+                calcWM(i, j);
         }
     }
 
@@ -228,14 +239,18 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
 #endif
         for (i = 1; i <= len - b; i++) {
             j = i + b;
-            //if (constraints[i] == -1 && constraints[j] == -1)
-            //  continue;
+
+            // don't allow pairing past the contact distance
             if (j-i >= contact_dist) continue;
+
+            // if i and j pair
             if (chPair(RNA[i], RNA[j])) {
-                calcVBI(i, j); /* Calculates VBI element at (i,j) */
-                calcVWM(i, j, VBI[i][j], INFINITY_); /* Calculates V and WM arrays*/
+                // calculate VBI, V, and WM
+                calcVBI(i, j);
+                calcVWM(i, j, VBI[i][j], INFINITY_);
             } else
-                calcWM(i, j); /* Calculates WM element at (i,j) */
+                // calculate WM
+                calcWM(i, j);
         }
     }
 
@@ -245,14 +260,15 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
 #endif
         for (i = 1; i <= len - b; i++) {
             j = i + b;
-            //printf("%d %d: %d %d\n", i, j, constraints[i], constraints[j]);
-            //if (constraints[i] == -1 && constraints[j] == -1)
-            //  continue;
+
+            // don't allow pairing past the contact distance
             if (j-i >= contact_dist) continue;
+
+            // if i and j pair
             if (chPair(RNA[i], RNA[j])) {
-                calcVBIVMVWM(i, j); /* Calculates VBI, VM, V and WM elements at (i,j) */
+                calcVBIVMVWM(i, j); // calculate VBI, VM, V and WM at (i,j)
             } else
-                calcWM(i, j); /* Calculates WM element at (i,j) */
+                calcWM(i, j); // calculate WM at (i,j)
         }
     }
 
