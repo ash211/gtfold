@@ -272,21 +272,14 @@ int calculate(int len, int **forceList, int **prohibitList, int forcelen, int pr
         }
     }
 
-/*
-    for(j=2; j<=len; j++){
-        for (i=j-1; i>0; i--){
-            printf("%d, (%d,%d), WM: %d\n", j-i, i, j, WM[i][j]);
-        }
-    }
-*/            
-
-    for (j = 5; j <= len; j++) /* Recurssion relation for W array does not depend upon any other array, so can be done after the computation of other arrays are finished.*/
+    // Recursion relation for the W array does not depend on any other arrays,
+    // so we can do it in one pass later
+    for (j = 5; j <= len; j++)
         calcW(j);
-
-    //printV(len);
 
     return W[len];
 }
+
 /* This function calculates the optimal energy of internal loops closed with base pair (i,j) using a heuristic, which limits their size to a constant value - MAXLOOP
  An internal loop contains one closing base pair (i,j) and one enclosed base pair (ip,jp). This function searches for the best enclosed base pair for the closing base pair (i,j) within the given window limited by MAXLOOP
  */
