@@ -4,9 +4,11 @@
 #include <stdlib.h>
 
 #include "algorithms.h"
+#include "utils.h"
+#include "energy.h"
+#include "global.h"
 #include "algorithms-partition.h"
 #include "data.h"
-
 
 // double[][] QB;
 // double[][] Q;

@@ -32,17 +32,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+
 #include "data.h"
+#include "utils.h"
 #include "constants.h"
+#include "energy.h"
+#include "global.h"
 #include "algorithms.h"
 #include "traceback.h"
 
 int total_en = 0;
 
+int checkSS(int i, int j){return 1;} //TODO remove this when we put constraints back in
+
 void trace(int len) {
 	int i;
 
-	for (i = 0; i < LENGTH; i++)
+	for (i = 0; i < len; i++)
 		structure[i] = 0;
 
 	if (W[len] >= MAXENG) {
@@ -77,15 +84,14 @@ void traceW(int j) {
 		Widj = INFINITY_;
 
 		Wij = V[indx[i] + j] + auPen(RNA[i], RNA[j]) + wim1;
-
-		if (constraints[i] <= 0 && constraints[j] <= 0)
+		//if (constraints[i] <= 0 && constraints[j] <= 0)
 			Widjd = V[indx[i + 1] + j - 1] + auPen(RNA[i + 1], RNA[j - 1])
 				+ dangle[RNA[j - 1]][RNA[i + 1]][RNA[i]][1]
 				+ dangle[RNA[j - 1]][RNA[i + 1]][RNA[j]][0] + wim1;
-		if (constraints[j] <= 0)
+		//if (constraints[j] <= 0)
 			Wijd = V[indx[i] + j - 1] + auPen(RNA[i], RNA[j - 1])
 				+ dangle[RNA[j - 1]][RNA[i]][RNA[j]][0] + wim1;
-		if (constraints[i] <= 0)
+		//if (constraints[i] <= 0)
 			Widj = V[indx[i + 1] + j] + auPen(RNA[i + 1], RNA[j])
 				+ dangle[RNA[j]][RNA[i + 1]][RNA[i]][1] + wim1;
 		Wj_temp=Wj;
@@ -102,15 +108,15 @@ void traceW(int j) {
 				if (flag || checkSS(1,i)) // Added this condition because if constraints are present, flag should be overridden
 					traceW(i - 1);
 				break;
-			} else if (W[j] == Widjd && constraints[i] <= 0
-					   && constraints[j] <= 0) { /* If base pair (i+1,j-1) is pairing and there is a dangling base on both its sides */
+			} else if (W[j]){ // == Widjd && constraints[i] <= 0
+					   //&& constraints[j] <= 0) { /* If base pair (i+1,j-1) is pairing and there is a dangling base on both its sides */
 				done = 1;
 				structure[i + 1] = j - 1;
 				structure[j - 1] = i + 1;
 				traceV(i + 1, j - 1);
 				if (flag || checkSS(1,i)) traceW(i - 1);
 				break;
-			} else if (W[j] == Wijd && constraints[j] <= 0) { /* If base pair (i,j-1) pairs and base j is single stranded. */
+			} else if (W[j]){// == Wijd && constraints[j] <= 0) { /* If base pair (i,j-1) pairs and base j is single stranded. */
 				done = 1;
 				structure[i] = j - 1;
 				structure[j - 1] = i;
@@ -118,7 +124,7 @@ void traceW(int j) {
 				if (flag || checkSS(1,i) )
 					traceW(i - 1);
 				break;
-			} else if (W[j] == Widj && constraints[i] <= 0) { /* If base pair (i+1,j) pairs and base i is single stranded. */
+			} else if (W[j]){// == Widj && constraints[i] <= 0) { /* If base pair (i+1,j) pairs and base i is single stranded. */
 				done = 1;
 				structure[i + 1] = j;
 				structure[j] = i + 1;
@@ -240,7 +246,7 @@ int traceVM(int i, int j) {
 	}
 
 	/* WM[i+2, j-1] */
-	if (constraints[i + 1] <= 0) {
+//	if (constraints[i + 1] <= 0) {
 		for (h = i + 3; h <= j - 1 && !done; h++) {
 			A_temp = WM[i + 2][h - 1] + WM[h][j - 1] + a + b + auPen(RNA[i],
 					RNA[j]) + dangle[RNA[i]][RNA[j]][RNA[i + 1]][0]; /* IF base i+1 is dangling on the 5' end of the base pair (i,j) */
@@ -251,10 +257,10 @@ int traceVM(int i, int j) {
 				break;
 			}
 		}
-	}
+//	}
 
 	/* WM[i+1][j-2] */
-	if (constraints[j - 1] <= 0) {
+//	if (constraints[j - 1] <= 0) {
 		for (h = i + 2; h <= j - 2 && !done; h++) { /* If base j-1 is dangling on 3' end of the base pair (i,j) */
 			A_temp = WM[i + 1][h - 1] + WM[h][j - 2] + a + b + auPen(RNA[i],
 					RNA[j]) + dangle[RNA[i]][RNA[j]][RNA[j - 1]][1];
@@ -265,10 +271,10 @@ int traceVM(int i, int j) {
 				break;
 			}
 		}
-	}
+//	}
 
 	/* WM[i+2][j-2] */
-	if (constraints[i + 1] <= 0 && constraints[j - 1] <= 0) {
+//	if (constraints[i + 1] <= 0 && constraints[j - 1] <= 0) {
 		for (h = i + 3; h <= j - 2 && !done; h++) { /* If base pair (i,j) has dangling bases on both sides. */
 			A_temp = WM[i + 2][h - 1] + WM[h][j - 2] + a + b + auPen(RNA[i],
 					RNA[j]) + dangle[RNA[i]][RNA[j]][RNA[i + 1]][0]
@@ -280,7 +286,7 @@ int traceVM(int i, int j) {
 				break;
 			}
 		}
-	}
+//	}
 
 	return eVM;
 }
@@ -320,33 +326,32 @@ int traceWM(int i, int j) {
 				structure[i] = j;
 				structure[j] = i;
 				eWM += traceV(i, j);
-			} else if (WM[i][j] == V[indx[i + 1] + j] + dangle[RNA[j]][RNA[i
-			                                                               + 1]][RNA[i]][1] + auPen(RNA[i + 1], RNA[j]) + b + c
-			                                                               && constraints[i] <= 0) { /* If base pair (i+1, j) forms and base i remain as a dangling base*/
+			} else if (WM[i][j] == V[indx[i + 1] + j] + dangle[RNA[j]][RNA[i + 1]][RNA[i]][1] + auPen(RNA[i + 1], RNA[j]) + b + c){
+			                                                               //&& constraints[i] <= 0) { /* If base pair (i+1, j) forms and base i remain as a dangling base*/
 				done = 1;
 				eWM += traceV(i + 1, j);
 				structure[i + 1] = j;
 				structure[j] = i + 1;
 			} else if (WM[i][j] == V[indx[i] + j - 1]
 			                         + dangle[RNA[j - 1]][RNA[i]][RNA[j]][0] + auPen(RNA[i],
-			                        		 RNA[j - 1]) + b + c && constraints[j] <= 0) { /* If base pair (i,j-1) forms and base j remain as a dangling base */
+			                        		 RNA[j - 1]) + b + c){ //&& constraints[j] <= 0) { /* If base pair (i,j-1) forms and base j remain as a dangling base */
 				done = 1;
 				eWM += traceV(i, j - 1);
 				structure[i] = j - 1;
 				structure[j - 1] = i;
 			} else if (WM[i][j] == V[indx[i + 1] + j - 1]
-			                         + dangle[RNA[j - 1]][RNA[i + 1]][RNA[i]][1] + dangle[RNA[j
-			                                                                                  - 1]][RNA[i + 1]][RNA[j]][0]
-			                                                                                                            + auPen(RNA[i + 1], RNA[j - 1]) + b + 2* c
-			                                                                                                            && constraints[i] <= 0 && constraints[j] <= 0) { /* IF base pair (i+1,j-1) forms and base i and base j remain as dangling bases on each side.*/
+			                         + dangle[RNA[j - 1]][RNA[i + 1]][RNA[i]][1] + 
+									 dangle[RNA[j- 1]][RNA[i + 1]][RNA[j]][0] + auPen(RNA[i + 1], RNA[j - 1]) + b + 2* c)
+			                         {//&& constraints[i] <= 0 && constraints[j] <= 0) { 
+									/* IF base pair (i+1,j-1) forms and base i and base j remain as dangling bases on each side.*/
 				done = 1;
 				eWM += traceV(i + 1, j - 1);
 				structure[i + 1] = j - 1;
 				structure[j - 1] = i + 1;
-			} else if (WM[i][j] == WM[i + 1][j] + c && constraints[i] <= 0) { /* If base i does not make energy contribution */
+			} else if (WM[i][j] == WM[i + 1][j] + c){ //&& constraints[i] <= 0) { /* If base i does not make energy contribution */
 				done = 1;
 				eWM += traceWM(i + 1, j);
-			} else if (WM[i][j] == WM[i][j - 1] + c && constraints[j] <= 0) { /* If base j does not make energy contribution */
+			} else if (WM[i][j] == WM[i][j - 1] + c){ //&& constraints[j] <= 0) { /* If base j does not make energy contribution */
 				done = 1;
 				eWM += traceWM(i, j - 1);
 			}

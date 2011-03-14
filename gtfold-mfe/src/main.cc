@@ -35,21 +35,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 
 #include "loader.h"
+#include "energy.h"
 #include "algorithms.h"
 #include "algorithms-partition.h"
 #include "traceback.h"
 #include "subopt_traceback.h"
+#include "options.h"
 #include "main.h"
 #include "main-c.h"
 
 using namespace std;
 
 /* GLOBAL VARIABLES */
-enum BOOL NOISOLATE;
+
 enum BOOL BPP; // calculating base pair probabilities
-enum BOOL USERDATA;
-enum BOOL PARAMS;
-enum BOOL LIMIT_DISTANCE;
 enum BOOL VERBOSE;
 
 int num_threads;
@@ -75,46 +74,6 @@ double **QM;  // QM[i][j] is the sum of configuration energies from i to j,
 // assuming that i,j are contained in a multiloop
 double **P;   // P[i][j] The probability that nucleotides i and j form a basepair
 
-/**
- * Print the hep message and quit.
- */
-void help() {
-    fprintf(stderr,
-            "Usage: gtfold [OPTION]... FILE\n\n");
-
-    fprintf(stderr,
-            "  FILE is an RNA sequence file.  Single line or FASTA formats are accepted.\n\n");
-
-    fprintf(stderr, "OPTIONS\n");
-    fprintf(stderr,
-            "   -c, --constraints FILE\n                        Load constraints from FILE.  See Constraint syntax below\n");
-    fprintf(stderr,
-            "   -d, --limitCD num    Set a maximum base pair contact distance to num. If no\n                        limit is given, base pairs can be over any distance\n");
-    fprintf(stderr,
-            "   -n, --noisolate      Prevent isolated base pairs from forming\n");
-    fprintf(stderr,
-            "   -o, --output FILE    Output to FILE (default output is to a .ct extension)\n");
-	fprintf(stderr,
-            "   -t, --threads num    Limit number of threads used\n");
-
-    fprintf(stderr, "\n");
-    fprintf(stderr,
-            "   -h, --help           Output help (this message) and exit\n");
-    fprintf(stderr,
-            "   -v, --verbose        Run in verbose mode\n");
-
-    fprintf(stderr, "\nBETA OPTIONS\n");
-    fprintf(stderr,
-            "   --bpp                Calculate base pair probabilities\n");
-    fprintf(stderr,
-            "   --subopt range       Calculate suboptimal structures within 'range' kcal/mol\n");
-    fprintf(stderr, "                        of the mfe\n");
-
-
-    fprintf(stderr,
-            "\nConstraint syntax:\n\tF i j k  # force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i j k  # prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i 0 k  # make bases from i to i+k-1 single stranded bases.\n");
-    exit(-1);
-}
 
 /* Function for calculating time */
 double get_seconds() {
@@ -478,7 +437,7 @@ int main(int argc, char** argv) {
     else
         populate("Turner99",false); /* Defined in loader.cc file to read in the thermodynamic parameter values from the tables in the ../data directory. */
 
-    initTables(length); /* Initialize global variables */
+    create_tables(length); /* Initialize global variables */
 
     ///// Run Configuration Output /////
 
@@ -523,7 +482,7 @@ int main(int argc, char** argv) {
     fflush(stdout);
 
     t1 = get_seconds();
-    energy = calculate(length, fbp, pbp, numfConstraints, numpConstraints);
+    energy = calculate(length); //, fbp, pbp, numfConstraints, numpConstraints);
     t1 = get_seconds() - t1;
 
     fprintf(stdout,"Minimum Free Energy: %9.2f\n", energy/100.00);

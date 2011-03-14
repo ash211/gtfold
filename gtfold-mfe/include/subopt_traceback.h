@@ -38,8 +38,7 @@
 #define Eb multConst[2]
 #define Ec multConst[1] 
 
-#define V(x,y)	V[indx[x]+y]
-#define TURN 3
+#define V(x,y) V[indx[x]+y]
 
 enum label {lW=0, lV, lVBI, lVM, lWM};
 extern const char* lstr[]; 

@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "constants.h"
+#include "main-c.h"
 
 using namespace std;
 

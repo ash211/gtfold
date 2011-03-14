@@ -22,10 +22,12 @@
 
 #include <cstdio>
 
-#include "subopt_traceback.h"
 #include "constants.h"
 #include "data.h"
-#include "algorithms.h"
+#include "global.h"
+#include "energy.h"
+#include "utils.h"
+#include "subopt_traceback.h"
 
 const char* lstr[] = {"W", "V", "VBI", "VM", "WM"};
 
