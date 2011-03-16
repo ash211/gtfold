@@ -6,13 +6,21 @@
 #include "utils.h"
 #include "global.h"
 #include "constants.h"
-#include "data.h"
 
 int *V; 
+int *VV; 
+int *VV1; 
 int *W; 
-int **VBI; 
-int **VM; 
-int **WM; 
+int *VBI; 
+int *VM; 
+int *WM; 
+int *WMi; 
+int *WMi1; 
+int *WMi2; 
+//int **V; 
+//int **WM; 
+//int **VM; 
+//int **VBI; 
 int *indx; 
 
 void create_tables(int len)
@@ -26,6 +34,77 @@ void create_tables(int len)
 		exit(-1);
 	}
 
+	VV1 = (int *) malloc((len+ 1)*sizeof(int));
+	if (VV1 == NULL) 
+	{
+		perror("Cannot allocate variable 'V'");
+		exit(-1);
+	}
+	VV = (int *) malloc((len+ 1)*sizeof(int));
+	if (VV == NULL) 
+	{
+		perror("Cannot allocate variable 'V'");
+		exit(-1);
+	}
+
+	WMi = (int *) malloc((len+ 1)*sizeof(int));
+	if (WMi == NULL) 
+	{
+		perror("Cannot allocate variable 'V'");
+		exit(-1);
+	}
+
+	WMi1 = (int *) malloc((len+ 1)*sizeof(int));
+	if (WMi1 == NULL) 
+	{
+		perror("Cannot allocate variable 'V'");
+		exit(-1);
+	}
+
+	WMi2 = (int *) malloc((len+ 1)*sizeof(int));
+	if (WMi2 == NULL) 
+	{
+		perror("Cannot allocate variable 'V'");
+		exit(-1);
+	}
+
+	WM = (int *) malloc(((len+1)*len/2 + 1) * sizeof(int));
+	if (WM == NULL) 
+	{
+		perror("Cannot allocate variable 'V'");
+		exit(-1);
+	}
+
+	VM = (int *) malloc(((len+1)*len/2 + 1) * sizeof(int));
+	if (VM == NULL) 
+	{
+		perror("Cannot allocate variable 'V'");
+		exit(-1);
+	}
+
+	VBI = (int *) malloc(((len+1)*len/2 + 1) * sizeof(int));
+	if (VBI == NULL) 
+	{
+		perror("Cannot allocate variable 'V'");
+		exit(-1);
+	}
+
+	/*
+	V = (int **) malloc((len+1)* sizeof(int *));
+	if (V == NULL) 
+	{
+		perror("Cannot allocate variable 'VM'");
+		exit(-1);
+	}
+	for (i = 0; i < len+1; i++) {
+		V[i] = (int *) malloc((len+1)*sizeof(int));
+		if (V[i] == NULL) {
+			perror("Cannot allocate variable 'VM[i]'");
+			exit(-1);
+		}
+	}
+	*/
+
 	W = (int *) malloc((len+1) * sizeof(int));
 	if (W == NULL) 
 	{
@@ -33,6 +112,7 @@ void create_tables(int len)
 		exit(-1);
 	}
 
+	/*
 	VBI = (int **) malloc((len+1) * sizeof(int *));
 	if (VBI == NULL) 
 	{
@@ -48,8 +128,7 @@ void create_tables(int len)
 			exit(-1);
 		}
 	}
-    
-	
+
 	VM = (int **) malloc((len+1)* sizeof(int *));
 	if (VM == NULL) 
 	{
@@ -63,8 +142,7 @@ void create_tables(int len)
 			exit(-1);
 		}
 	}
-    
-	
+
 	WM = (int **) malloc((len+1)*sizeof(int *));
 	if (WM == NULL) 
 	{
@@ -79,9 +157,9 @@ void create_tables(int len)
 			exit(-1);
 		}
 	}
+	*/
     
-	
-	indx = (int *) malloc((len+1) * sizeof(int));
+	indx = (int*) malloc((len+1) * sizeof(int));
 	if (indx == NULL) {
 		perror("Cannot allocate variable 'indx'");
 		exit(-1);
@@ -95,30 +173,38 @@ void init_tables(int len)
 {
 	int i, j, LLL;
 	
-	for (i = 0; i <= len; i++) 
-	{
+	for (i = 0; i <= len; i++) {
 		W[i] = INFINITY_; 
-
-		for (j = 0; j <= len; j++) 
-		{
-			VBI[i][j] = INFINITY_;
-			VM[i][j] = INFINITY_;
-			WM[i][j] = INFINITY_;
-		}
+		VV[i] = INFINITY_;
+		VV1[i] = INFINITY_;
+		WMi[i] = INFINITY_;
+		WMi1[i] = INFINITY_;
+		WMi2[i] = INFINITY_;
+		//for (j = 0; j <= len; j++) {
+			//V[i][j] = INFINITY_;
+			//VBI[i][j] = INFINITY_;
+			//VM[i][j] = INFINITY_;
+			//WM[i][j] = INFINITY_;
+		//}
 	}
 	
-
+	
 	LLL = (len)*(len+1)/2 + 1;
 
-	for (i = 0; i < LLL; i++)
-	{
+	for (i = 0; i < LLL; i++) {
 		V[i] = INFINITY_;
+		WM[i] = INFINITY_;
+		VM[i] = INFINITY_;
+		VBI[i] = INFINITY_;
 	}
 
-	for (i = 0; i <= len; i++)
-	{
+	/*
+	for (i = 0; i <= len; i++) {
 		indx[i] = (len)*(i-1)-(i*(i-1))/2;
-	}
+	}*/
+
+	for (i = 1; i <= (unsigned) len; i++) 
+	    indx[i] = (i*(i-1)) >> 1;        /* n(n-1)/2 */
 
 	return;
 }
@@ -128,30 +214,34 @@ void free_tables(int len)
 	int i;
 
 	free(indx);
-	for (i = 0; i < len; i++)
-		free(WM[i]);
+	//for (i = 0; i < len; i++)
+	//	free(WM[i]);
 	
 	free(WM);
 	
-	for (i = 0; i < len; i++)
-		free(VM[i]);
-	
+	//for (i = 0; i < len; i++)
+	//	free(VM[i]);
 	free(VM);
-	for (i = 0; i < len; i++)
-		free(VBI[i]);
+	
+
+	//for (i = 0; i < len; i++)
+	//	free(V[i]);
+	free(V);
+	free(VV);
+	free(VV1);
+
+
+	//for (i = 0; i < len; i++)
+	//	free(VBI[i]);
 	
 	free(VBI);
 	free(W);
-	free(V);
 }
 
 
 inline int Ed3(int i, int j, int k) { return dangle[RNA[i]][RNA[j]][RNA[k]][1];}
 inline int Ed5(int i, int j, int k) { return dangle[RNA[i]][RNA[j]][RNA[k]][0]; }
 inline int auPenalty(int i, int j) { return auPen(RNA[i], RNA[j]);}
-inline int Ec() { return multConst[1];}
-inline int Eb()  { return multConst[2];}
-inline int Ea()  { return multConst[0]; }
 
 inline int eL(int i, int j, int ip, int jp) 
 {
@@ -352,8 +442,7 @@ inline int eS(int i, int j)
 {
 	int energy;
 	/*  not sure about eparam[1], come from MFold.. = 0 */
-	energy = stack[fourBaseIndex(RNA[i], RNA[j], RNA[i + 1], RNA[j - 1])]
-		+ eparam[1];
+	energy = stack[fourBaseIndex(RNA[i], RNA[j], RNA[i+1], RNA[j-1])] + eparam[1];
 
 	return energy;
 }

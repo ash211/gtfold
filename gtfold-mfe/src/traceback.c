@@ -141,10 +141,10 @@ int traceV(int i, int j) {
 	int a, b, c, d, Vij;
 
 	a = eH(i, j);
-	b = eS(i, j) + V[indx[i + 1] + j - 1];
+	b = eS(i, j) + V(i + 1, j - 1);
 	if (eS(i, j) == 0) b = INFINITY_;
-	c = VBI[i][j];
-	d = VM[i][j];
+	c = VBI(i,j);
+	d = VM(i,j);
 	
 	Vij = MIN(MIN(a, b), MIN(c, d));
 	
@@ -185,9 +185,9 @@ int traceVBI(int i, int j) {
 	for (ip = i + 1; ip < j - 1; ip++) {
 		for (jp = ip + 1; jp < j; jp++) { /* Search which internal loop (ip,jp) is closing */
 			el = eL(i, j, ip, jp);
-			v = V[indx[ip] + jp];
+			v = V(ip, jp);
 			VBIij_temp = el + v;
-			if (VBIij_temp == VBI[i][j]) {
+			if (VBIij_temp == VBI(i,j)) {
 				ifinal = ip;
 				jfinal = jp;
 				break;
@@ -219,10 +219,10 @@ int traceVM(int i, int j) {
 	a = eparam[5];
 	b = eparam[10]; /* efn2b */
 
-	int VMij = VM[i][j];
+	int VMij = VM(i,j);
 
 	for (h = i + 2; h <= j - 1 && !done; h++) {
-		A_temp = WM[i + 1][h - 1] + WM[h][j - 1] + a + b + auPen(RNA[i],
+		A_temp = WM(i+1,h-1) + WM(h,j - 1) + a + b + auPen(RNA[i],
 				RNA[j]);
 		if (A_temp == VMij) { /* No dangling bases on any of the sides of base pair (i,j) in the multiloop */
 			done = 1;
@@ -233,7 +233,7 @@ int traceVM(int i, int j) {
 	}
 
 	for (h = i + 3; h <= j - 1 && !done; h++) {
-		A_temp = WM[i + 2][h - 1] + WM[h][j - 1] + a + b + auPenalty(i,j) + Ed5(i,j,i + 1); 
+		A_temp = WM(i + 2,h - 1) + WM(h,j - 1) + a + b + auPenalty(i,j) + Ed5(i,j,i + 1); 
 		if (A_temp == VMij) {
 			done = 1;
 			eVM += traceWM(i + 2, h - 1);
@@ -243,7 +243,7 @@ int traceVM(int i, int j) {
 	}
 
 	for (h = i + 2; h <= j - 2 && !done; h++) { /* If base j-1 is dangling on 3' end of the base pair (i,j) */
-		A_temp = WM[i + 1][h - 1] + WM[h][j - 2] + a + b + auPenalty(i, j) + Ed3(i,j,j - 1);
+		A_temp = WM(i + 1,h - 1) + WM(h,j - 2) + a + b + auPenalty(i, j) + Ed3(i,j,j - 1);
 		if (A_temp == VMij) {
 			done = 1;
 			eVM += traceWM(i + 1, h - 1);
@@ -253,7 +253,7 @@ int traceVM(int i, int j) {
 	}
 
 	for (h = i + 3; h <= j - 2 && !done; h++) { /* If base pair (i,j) has dangling bases on both sides. */
-		A_temp = WM[i + 2][h - 1] + WM[h][j - 2] + a + b + auPenalty(i,j) + Ed5(i,j,i + 1) + Ed3(i,j,j - 1);
+		A_temp = WM(i + 2,h - 1) + WM(h,j - 2) + a + b + auPenalty(i,j) + Ed5(i,j,i + 1) + Ed3(i,j,j - 1);
 		if (A_temp == VMij) {
 			done = 1;
 			eVM += traceWM(i + 2, h - 1);
@@ -279,8 +279,8 @@ int traceWM(int i, int j) {
 		return 0;
 	else {
 		for (h = i; h < j && !done; h++) {
-			int aa = WM[i][h] + WM[h + 1][j]; /* If WM(i,j) came from the summation of two WM terms */
-			if (aa == WM[i][j]) {
+			int aa = WM(i,h) + WM(h + 1,j); /* If WM(i,j) came from the summation of two WM terms */
+			if (aa == WM(i,j)) {
 				done = 1;
 				h1 = h;
 				break;
@@ -290,30 +290,30 @@ int traceWM(int i, int j) {
 			eWM += traceWM(i, h);
 			eWM += traceWM(h + 1, j);
 		} else {
-			if (WM[i][j] == V(i,j) + auPenalty(i, j) + Eb()) { /* If base pair (i,j) pairs*/
+			if (WM(i,j) == V(i,j) + auPenalty(i, j) + Eb) { /* If base pair (i,j) pairs*/
 				done = 1;
 				structure[i] = j;
 				structure[j] = i;
 				eWM += traceV(i, j);
-			} else if (WM[i][j] == V(i+1, j) + Ed3(j,i + 1,i) + auPenalty(i+1, j) + Eb() + Ec()) { 
+			} else if (WM(i,j) == V(i+1, j) + Ed3(j,i + 1,i) + auPenalty(i+1, j) + Eb + Ec) { 
 				done = 1;
 				eWM += traceV(i + 1, j);
 				structure[i + 1] = j;
 				structure[j] = i + 1;
-			} else if (WM[i][j] == V(i,j-1) + Ed5(j-1,i,j) + auPenalty(i,j-1) +  Eb() + Ec() ) { 
+			} else if (WM(i,j) == V(i,j-1) + Ed5(j-1,i,j) + auPenalty(i,j-1) +  Eb + Ec ) { 
 				done = 1;
 				eWM += traceV(i, j - 1);
 				structure[i] = j - 1;
 				structure[j - 1] = i;
-			} else if (WM[i][j] == V(i+1,j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + auPenalty(i+1, j-1) + Eb() + 2*Ec()) { 
+			} else if (WM(i,j) == V(i+1,j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + auPenalty(i+1, j-1) + Eb + 2*Ec) { 
 				done = 1;
 				eWM += traceV(i + 1, j - 1);
 				structure[i + 1] = j - 1;
 				structure[j - 1] = i + 1;
-			} else if (WM[i][j] == WM[i + 1][j] + Ec() ) { 
+			} else if (WM(i,j) == WM(i + 1,j) + Ec ) { 
 				done = 1;
 				eWM += traceWM(i + 1, j);
-			} else if (WM[i][j] == WM[i][j - 1] + Ec() ) { 
+			} else if (WM(i,j) == WM(i,j - 1) + Ec ) { 
 				done = 1;
 				eWM += traceWM(i, j - 1);
 			}

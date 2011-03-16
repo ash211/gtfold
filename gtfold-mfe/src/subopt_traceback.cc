@@ -34,7 +34,6 @@ extern int nThreads;
 
 const char* lstr[] = {"W", "V", "VBI", "VM", "WM"};
 
-
 void (*trace_func[5]) (int i, int j, pstruct& ps,std::stack<pstruct>& gs, int MIN_ENERGY, int delta1);
 
 void print_stack(std::stack<pstruct> temp)
@@ -155,21 +154,21 @@ void traceV(int i, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENER
 	}
 
 	// Internal Loop
-	if (VBI[i][j] + ps.total() <= MIN_ENERGY + delta1)
+	if (VBI(i,j) + ps.total() <= MIN_ENERGY + delta1)
 	{
 		//std::cout << "Internal " << i  << ' ' << j << std::endl;
 		pstruct ps1(ps);
-		ps1.push(segment(i, j, lVBI, VBI[i][j]));
+		ps1.push(segment(i, j, lVBI, VBI(i,j)));
 		ps1.update(i, j, '(', ')');
 		push_to_gstack(gstack, ps1);
 	}
 
 	// Multiloop
-	if ( VM[i][j] + ps.total() <= MIN_ENERGY + delta1)
+	if ( VM(i,j) + ps.total() <= MIN_ENERGY + delta1)
 	{
 		//	std::cout << "Multi " << i  << ' ' << j << std::endl;
 		pstruct ps1(ps);
-		ps1.push(segment(i, j, lVM, VM[i][j]));
+		ps1.push(segment(i, j, lVM, VM(i,j)));
 		ps1.update(i, j, '(', ')');
 		push_to_gstack(gstack, ps1);
 	}
@@ -263,8 +262,8 @@ void traceW(int h, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENER
 
 void traceWM(pstruct& ps, std::map<std::string, pstruct>& filter, int MIN_ENERGY, int delta1)
 {
-	int b = Eb(); 
-	int c = Ec(); 
+	int b = Eb; 
+	int c = Ec; 
 	std::stack<pstruct> wm_stack;
 	wm_stack.push(ps);
 
@@ -340,29 +339,29 @@ void traceWM(pstruct& ps, std::map<std::string, pstruct>& filter, int MIN_ENERGY
 		}
 
 
-		if (pss.total() + WM[i1][j1-1]  + c  <= MIN_ENERGY + delta1)
+		if (pss.total() + WM(i1,j1-1)  + c  <= MIN_ENERGY + delta1)
 		{
 			pstruct ps1(pss);
-			ps1.push(segment(i1,j1-1, lWM, WM[i1][j1-1]));		
+			ps1.push(segment(i1,j1-1, lWM, WM(i1,j1-1)));		
 			ps1.accumulate(c);
 			wm_stack.push(ps1);
 		}
 
-		if (pss.total() + WM[i1+1][j1] + c <= MIN_ENERGY + delta1)
+		if (pss.total() + WM(i1+1,j1) + c <= MIN_ENERGY + delta1)
 		{
 			pstruct ps1(pss);
-			ps1.push(segment(i1+1,j1, lWM, WM[i1+1][j1]));		
+			ps1.push(segment(i1+1,j1, lWM, WM(i1+1,j1)));		
 			ps1.accumulate(c);
 			wm_stack.push(ps1);
 		}
 
 		for (int h = i1+1; h <= j1-1; ++h)
 		{	
-			if (WM[i1][h] + WM[h+1][j1] + pss.total() <= MIN_ENERGY + delta1)
+			if (WM(i1,h) + WM(h+1,j1) + pss.total() <= MIN_ENERGY + delta1)
 			{
 				pstruct ps1(pss);
-				ps1.push(segment(i1, h, lWM, WM[i1][h]));
-				ps1.push(segment(h+1, j1, lWM, WM[h+1][j1]));
+				ps1.push(segment(i1, h, lWM, WM(i1,h)));
+				ps1.push(segment(h+1, j1, lWM, WM(h+1,j1)));
 				wm_stack.push(ps1);
 			}
 		}
@@ -380,49 +379,49 @@ void traceVM(int i, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENE
 	for (h = i+1; h <= j-1; ++h)
 	{
 		int energy;
-		int a = Ea(); //multConst[0]; 
-		int b = Eb(); //multConst[2]; 
-		int c = Ec(); //multConst[1]; 
+		int a = Ea; //multConst[0]; 
+		int b = Eb; //multConst[2]; 
+		int c = Ec; //multConst[1]; 
 		int d5 = Ed5(i,j,i+1);
 		int d3 = Ed3(i,j,j-1);
 		int common = auPenalty(i,j) + a + b;
 
-		energy = common + WM[i+1][h-1] + WM[h][j-1];
+		energy = common + WM(i+1,h-1) + WM(h,j-1);
 		if (energy + ps.total()  <= MIN_ENERGY + delta1)
 		{
 			pstruct ps1(ps);
-			ps1.push(segment(i+1,h-1, lWM, WM[i+1][h-1]));
-			ps1.push(segment(h, j-1, lWM, WM[h][j-1]));
+			ps1.push(segment(i+1,h-1, lWM, WM(i+1,h-1)));
+			ps1.push(segment(h, j-1, lWM, WM(h,j-1)));
 			ps1.accumulate(common) ; 
 			traceWM(ps1, filter, MIN_ENERGY, delta1);
 		}
 
-		energy =  common + WM[i+2][h-1] + WM[h][j-1] + d5 + c;
+		energy =  common + WM(i+2,h-1) + WM(h,j-1) + d5 + c;
 		if (energy + ps.total()  <= MIN_ENERGY + delta1)
 		{
 			pstruct ps1(ps);
-			ps1.push(segment(i+2,h-1, lWM, WM[i+2][h-1]));	
-			ps1.push(segment(h, j-1, lWM, WM[h][j-1]));	
+			ps1.push(segment(i+2,h-1, lWM, WM(i+2,h-1)));	
+			ps1.push(segment(h, j-1, lWM, WM(h,j-1)));	
 			ps1.accumulate(common + d5 + c);
 			traceWM(ps1, filter, MIN_ENERGY, delta1);
 		}
 
-		energy = common + WM[i+1][h-1] + WM[h][j-2] + d3 + c;
+		energy = common + WM(i+1,h-1) + WM(h,j-2) + d3 + c;
 		if (energy + ps.total()  <= MIN_ENERGY + delta1)
 		{
 			pstruct ps1(ps);	
-			ps1.push(segment(i+1,h-1, lWM, WM[i+1][h-1]));	
-			ps1.push(segment(h, j-2, lWM, WM[h][j-2]));	
+			ps1.push(segment(i+1,h-1, lWM, WM(i+1,h-1)));	
+			ps1.push(segment(h, j-2, lWM, WM(h,j-2)));	
 			ps1.accumulate(common + d3 + c);
 			traceWM(ps1, filter, MIN_ENERGY, delta1);
 		}
 
-		energy = common + WM[i+2][h-1] + WM[h][j-2] + d5 + d3 + 2*c;
+		energy = common + WM(i+2,h-1) + WM(h,j-2) + d5 + d3 + 2*c;
 		if (energy + ps.total()  <= MIN_ENERGY + delta1)
 		{ 	
 			pstruct ps1(ps);	
-			ps1.push(segment(i+2,h-1, lWM, WM[i+2][h-1]));	
-			ps1.push(segment(h, j-2, lWM, WM[h][j-2]));	
+			ps1.push(segment(i+2,h-1, lWM, WM(i+2,h-1)));	
+			ps1.push(segment(h, j-2, lWM, WM(h,j-2)));	
 			ps1.accumulate(common + d3 + d5 + 2*c) ;
 			traceWM(ps1, filter, MIN_ENERGY, delta1);
 		}

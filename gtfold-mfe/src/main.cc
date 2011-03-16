@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 	fprintf(stdout, "Sequence length: %5d\n", seq.length());
-	//fprintf(stdout, "Sequence : %s\n", seq.c_str());
+	fprintf(stdout, "Sequence : %s\n", seq.c_str());
 	
 	init_fold(seq.length());
 	
