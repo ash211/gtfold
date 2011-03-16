@@ -6,7 +6,6 @@
 extern unsigned char *RNA1; 
 extern unsigned char *RNA; 
 extern int *structure; 
-extern int VERBOSE;
 
 extern unsigned int chPairKey;
 

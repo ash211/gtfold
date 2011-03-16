@@ -17,79 +17,74 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Modified by Amrita Mathuriya August 2007 - January 2009. 1) Functions are rewritten, removing calls of boost library functions and corrected bugs.
- * This file defines various functions to read the thermodynamic parameters from files in the data directory.
- * */
-/* Modified by Sonny Hernandez May 2007 - Aug 2007. All comments added marked by "SH: "*/
-/* Modified by Sainath Mallidi August 2009 -  "*/
+#include <iostream>
+#include <fstream>
+#include <istream>
+#include <math.h>
 
-#include <string.h>
+#include <cstring>
 #include <stdlib.h>
+
+#include "data.h"
+#include "utils.h"
+#include "constants.h"
+#include "global.h"
 #include "loader.h"
-#include "main-c.h"
 
 #define xstr(s) str(s)
 #define str(s) #s
-
-//#define GENBIN
+//#define GENBIN 1
 
 using namespace std;
 
-//Global Variables
-int poppen[5];
-int maxpen;
-int eparam[11]; /* Amrita: I am not sure of what does this array contain at different values.*/
-int multConst[3]; /* Amrita: I have copied multiloop penalties into this array */
-int dangle[4][4][4][2]; /* Dangling energies */
-int inter[31]; /* Size penalty for internal loops */
-int bulge[31]; /* Size penalty for bulges*/
-int hairpin[31]; /* Size penalty for hairpin loops */
-#if 0
-int stack[4][4][4][4];
-int tstkh[4][4][4][4];
-int tstki[4][4][4][4];
-#else
-int stack[256]; /* Stacking energy for stack loops */
-int tstkh[256]; /* Terminal stacking energy for hairpin loops */
-int tstki[256]; /* Terminal stacking energy for internal loops */
-#endif
-int tloop[maxtloop + 1][2];
-int numoftloops;
-int iloop22[5][5][5][5][5][5][5][5]; /* 2*1 internal loops*/
-int iloop21[5][5][5][5][5][5][5]; /* 2*1 internal loops */
-int iloop11[5][5][5][5][5][5]; /*1*1 internal loops */
-int coax[6][6][6][6];
-int tstackcoax[6][6][6][6];
-int coaxstack[6][6][6][6];
-int tstack[6][6][6][6];
-int tstkm[6][6][6][6];
+std::string EN_DATADIR;
 
-int auend; /* For AU penalty */
-int gubonus;
-int cint; /* cint, cslope, c3 are used for poly C hairpin loops */
-int cslope;
-int c3;
-int efn2a;
-int efn2b;
-int efn2c;
-int triloop[maxtloop + 1][2];
-int numoftriloops;
-int init;
-int gail;
-float prelog; /* Used for loops having size > 30 */
-
-string EN_DATADIR;
+ int poppen[5];
+ int maxpen;
+ int eparam[11];
+ int multConst[3]; /* for multiloop penalties. */
+ int dangle[4][4][4][2]; /* Contain dangling energy values */
+ int inter[31]; /* Contains size penalty for internal loops */
+ int bulge[31]; /* Contain the size penalty for bulges */
+ int hairpin[31]; /* Contains the size penalty for hairpin loops */
+ int stack[256]; /* Stacking energy used to calculate energy of stack loops */
+ int tstkh[256]; /* Terminal mismatch energy used in the calculations of hairpin loops */
+ int tstki[256]; /* Terminal mismatch energy used in the calculations of internal loops */
+ int tloop[maxtloop + 1][2];
+ int numoftloops;
+ int iloop22[5][5][5][5][5][5][5][5]; /* 2*2 internal looops */
+ int iloop21[5][5][5][5][5][5][5]; /* 2*1 internal loops */
+ int iloop11[5][5][5][5][5][5]; /* 1*1 internal loops */
+ int coax[6][6][6][6];
+ int tstackcoax[6][6][6][6];
+ int coaxstack[6][6][6][6];
+ int tstack[6][6][6][6];
+ int tstkm[6][6][6][6];
+ int auend;
+ int gubonus;
+ int cint; /* cint, cslope, c3 are used for poly C hairpin loops */
+ int cslope;
+ int c3;
+ int efn2a;
+ int efn2b;
+ int efn2c;
+ int triloop[maxtloop + 1][2];
+ int numoftriloops;
+ int init;
+ int gail; /* It is either 0 or 1. It is used for grosely asymmetric internal loops */
+ float prelog;
 
 void populate(const char *userdatadir,bool userdatalogic) {
 
-	cout << "Thermodynamic parameters: ";
-
+	cout << "Loading in GTfold data files from ";
 #ifndef GENBIN
-	if (!userdatalogic) {
+	if (!userdatalogic) 
+	{
 		EN_DATADIR.assign(xstr(DATADIR));
 		EN_DATADIR += "/";
 		EN_DATADIR += userdatadir;
-	} else {
+	} else 
+	{
 		EN_DATADIR.assign(userdatadir);
 	}
 #else
@@ -101,8 +96,7 @@ void populate(const char *userdatadir,bool userdatalogic) {
 		EN_DATADIR += "/";
 	}
 
-
-	cout << EN_DATADIR << endl << endl;
+	cout << EN_DATADIR << endl;
 
 	initMiscloopValues("miscloop.dat");
 	// miscloop.dat - Miscellaneous loop file
@@ -124,79 +118,12 @@ void populate(const char *userdatadir,bool userdatalogic) {
 	// int22.dat - free energies for 2 x 2 interior loops
 	initInt11Values("int11.dat");
 	// int11.dat - free energies for 1 x 1 interior loops
+
+	cout << "Done loading data files." << endl;
 }
 
-char baseToDigit(std::string base) {
-	if (!strcmp(base.c_str(), "A")) {
-		return '1';
-	}
-	if (!strcmp(base.c_str(), "C")) {
-		return '2';
-	}
-	if (!strcmp(base.c_str(), "G")) {
-		return '3';
-	}
-	if (!strcmp(base.c_str(), "U")) {
-		return '4';
-	}
-	if (!strcmp(base.c_str(), "N")) {
-		return '5';
-	}
-	return (char) NULL;
-}
 
-unsigned char getBase(std::string base) {
-	//cout << base;
-	if (!strcmp(base.c_str(), "A") || !strcmp(base.c_str(), "a")) {
-		//cout << "1";
-		return BASE_A;
-	}
-	if (!strcmp(base.c_str(), "C") || !strcmp(base.c_str(), "c")) {
-		//cout << "2";
-		return BASE_C;
-	}
-	if (!strcmp(base.c_str(), "G") || !strcmp(base.c_str(), "g")) {
-		//cout << "3";
-		return BASE_G;
-	}
-	if (!strcmp(base.c_str(), "U") || !strcmp(base.c_str(), "u") || !strcmp(
-			base.c_str(), "T") || !strcmp(base.c_str(), "t")) {
-		//cout << "4";
-		return BASE_U;
-	}
-	if (!strcmp(base.c_str(), "N") || !strcmp(base.c_str(), "n")||!strcmp(base.c_str(), "R")|| !strcmp(base.c_str(), "r")|| !strcmp(base.c_str(), "Y")|| !strcmp(base.c_str(), "y")|| !strcmp(base.c_str(), "M")|| !strcmp(base.c_str(), "m")|| !strcmp(base.c_str(), "K")|| !strcmp(base.c_str(), "k")|| !strcmp(base.c_str(), "S")|| !strcmp(base.c_str(), "s")|| !strcmp(base.c_str(), "W")|| !strcmp(base.c_str(), "w")|| !strcmp(base.c_str(), "B")|| !strcmp(base.c_str(), "b")|| !strcmp(base.c_str(), "D")|| !strcmp(base.c_str(), "d")|| !strcmp(base.c_str(), "H")|| !strcmp(base.c_str(), "h")|| !strcmp(base.c_str(), "V")|| !strcmp(base.c_str(), "v")) {
-		//cout << "4";
-		return BASE_A;
-	}
-	return 'X';
-}
-unsigned char getBase1(std::string base) {
-	//cout << base;
-	if (!strcmp(base.c_str(), "A") || !strcmp(base.c_str(), "a")) {
-		//cout << "1";
-		return BASE_A;
-	}
-	if (!strcmp(base.c_str(), "C") || !strcmp(base.c_str(), "c")) {
-		//cout << "2";
-		return BASE_C;
-	}
-	if (!strcmp(base.c_str(), "G") || !strcmp(base.c_str(), "g")) {
-		//cout << "3";
-		return BASE_G;
-	}
-	if (!strcmp(base.c_str(), "U") || !strcmp(base.c_str(), "u") || !strcmp(
-			base.c_str(), "T") || !strcmp(base.c_str(), "t")) {
-		//cout << "4";
-		return BASE_U;
-	}
-	if (!strcmp(base.c_str(), "N") || !strcmp(base.c_str(), "n")|| !strcmp(base.c_str(), "R")|| !strcmp(base.c_str(), "r")|| !strcmp(base.c_str(), "Y")|| !strcmp(base.c_str(), "y")|| !strcmp(base.c_str(), "M")|| !strcmp(base.c_str(), "m")|| !strcmp(base.c_str(), "K")|| !strcmp(base.c_str(), "k")|| !strcmp(base.c_str(), "S")|| !strcmp(base.c_str(), "s")|| !strcmp(base.c_str(), "W")|| !strcmp(base.c_str(), "w")|| !strcmp(base.c_str(), "B")|| !strcmp(base.c_str(), "b")|| !strcmp(base.c_str(), "D")|| !strcmp(base.c_str(), "d")|| !strcmp(base.c_str(), "H")|| !strcmp(base.c_str(), "h")|| !strcmp(base.c_str(), "V")|| !strcmp(base.c_str(), "v")) {
-		//cout << "4";
-		return 'N';
-	}
-	return 'X';
-}
-
-int initStackValues(string fileName) {
+ int initStackValues(string fileName) {
 
 	ifstream cf; //cf = current file
 	int i, j, k, l;
@@ -301,7 +228,7 @@ int initStackValues(string fileName) {
 	return 0;
 }
 
-int initMiscloopValues(string fileName) {
+ int initMiscloopValues(string fileName) {
 	/*
 	 miscloop.dat - Miscellaneous loop file. Contains :
 	 1. Extrapolation for large loops based on polymer theory
@@ -418,136 +345,7 @@ int initMiscloopValues(string fileName) {
 	return 0;
 }
 
-int initMiscloopValuesOLD(string fileName) {
-	/*
-	 miscloop.dat - Miscellaneous loop file. Contains :
-	 1. Extrapolation for large loops based on polymer theory
-	 2. Asymmetric internal loop correction parameters.
-	 3. the f(m) array (see Ninio for details)
-	 4. Paremeters for multibranch loops
-	 5. Paremeters for multibranch loops (for efn2 only)
-	 6. Terminal AU or GU penalty
-	 7. Bonus for GGG hairpin
-	 8,9,10. C hairpin rules: a) slope  b) intercept c) value for size 3
-	 11. Intermolecular initiation free energy
-	 12. GAIL Rule (Grossly Asymmetric Interior Loop Rule) (on or off)
-	 */
-
-	char currentWord[256];
-	string s;
-	ifstream cf; //cf = current file
-
-	fileName = EN_DATADIR + fileName;
-#if 0
-	cout << "Getting miscloop values from " << fileName << endl;
-#endif
-	cf.open(fileName.c_str(), ios::in);
-	if (cf.fail()) {
-		cerr << "File open failed" << endl;
-		exit(-1);
-	}
-	s = "";
-
-	cf >> currentWord;
-	for (int index = 1; index < 13; index++) { // There are total 12 values to read in.
-		while (strcmp(currentWord, "-->")) {
-			cf >> currentWord;
-		}
-		if (index == 1) {
-			cf >> currentWord;
-			prelog = 100 * atof(currentWord);
-			cout << "prelog = " << prelog << endl;
-		}
-		if (index == 2) {
-			cf >> currentWord;
-			maxpen = int(atof(currentWord) * 100.0 + .5);
-			cout << "maxpen = " << maxpen << endl;
-		}
-		if (index == 3) {
-			for (int count = 1; count <= 4; count++) {
-				cf >> currentWord;
-				s = currentWord;
-				poppen[count] = (int) (atof(s.c_str()) * 100 + 0.5);
-				//cout << "poppen[" << count << "] = "<< poppen[count] << endl;
-			}
-		}
-		if (index == 4) {
-			eparam[1] = 0;
-			eparam[2] = 0;
-			eparam[3] = 0;
-			eparam[4] = 0;
-			eparam[7] = 30;
-			eparam[8] = 30;
-			eparam[9] = -500;
-			int table[4];
-			table[1] = 5;
-			table[2] = 6;
-			table[3] = 10;
-			for (int count = 1; count <= 3; count++) {
-				cf >> currentWord;
-				s = currentWord;
-				eparam[table[count]] = (int) (atof(s.c_str()) * 100 + 0.5);
-				//printf(" %d  ", eparam[table[count]]);
-				//cout << "eparam[" << table[count] << "] = "<< eparam[table[count]] << endl;
-			}
-		}
-		if (index == 5) {
-			int table[4];
-			for (int count = 1; count <= 3; count++) {
-				cf >> currentWord;
-				s = currentWord;
-				table[count] = (int) (atof(s.c_str()) * 100 + 0.5);
-				//cout << "efn2[" << count << "] = "<< table[count] << endl;
-			}
-			efn2a = table[1];
-			efn2b = table[2] - 1;
-			efn2c = table[3] - 1;
-		}
-		if (index == 6) {
-			cf >> currentWord;
-			auend = (int) (100 * atof(currentWord));
-			//cout << "auend = " << auend << endl;
-		}
-		if (index == 7) {
-			cf >> currentWord;
-			gubonus = (int) (100 * atof(currentWord));
-			//cout << "gubonus = " << gubonus << endl;
-		}
-		if (index == 8) {
-			cf >> currentWord;
-			cslope = (int) (100 * atof(currentWord)) + 1;
-			//cout << "cslope = " << cslope << endl;
-		}
-		if (index == 9) {
-			cf >> currentWord;
-			cint = (int) (100 * atof(currentWord));
-			//cout << "cint = " << cint << endl;
-		}
-		if (index == 10) {
-			cf >> currentWord;
-			c3 = (int) (100 * atof(currentWord)) + 1;
-			//cout << "c3 = " << c3 << endl;
-		}
-		if (index == 11) {
-			cf >> currentWord;
-			init = (int) (100 * atof(currentWord)) + 1;
-			//cout << "init = " << init << endl;
-		}
-		if (index == 12) {
-			cf >> currentWord;
-			gail = (int) floor(.5 + atof(currentWord));
-			//cout << "gail = " << gail << endl;
-		}
-	}
-
-	cf.close();
-#if 0
-	cout << " Done!" << endl;
-#endif
-	return 0;
-}
-
-int initDangleValues(string fileName) {
+ int initDangleValues(string fileName) {
 	ifstream cf; //cf = current file
 	char currentLine[256];
 	string currentString;
@@ -656,7 +454,7 @@ int initDangleValues(string fileName) {
 	return 0;
 }
 
-int initLoopValues(string fileName) {
+ int initLoopValues(string fileName) {
 	// algorithm.c, line 2996
 	ifstream cf; // current file
 	char currentLine[256];
@@ -713,7 +511,7 @@ int initLoopValues(string fileName) {
 	return 0;
 }
 
-int initTstkhValues(string fileName) {
+ int initTstkhValues(string fileName) {
 	ifstream cf; //cf = current file
 	int i, j, k, l;
 	int ii, jj, kk, ll;
@@ -819,7 +617,7 @@ int initTstkhValues(string fileName) {
 	return 0;
 }
 
-int initTstkiValues(string fileName) {
+ int initTstkiValues(string fileName) {
 	ifstream cf; //cf = current file
 	int i, j, k, l;
 	int ii, jj, kk, ll;
@@ -927,7 +725,7 @@ int initTstkiValues(string fileName) {
 }
 
 //SH: Rewritten as an error was being generated by this function.
-int initTloopValues(string fileName) {
+ int initTloopValues(string fileName) {
 	ifstream cf;
 	int count;
 	char currentLine[256];
@@ -965,7 +763,7 @@ int initTloopValues(string fileName) {
 		while(currentLine[clindex]== ' ') clindex++;
 		for (count = 0; count < 6; count++) {
 			temp = currentLine[count + clindex];
-			currentSeqNumbers[count] = baseToDigit(temp);
+			currentSeqNumbers[count] = baseToDigit(temp.c_str());
 			//cout << currentSeqNumbers[count];
 			//cout << currentLine[count+1];
 		}
@@ -991,7 +789,7 @@ int initTloopValues(string fileName) {
 	return 0;
 }
 
-int initInt22Values(string fileName) {
+ int initInt22Values(string fileName) {
 
 	//Read the 2x2 internal loops
 	//key iloop22[a][b][c][d][j][l][k][m] =
@@ -1116,7 +914,7 @@ int initInt22Values(string fileName) {
 	return 0;
 }
 
-int initInt21Values(string fileName) {
+ int initInt21Values(string fileName) {
 
 	// 24x6 arrays of 4x4 values
 	//      c
@@ -1257,7 +1055,7 @@ int initInt21Values(string fileName) {
 	return 0;
 }
 
-int initInt11Values(string fileName) {
+ int initInt11Values(string fileName) {
 
 	//Read the 1x1 internal loops
 	//key iloop11[a][b][c][d][j][l][k][m] =
@@ -1394,3 +1192,5 @@ int initInt11Values(string fileName) {
 #endif
 	return 0;
 }
+
+

@@ -12,10 +12,10 @@ gtfold_SOURCES = \
 	options.cc\
 	global.c\
 	energy.c\
-	algorithms.c\
-	algorithms-partition.c\
-	subopt_traceback.cc\
-	traceback.c
+	algorithms.c
+# traceback.c \
+#	subopt_traceback.cc
+
 
 gtfold_LDFLAGS = 
 

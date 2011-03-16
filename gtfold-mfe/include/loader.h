@@ -17,22 +17,16 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* This file externs the prototypes of functions defined in loader.cc*/
-
 #ifndef _LOADER_H
 #define _LOADER_H
 
-#include <iostream>
-#include <fstream>
-#include <istream>
-#include <math.h>
 #include <string>
+
 #include "constants.h"
 #include "data.h"
 
 void populate(const char *userdatadir,bool userdatalogic);
-unsigned char getBase(std::string base);
-unsigned char getBase1(std::string base);
+
 int initStackValues(std::string fileName);
 int initMiscloopValues(std::string fileName);
 int initDangleValues(std::string fileName);
