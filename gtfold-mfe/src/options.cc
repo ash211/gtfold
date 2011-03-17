@@ -1,17 +1,17 @@
 #include "options.h"
 
- bool ILSA; 
- bool NOISOLATE;
- bool USERDATA;
- bool PARAMS;
- bool LIMIT_DISTANCE;
+bool ILSA;
+bool NOISOLATE;
+bool USERDATA;
+bool PARAMS;
+bool LIMIT_DISTANCE;
 
- std::string datadir;
- std::string dataparam;
- std::string seqfile ;
+std::string datadir;
+std::string dataparam;
+std::string seqfile ;
 
- int delta;
- int nThreads;
+int delta;
+int nThreads;
 
 void help() 
 {
