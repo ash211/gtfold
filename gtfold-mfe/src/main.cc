@@ -63,31 +63,33 @@ void free_fold(int len)
 	return;
 }
 
+/**
+ * Read the sequence out of the given filename and store it in seq
+ *
+ * @param filename A c string with the file to open
+ * @param seq A C++ string object (passed by reference) to save to
+ * @return SUCCESS or FAILURE
+ */
 int read_sequence_file(const char* filename, std::string& seq)
 {
-	ifstream cf;
-	cf.open(filename, ios::in);
-	if (cf == NULL)
-	{
-		return FAILURE;
-	}
-	
 	seq = "";
-	//Handle FASTA input
-	char ss[10000];
-	cf.getline(ss, 10000);
-	if (ss[0] != '>') 
-	{
-		char *fline;
-		fline = strtok(ss, " ");
-		while (fline != NULL) {
-			seq.append(fline);
-			fline = strtok(NULL, " ");
-		}
+
+	ifstream fs;
+	fs.open(filename, ios::in);
+	if (fs == NULL)
+		return FAILURE;
+
+	string line;
+	getline(fs, line);
+	while(line.length() > 0) {
+		// exclude lines starting with FASTA comment characters
+		if(line[0] != ';' && line[0] != '>')
+			seq += line;
+		getline(fs, line);
 	}
-	
-	cf.close();
-	
+
+	fs.close();
+
 	return SUCCESS;
 }
 
