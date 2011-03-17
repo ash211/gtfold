@@ -171,12 +171,8 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 		
-	if(USERDATA==true)
-		populate(datadir.c_str(),true);
-	else if (PARAMS == true)
-		populate(dataparam.c_str(),false);
-	else
-		populate("Turner99",false); 
+	// always use Turner99 data (for now)
+	populate("Turner99",false);
 	
 	fprintf(stdout,"Computing minimum free energy structure. . . \n");
 	fflush(stdout);
@@ -190,10 +186,10 @@ int main(int argc, char** argv) {
 	fprintf(stdout,"MFE running time (in seconds): %9.6f\n\n", t1);
 	
 	
-	if (delta > 0)
+	if (suboptDelta > 0)
 	{	
 		t1 = get_seconds();
-		subopt_traceback(seq.length(), delta);
+		subopt_traceback(seq.length(), suboptDelta);
 		t1 = get_seconds() - t1;
 		fprintf(stdout,"Traceback running time (in seconds): %9.6f\n\n", t1);
 

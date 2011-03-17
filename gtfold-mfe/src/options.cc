@@ -1,137 +1,149 @@
 #include "options.h"
 
+using namespace std;
+
 bool ILSA;
 bool NOISOLATE;
 bool USERDATA;
 bool PARAMS;
 bool LIMIT_DISTANCE;
+bool ENABLE_BPP;
 
-std::string datadir;
-std::string dataparam;
-std::string seqfile ;
+string seqfile = "";
+string constraintsFile = "";
+string outputFile = "";
 
-int delta;
-int nThreads;
+int suboptDelta = -1;
+int nThreads = -1;
+int contactDistance = -1;
 
-void help() 
-{
-	fprintf(stderr, "\n");
-	fprintf(stderr, "Usage: gtfold [OPTIONS]  FILE\n"); 
-	fprintf(stderr, "\tSequence file has to be in one of the two formats: Single line or FASTA\n\n"); 
-	fprintf(stderr, "OPTIONS\n" );
-	fprintf(stderr, "-ni, --noisolate\n"); 
-	fprintf(stderr, "\tprevents isolated base pairs from forming\n"); 
-	fprintf(stderr, "-c, --constraints filename\n");
-	fprintf(stderr,	"\tconstraints is a optional parameter\n");
-	fprintf(stderr, "\tSyntax for giving constraints is:\n\tfor forcing (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, F i j k \n");
-	fprintf(stderr,	"\tto prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) base pair, P i j k \n");
-	fprintf(stderr, "\tto make bases from i to i+k-1 single stranded bases, P i 0 k \n");
-	fprintf(stderr,	"-lcd --limitcd value\n");
-	fprintf(stderr,	"\tlimits the 'contact distance' for a base pair\n");
-	fprintf(stderr,	"-d --datadir dirname \n");
-	fprintf(stderr, "\n");
-	exit(-1);
+/**
+ * Print the help message and quit.
+ */
+void help() {
+    fprintf(stdout, "Usage: gtfold [OPTION]... FILE\n\n");
+
+    fprintf(stdout, "  FILE is an RNA sequence file.  Single line or FASTA formats are accepted.\n\n");
+
+    fprintf(stdout, "OPTIONS\n");
+    fprintf(stdout, "   -c, --constraints FILE\n                        Load constraints from FILE.  See Constraint syntax below\n");
+    fprintf(stdout, "   -d, --limitCD num    Set a maximum base pair contact distance to num. If no\n                        limit is given, base pairs can be over any distance\n");
+    fprintf(stdout, "   -n, --noisolate      Prevent isolated base pairs from forming\n");
+    fprintf(stdout, "   -o, --output FILE    Output to FILE (default output is to a .ct extension)\n");
+    fprintf(stdout, "   -t, --threads num    Limit number of threads used\n");
+
+    fprintf(stdout, "\n");
+    fprintf(stdout, "   -h, --help           Output help (this message) and exit\n");
+    fprintf(stdout, "   -v, --verbose        Run in verbose mode\n");
+
+    fprintf(stdout, "\nBETA OPTIONS\n");
+    fprintf(stdout, "   --bpp                Calculate base pair probabilities\n");
+    fprintf(stdout, "   --subopt range       Calculate suboptimal structures within 'range' kcal/mol\n");
+    fprintf(stdout, "                        of the mfe\n");
+
+    fprintf(stdout, "\nConstraint syntax:\n\tF i j k  # force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i j k  # prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i 0 k  # make bases from i to i+k-1 single stranded bases.\n");
+    exit(-1);
 }
 
+/**
+ * Parse the options from argc and argv and save them into global state.
+ */
+void parse_options(int argc, char** argv) {
+	int i;
 
-void parse_options(int argc, char** argv)
-{
-	int fileIndex = 0;
-	int consIndex = 0;
-	int dataIndex = 0;
-	int paramsIndex =0;
-	int eIndex = 0;
-	int nTIndex = 0;
-
-	int i = 1;
-
-	while (i < argc) {
-		if (argv[i][0] == '-') {
-			if (strcmp(argv[i], "-ilsa") == 0) {
-				ILSA = true;
-			} else if (strcmp(argv[i], "-noisolate") == 0) {
-				NOISOLATE = true;
-			} else if (strcmp(argv[i], "-help") == 0) {
+	for(i=1; i<argc; i++) {
+		if(argv[i][0] == '-') {
+			if(strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
 				help();
-			} else if (strcmp(argv[i], "-constraints") == 0) {
-				if (i < argc)
-					consIndex = ++i;
+			} else if(strcmp(argv[i], "--constraints") == 0 || strcmp(argv[i], "-c") == 0) {
+				if(i < argc)
+					constraintsFile = argv[++i];
 				else
 					help();
-			} else if (strcmp(argv[i], "-params")==0) { 
-				PARAMS = true;			  
-				if (i < argc)
-					paramsIndex = ++i;
+			} else if(strcmp(argv[i], "--limitCD") == 0 || strcmp(argv[i], "-d") == 0) {
+				if(i < argc)
+					contactDistance = atoi(argv[++i]);
 				else
 					help();
-			} else if (strcmp(argv[i], "-datadir") == 0) {
-				USERDATA = true;
-				if (i < argc)
-					dataIndex = ++i;
+			} else if(strcmp(argv[i], "--noisolate") == 0 || strcmp(argv[i], "-n") == 0) {
+				NOISOLATE = true;
+			} else if(strcmp(argv[i], "--output") == 0 || strcmp(argv[i], "-o") == 0) {
+				if(i < argc)
+					outputFile = argv[++i];
 				else
 					help();
-			} else if (strcmp(argv[i], "-e") == 0)
-			{
-				if (i < argc)
-					eIndex = ++i;
+			} else if(strcmp(argv[i], "--threads") == 0 || strcmp(argv[i], "-t") == 0) {
+				if(i < argc)
+					nThreads = atoi(argv[++i]);
 				else
 					help();	
-			}
-			else if (strcmp(argv[i], "-nTHREAD") == 0)
-			{
-				if (i < argc)
-					nTIndex = ++i;
+			} else if(strcmp(argv[i], "--bpp") == 0) {
+				ENABLE_BPP = true;
+			} else if(strcmp(argv[i], "--subopt") == 0) {
+				if(i < argc)
+					suboptDelta = atoi(argv[i]);
 				else
-					help();	
+					help();
 			}
 		} else {
-			fileIndex = i;
-			seqfile = argv[fileIndex];
+			seqfile = argv[i];
 		}
-		i++;
 	}
 
-	if (fileIndex == 0)
+	// Must have an input file specified
+	if(seqfile.compare("") == 0) {
 		help();
-	
-	if (NOISOLATE == true)
-		fprintf(stdout, "Not allowing isolated base pairs\n");
+		printf("Missing input file.\n");
+	}
+
+	printRunConfiguration();
+}
+
+/**
+ * Prints the run configuration for this run.
+ *
+ * The lines that start with a '-' are normal options, the '+' are beta options.
+ */
+void printRunConfiguration() {
+	bool standardRun = true;
+
+	printf("\nRun Configuration:\n");
+
+#ifdef _OPENMP
+	if(nThreads == -1)
+		printf("- thread count: %d\n", omp_get_num_threads());
 	else
-		fprintf(stdout, "Allowing isolated base pairs\n");
-	
-	if (consIndex != 0)
-	{
-		fprintf(stdout, "Constraint file index: %d\n", consIndex);
+		printf("- thread count: %d\n", nThreads);
+#else
+	printf("- thread count: 1\n");
+#endif
+
+
+	if (NOISOLATE == true) {
+		printf("- preventing isolated base pairs\n");
+		standardRun = false;
 	}
 
-	if (dataIndex != 0)
-	{
-		datadir = argv[dataIndex];
+	if(!constraintsFile.empty()) {
+		printf("- using constraint file: %s\n", constraintsFile.c_str());
+		standardRun = false;
 	}
 
-	if (paramsIndex != 0)
-	{
-		dataparam = argv[paramsIndex];
+	if (contactDistance != -1) {
+		printf("- maximum contact distance: %d\n", contactDistance);
+		standardRun = false;
 	}
 
-	nThreads = -1;
-	if (nTIndex != 0)
-	{
-		nThreads = atoi(argv[nTIndex]);
-	}
-	
-	delta = 0;
-	if (eIndex != 0)
-	{
-		delta = atoi(argv[eIndex]);
-	}	
-	if (delta > 0)
-	{
-		fprintf(stdout, "Suboptimal range = %d\n\n", delta);
+	if (ENABLE_BPP == true) {
+		printf("+ calculating base pair probabilities\n");
+		standardRun = false;
 	}
 
-	if (argc < 2)
-	{
-		help();
+	if (suboptDelta != -1) {
+		printf("+ calculating suboptimal structures within %d kcal/mol of MFE\n", suboptDelta);
+		standardRun = false;
 	}
+
+	if(standardRun)
+		printf("- standard\n");
 }
