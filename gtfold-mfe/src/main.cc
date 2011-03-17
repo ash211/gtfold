@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
 	parse_options(argc, argv);
 
 	fprintf(stdout, "Opening file: %s\n", seqfile.c_str());
-	if (read_sequence_file(seqfile.c_str(), seq) == 0)
+	if (read_sequence_file(seqfile.c_str(), seq) == FAILURE)
 	{
 		fprintf(stdout, "File open failed.\n\n");
 		exit(-1);
@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
 	
 	init_fold(seq.length());
 	
-	if (handle_IUPAC_code(seq.c_str(), seq.length())  == 0)
+	if (handle_IUPAC_code(seq.c_str(), seq.length())  == FAILURE)
 	{
 		free_fold(seq.length());
 		exit(0);
