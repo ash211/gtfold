@@ -139,15 +139,19 @@ int handle_IUPAC_code(const char* str, const int bases)
 	}
 }
 
+void print_header() {
+	fprintf(stdout,"GTfold: A Scalable Multicore Code for RNA Secondary Structure Prediction\n");
+	fprintf(stdout,"(c) 2007-2011  D.A. Bader, S. Mallidi, A. Mathuriya, C.E. Heitsch, S.C. Harvey\n");
+	fprintf(stdout, "Georgia Institute of Technology\n");
+}
+
 int main(int argc, char** argv) {
 	std::string seq;
 	int energy;
 	double t1;
 
-	fprintf(stdout,"GTfold: A Scalable Multicore Code for RNA Secondary Structure Prediction\n");
-	fprintf(stdout,"(c) 2007-2010  D.A. Bader, S. Mallidi, A. Mathuriya, C.E. Heitsch, S.C. Harvey\n");
-	fprintf(stdout, "Georgia Institute of Technology\n");
-	
+	print_header();
+
 	parse_options(argc, argv);
 
 	fprintf(stdout, "Opening file: %s\n", seqfile.c_str());
