@@ -95,8 +95,6 @@ void parse_options(int argc, char** argv) {
 		help();
 		printf("Missing input file.\n");
 	}
-
-	printRunConfiguration();
 }
 
 /**
@@ -104,7 +102,7 @@ void parse_options(int argc, char** argv) {
  *
  * The lines that start with a '-' are normal options, the '+' are beta options.
  */
-void printRunConfiguration() {
+void printRunConfiguration(string seq) {
 	bool standardRun = true;
 
 	printf("Run Configuration:\n");
@@ -146,4 +144,8 @@ void printRunConfiguration() {
 
 	if(standardRun)
 		printf("- standard\n");
+
+	printf("- input file: %s\n", seqfile.c_str());
+	printf("  - sequence length: %d\n", (int)seq.length());
+	printf("  - sequence contents: %s\n", seq.c_str());
 }

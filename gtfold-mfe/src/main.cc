@@ -154,14 +154,12 @@ int main(int argc, char** argv) {
 
 	parse_options(argc, argv);
 
-	fprintf(stdout, "Opening file: %s\n", seqfile.c_str());
-	if (read_sequence_file(seqfile.c_str(), seq) == FAILURE)
-	{
-		fprintf(stdout, "File open failed.\n\n");
+	if (read_sequence_file(seqfile.c_str(), seq) == FAILURE) {
+		printf("Failed to open sequence file: %s.\n\n", seqfile.c_str());
 		exit(-1);
 	}
-	fprintf(stdout, "Sequence length: %5d\n", (int)seq.length());
-	fprintf(stdout, "Sequence : %s\n", seq.c_str());
+
+	printRunConfiguration(seq);
 	
 	init_fold(seq.length());
 	

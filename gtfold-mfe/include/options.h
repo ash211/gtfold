@@ -25,6 +25,6 @@ extern int contactDistance;
 
 void help(); 
 void parse_options(int argc, char** argv);
-void printRunConfiguration();
+void printRunConfiguration(string seq);
 
 #endif
