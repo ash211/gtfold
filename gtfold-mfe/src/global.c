@@ -42,14 +42,14 @@ void printSequence(int len)
 	int i;
 	for (i = 1; i <= len; i++) 
 	{
-		if (RNA1[i] == 0)
+		if (RNA1[i] == BASE_A)
 			printf("A");
-		else if (RNA1[i] == 1)
+		else if (RNA1[i] == BASE_C)
 			printf("C");
-		else if (RNA1[i] == 2)
+		else if (RNA1[i] == BASE_G)
 			printf("G");
-		else if (RNA1 [i] == 3)
-			printf("T");
+		else if (RNA1 [i] == BASE_U)
+			printf("U");
 		else
 			printf("N");
 	}
