@@ -71,7 +71,7 @@ void printStructure(int len)
 	printf("\n");
 }
 
-int allowedPairs(int a, int b) 
+int canPair(int a, int b)
 {
 	return (chPairKey & (1 << (((a)<<2) + (b)))); 
 }  

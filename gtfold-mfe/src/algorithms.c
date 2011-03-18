@@ -62,7 +62,7 @@ int calculate(int len) {
 		//	for (i = 1; i <= len - b; i++) {
 		for (j = i+TURN+1; j <= len; j++) {
 			//j = i + b;
-			if (allowedPairs(RNA[i], RNA[j])) { 
+			if (canPair(RNA[i], RNA[j])) {
 				int p, q, h;
 				int newV = INFINITY_;
 				int VBIij = INFINITY_;
@@ -86,7 +86,7 @@ int calculate(int len) {
 					int minq = j-i+p-MAXLOOP-2;
 					if (minq < p+1+TURN) minq = p+1+TURN;
 					for (q = minq; q < j; q++) {
-						if (!allowedPairs(RNA[p], RNA[q])) continue;
+						if (!canPair(RNA[p], RNA[q])) continue;
 						VBIij = MIN(eL(i, j, p, q) + V(p,q), VBIij);
 					}
 				}
