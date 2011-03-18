@@ -9,6 +9,6 @@
 
 char baseToDigit(const char* base) ;
 unsigned char encode(char base);
-unsigned char getBase1(const char* base) ;
+int isWatsonCrickBase(char base);
 
 #endif

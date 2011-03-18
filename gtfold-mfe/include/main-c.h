@@ -21,7 +21,6 @@
 #define _MAIN_C_H
 
 extern int LENGTH;
-extern unsigned char *RNA1; /* [LENGTH] */
 extern unsigned char *RNA; /* [LENGTH] */
 extern int *structure; /* [LENGTH] */
 extern int *V; /* [(LENGTH-1)*(LENGTH)/2 + 1] */

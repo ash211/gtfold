@@ -66,51 +66,23 @@ unsigned char encode(char base) {
 }
 
 /**
- * Identical to getBase but returns 'N' instead of 'A' for non-standard bases
- * (a,c,g,u)
+ * Returns true if the given base is an A, C, G, U, or T
+ * @param base 'A', 'C', 'G', 'U', etc.
  */
-unsigned char getBase1(const char* base) {
-	if (!strcmp(base, "A") ||
-		!strcmp(base, "a"))
-		return BASE_A;
-
-	if (!strcmp(base, "C") ||
-		!strcmp(base, "c"))
-		return BASE_C;
-
-	if (!strcmp(base, "G") ||
-		!strcmp(base, "g"))
-		return BASE_G;
-
-	if (!strcmp(base, "U") ||
-		!strcmp(base, "u") ||
-		!strcmp(base, "T") ||
-		!strcmp(base, "t"))
-		return BASE_U;
-
-	if (!strcmp(base, "N") ||
-		!strcmp(base, "n") ||
-		!strcmp(base, "R") ||
-		!strcmp(base, "r") ||
-		!strcmp(base, "Y") ||
-		!strcmp(base, "y") ||
-		!strcmp(base, "M") ||
-		!strcmp(base, "m") ||
-		!strcmp(base, "K") ||
-		!strcmp(base, "k") ||
-		!strcmp(base, "S") ||
-		!strcmp(base, "s") ||
-		!strcmp(base, "W") ||
-		!strcmp(base, "w") ||
-		!strcmp(base, "B") ||
-		!strcmp(base, "b") ||
-		!strcmp(base, "D") ||
-		!strcmp(base, "d") ||
-		!strcmp(base, "H") ||
-		!strcmp(base, "h") ||
-		!strcmp(base, "V") ||
-		!strcmp(base, "v"))
-		return 'N';
-
-	return 'X';
+int isWatsonCrickBase(char base) {
+	switch(base) {
+		case 'A':
+		case 'a':
+		case 'C':
+		case 'c':
+		case 'G':
+		case 'g':
+		case 'U':
+		case 'u':
+		case 'T':
+		case 't':
+			return true;
+		default:
+			return false;
+	}
 }

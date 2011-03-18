@@ -101,14 +101,13 @@ int handle_IUPAC_code(const char* str, const int bases)
 	for(int i = 1; i <= bases; i++)
 	{
 		RNA[i] = encode(s[i-1]);
-		RNA1[i] = getBase1((s.substr(i-1,1)).c_str());
 
 		if (RNA[i]=='X') 
 		{
 			fprintf(stderr,"ERROR: Base unrecognized\n");
 			return FAILURE;
 		}
-		else if(RNA[i]!='X' && RNA1[i]=='N')
+		else if(RNA[i]!='X' && !isWatsonCrickBase(s[i-1]))
 		{
 			unspecd=1;
 			stack_unidentified_base[stack_count]=i;

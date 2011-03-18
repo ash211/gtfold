@@ -3,7 +3,6 @@
 
 #include "constants.h"
 
-extern unsigned char *RNA1; 
 extern unsigned char *RNA; 
 extern int *structure; 
 

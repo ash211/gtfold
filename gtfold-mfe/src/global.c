@@ -3,7 +3,6 @@
 
 #include "global.h"
 
-unsigned char *RNA1; 
 unsigned char *RNA; 
 int *structure; 
 unsigned int chPairKey;
@@ -13,11 +12,6 @@ void init_global_params(int len)
 {
 	RNA = (unsigned char *) malloc((len+1)* sizeof(unsigned char));
 	if (RNA == NULL) {
-		perror("Cannot allocate variable 'RNA'");
-		exit(-1);
-	}
-	RNA1 = (unsigned char *) malloc((len+1) * sizeof(unsigned char));
-	if (RNA1 == NULL) {
 		perror("Cannot allocate variable 'RNA'");
 		exit(-1);
 	}
@@ -34,7 +28,6 @@ void free_global_params()
 {
 	free(structure);
 	free(RNA);
-	free(RNA1);
 }
 
 void printSequence(int len) 
@@ -42,13 +35,13 @@ void printSequence(int len)
 	int i;
 	for (i = 1; i <= len; i++) 
 	{
-		if (RNA1[i] == BASE_A)
+		if (RNA[i] == BASE_A)
 			printf("A");
-		else if (RNA1[i] == BASE_C)
+		else if (RNA[i] == BASE_C)
 			printf("C");
-		else if (RNA1[i] == BASE_G)
+		else if (RNA[i] == BASE_G)
 			printf("G");
-		else if (RNA1 [i] == BASE_U)
+		else if (RNA[i] == BASE_U)
 			printf("U");
 		else
 			printf("N");
