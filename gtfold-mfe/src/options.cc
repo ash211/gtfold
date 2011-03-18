@@ -111,9 +111,9 @@ void printRunConfiguration() {
 
 #ifdef _OPENMP
 	if(nThreads == -1)
-		printf("- thread count: %d\n", omp_get_num_threads());
+		printf("- [OMP] thread count: %d\n", omp_get_num_threads());
 	else
-		printf("- thread count: %d\n", nThreads);
+		printf("- [OMP] thread count: %d\n", nThreads);
 #else
 	printf("- thread count: 1\n");
 #endif
