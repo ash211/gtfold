@@ -101,7 +101,7 @@ int handle_IUPAC_code(const char* str, const int bases)
 	stack_unidentified_base=new int[bases];
 	std::string s = str;
 
-	for(int i = 1; i <= bases; i++) 
+	for(int i = 1; i <= bases; i++)
 	{
 		RNA[i] = getBase((s.substr(i-1,1)).c_str());
 		RNA1[i] = getBase1((s.substr(i-1,1)).c_str());
@@ -143,6 +143,25 @@ void print_header() {
 	printf("GTfold: A Scalable Multicore Code for RNA Secondary Structure Prediction\n");
 	printf("(c) 2007-2011  D.A. Bader, S. Mallidi, A. Mathuriya, C.E. Heitsch, S.C. Harvey\n");
 	printf("Georgia Institute of Technology\n\n");
+}
+
+/**
+ * Save the output to a ct file
+ *
+ * @param outputFile The file to save to
+ * @param energy The MFE energy (multiplied by 100)
+ */
+void save_ct_file(string outputFile, string seq, int energy) {
+	ofstream outfile;
+	outfile.open(outputFile.c_str());
+
+	outfile << seq.length() << "\t  dG = " << energy/100.0 << endl;
+
+	unsigned int i = 1;
+	for(i=1; i <= seq.length(); i++)
+		outfile << i << "\t" << seq[i-1] << "\t" << i-1 << "\t" << (i+1)%(seq.length()+1) << "\t" << structure[i] << "\t" << i << endl;
+
+	outfile.close();
 }
 
 int main(int argc, char** argv) {
@@ -200,6 +219,9 @@ int main(int argc, char** argv) {
 	trace(seq.length());
 	t1 = get_seconds() - t1;
 	
+	save_ct_file(outputFile, seq, energy);
+	printf("Output saved to %s\n", outputFile.c_str());
+
 	/*
 	std::stringstream ss1, ss2;
 	char suboptfile[1024];

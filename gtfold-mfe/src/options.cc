@@ -98,6 +98,20 @@ void parse_options(int argc, char** argv) {
 		help();
 		printf("Missing input file.\n");
 	}
+
+	// If no output file specified, create one
+	if(outputFile.compare("") == 0) {
+
+		// base it off the input file
+		outputFile += seqfile;
+
+		// and if an extension exists, remove it ...
+		if(outputFile.find(".") != string::npos)
+			outputFile.erase(outputFile.rfind("."));
+
+		// ... and append the .ct
+		outputFile += ".ct";
+	}
 }
 
 /**
@@ -152,4 +166,5 @@ void printRunConfiguration(string seq) {
 	printf("- input file: %s\n", seqfile.c_str());
 	printf("  - sequence length: %d\n", (int)seq.length());
 	printf("  - sequence contents: %s\n", seq.c_str());
+	printf("- output file: %s\n", outputFile.c_str());
 }
