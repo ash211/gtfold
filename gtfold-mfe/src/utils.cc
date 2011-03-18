@@ -21,6 +21,14 @@ char baseToDigit(const char* base) {
 	return (char) '0';
 }
 
+/**
+ * Encodes the given base to a number.
+ *
+ * Handles upper- and lower-case letters.
+ *
+ * @param base The character to encode
+ * @return The numerical encoding of the base
+ */
 unsigned char encode(char base) {
 	switch(base) {
 		case 'A':
