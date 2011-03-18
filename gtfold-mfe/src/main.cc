@@ -120,14 +120,14 @@ bool encodeSequence(string seq) {
 
 	// just print a warning for non-canonical IUPAC codes
 	if(unspecifiedBaseCount > 0) {
-		printf("\nNon-canonical IUPAC codes have been detected at position%s: ", unspecifiedBaseCount == 1 ? "" : "s");
+		printf("\nIncompletely-specified IUPAC codes have been detected at position%s: ", unspecifiedBaseCount == 1 ? "" : "s");
 
 		// put [0] first for nice comma separation
 		printf("%d (%c)", unspecifiedBases[0], seq.at(unspecifiedBases[0]-1));
 		for(unsigned int i=1; i<unspecifiedBaseCount; i++)
 			printf(", %d (%c)", unspecifiedBases[i], seq[unspecifiedBases[i]-1]);
 
-		printf("\nPlease replace with canonical IUPAC codes (A,C,G,U,T) and retry.\n");
+		printf("\nPlease replace with fully-specified IUPAC codes (A,C,G,U,T) and retry.\n");
 		return false;
 	}
 
