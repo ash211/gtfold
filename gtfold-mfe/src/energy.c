@@ -30,62 +30,62 @@ void create_tables(int len)
 	V = (int *) malloc(((len+1)*len/2 + 1) * sizeof(int));
 	if (V == NULL) 
 	{
-		perror("Cannot allocate variable 'V'");
+		perror("Cannot allocate array 'V'");
 		exit(-1);
 	}
 
 	VV1 = (int *) malloc((len+ 1)*sizeof(int));
 	if (VV1 == NULL) 
 	{
-		perror("Cannot allocate variable 'V'");
+		perror("Cannot allocate array 'VV1'");
 		exit(-1);
 	}
 	VV = (int *) malloc((len+ 1)*sizeof(int));
 	if (VV == NULL) 
 	{
-		perror("Cannot allocate variable 'V'");
+		perror("Cannot allocate array 'VV'");
 		exit(-1);
 	}
 
 	WMi = (int *) malloc((len+ 1)*sizeof(int));
 	if (WMi == NULL) 
 	{
-		perror("Cannot allocate variable 'V'");
+		perror("Cannot allocate array 'WMi'");
 		exit(-1);
 	}
 
 	WMi1 = (int *) malloc((len+ 1)*sizeof(int));
 	if (WMi1 == NULL) 
 	{
-		perror("Cannot allocate variable 'V'");
+		perror("Cannot allocate array 'WMi1'");
 		exit(-1);
 	}
 
 	WMi2 = (int *) malloc((len+ 1)*sizeof(int));
 	if (WMi2 == NULL) 
 	{
-		perror("Cannot allocate variable 'V'");
+		perror("Cannot allocate array 'WMi2'");
 		exit(-1);
 	}
 
 	WM = (int *) malloc(((len+1)*len/2 + 1) * sizeof(int));
 	if (WM == NULL) 
 	{
-		perror("Cannot allocate variable 'V'");
+		perror("Cannot allocate array 'WM'");
 		exit(-1);
 	}
 
 	VM = (int *) malloc(((len+1)*len/2 + 1) * sizeof(int));
 	if (VM == NULL) 
 	{
-		perror("Cannot allocate variable 'V'");
+		perror("Cannot allocate array 'VM'");
 		exit(-1);
 	}
 
 	VBI = (int *) malloc(((len+1)*len/2 + 1) * sizeof(int));
 	if (VBI == NULL) 
 	{
-		perror("Cannot allocate variable 'V'");
+		perror("Cannot allocate array 'VBI'");
 		exit(-1);
 	}
 
@@ -93,13 +93,13 @@ void create_tables(int len)
 	V = (int **) malloc((len+1)* sizeof(int *));
 	if (V == NULL) 
 	{
-		perror("Cannot allocate variable 'VM'");
+		perror("Cannot allocate array 'VM'");
 		exit(-1);
 	}
 	for (i = 0; i < len+1; i++) {
 		V[i] = (int *) malloc((len+1)*sizeof(int));
 		if (V[i] == NULL) {
-			perror("Cannot allocate variable 'VM[i]'");
+			perror("Cannot allocate array 'VM[i]'");
 			exit(-1);
 		}
 	}
@@ -108,7 +108,7 @@ void create_tables(int len)
 	W = (int *) malloc((len+1) * sizeof(int));
 	if (W == NULL) 
 	{
-		perror("Cannot allocate variable 'W'");
+		perror("Cannot allocate array 'W'");
 		exit(-1);
 	}
 
@@ -116,7 +116,7 @@ void create_tables(int len)
 	VBI = (int **) malloc((len+1) * sizeof(int *));
 	if (VBI == NULL) 
 	{
-		perror("Cannot allocate variable 'VBI'");
+		perror("Cannot allocate array 'VBI'");
 		exit(-1);
 	}
 
@@ -124,7 +124,7 @@ void create_tables(int len)
 		VBI[i] = (int *) malloc((len+1)* sizeof(int));
 		if (VBI[i] == NULL) 
 		{
-			perror("Cannot allocate variable 'VBI[i]'");
+			perror("Cannot allocate array 'VBI[i]'");
 			exit(-1);
 		}
 	}
@@ -132,13 +132,13 @@ void create_tables(int len)
 	VM = (int **) malloc((len+1)* sizeof(int *));
 	if (VM == NULL) 
 	{
-		perror("Cannot allocate variable 'VM'");
+		perror("Cannot allocate array 'VM'");
 		exit(-1);
 	}
 	for (i = 0; i < len+1; i++) {
 		VM[i] = (int *) malloc((len+1)*sizeof(int));
 		if (VM[i] == NULL) {
-			perror("Cannot allocate variable 'VM[i]'");
+			perror("Cannot allocate array 'VM[i]'");
 			exit(-1);
 		}
 	}
@@ -146,14 +146,14 @@ void create_tables(int len)
 	WM = (int **) malloc((len+1)*sizeof(int *));
 	if (WM == NULL) 
 	{
-		perror("Cannot allocate variable 'WM'");
+		perror("Cannot allocate array 'WM'");
 		exit(-1);
 	}
 	for (i = 0; i < len+1; i++) 
 	{
 		WM[i] = (int *) malloc((len+1)*sizeof(int));
 		if (WM[i] == NULL) {
-			perror("Cannot allocate variable 'WM[i]'");
+			perror("Cannot allocate array 'WM[i]'");
 			exit(-1);
 		}
 	}
@@ -161,7 +161,7 @@ void create_tables(int len)
     
 	indx = (int*) malloc((len+1) * sizeof(int));
 	if (indx == NULL) {
-		perror("Cannot allocate variable 'indx'");
+		perror("Cannot allocate array 'indx'");
 		exit(-1);
 	}
 
