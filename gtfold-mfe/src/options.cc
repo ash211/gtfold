@@ -107,7 +107,7 @@ void parse_options(int argc, char** argv) {
 void printRunConfiguration() {
 	bool standardRun = true;
 
-	printf("\nRun Configuration:\n");
+	printf("Run Configuration:\n");
 
 #ifdef _OPENMP
 	if(nThreads == -1)

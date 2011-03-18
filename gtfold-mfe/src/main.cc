@@ -142,7 +142,7 @@ int handle_IUPAC_code(const char* str, const int bases)
 void print_header() {
 	printf("GTfold: A Scalable Multicore Code for RNA Secondary Structure Prediction\n");
 	printf("(c) 2007-2011  D.A. Bader, S. Mallidi, A. Mathuriya, C.E. Heitsch, S.C. Harvey\n");
-	printf("Georgia Institute of Technology\n");
+	printf("Georgia Institute of Technology\n\n");
 }
 
 int main(int argc, char** argv) {
