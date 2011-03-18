@@ -28,8 +28,10 @@ void help() {
     printf("  FILE is an RNA sequence file.  Single line or FASTA formats are accepted.\n\n");
 
     printf("OPTIONS\n");
-    printf("   -c, --constraints FILE\n                        Load constraints from FILE.  See Constraint syntax below\n");
-    printf("   -d, --limitCD num    Set a maximum base pair contact distance to num. If no\n                        limit is given, base pairs can be over any distance\n");
+    printf("   -c, --constraints FILE\n");
+    printf("                        Load constraints from FILE.  See Constraint syntax below\n");
+    printf("   -d, --limitCD num    Set a maximum base pair contact distance to num. If no\n");
+    printf("                        limit is given, base pairs can be over any distance\n");
     printf("   -n, --noisolate      Prevent isolated base pairs from forming\n");
     printf("   -o, --output FILE    Output to FILE (default output is to a .ct extension)\n");
     printf("   -t, --threads num    Limit number of threads used\n");
