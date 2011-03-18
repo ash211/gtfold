@@ -25,7 +25,7 @@ int *indx;
 
 void create_tables(int len)
 {	
-	int i;
+	//int i;
 	
 	V = (int *) malloc(((len+1)*len/2 + 1) * sizeof(int));
 	if (V == NULL) 
@@ -171,7 +171,7 @@ void create_tables(int len)
 
 void init_tables(int len) 
 {
-	int i, j, LLL;
+	int i, LLL;
 	
 	for (i = 0; i <= len; i++) {
 		W[i] = INFINITY_; 
@@ -211,8 +211,6 @@ void init_tables(int len)
 
 void free_tables(int len)
 {
-	int i;
-
 	free(indx);
 	//for (i = 0; i < len; i++)
 	//	free(WM[i]);

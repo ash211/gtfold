@@ -41,7 +41,7 @@ double get_seconds() {
 }
 
 int calculate(int len) { 
-	int b, i, j;
+	int i, j;
 	double t1, t2, tint=0, thair=0,tst=0, tml=0, twm=0;
 
 #if 1

@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
 		fprintf(stdout, "File open failed.\n\n");
 		exit(-1);
 	}
-	fprintf(stdout, "Sequence length: %5d\n", seq.length());
+	fprintf(stdout, "Sequence length: %5d\n", (int)seq.length());
 	fprintf(stdout, "Sequence : %s\n", seq.c_str());
 	
 	init_fold(seq.length());
