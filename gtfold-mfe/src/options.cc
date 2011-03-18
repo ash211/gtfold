@@ -8,7 +8,7 @@ bool NOISOLATE;
 bool USERDATA;
 bool PARAMS;
 bool LIMIT_DISTANCE;
-bool ENABLE_BPP;
+bool BPP_ENABLED;
 bool SUBOPT_ENABLED;
 
 string seqfile = "";
@@ -80,7 +80,7 @@ void parse_options(int argc, char** argv) {
 				else
 					help();	
 			} else if(strcmp(argv[i], "--bpp") == 0) {
-				ENABLE_BPP = true;
+				BPP_ENABLED = true;
 			} else if(strcmp(argv[i], "--subopt") == 0) {
 				SUBOPT_ENABLED = true;
 				if(i < argc)
@@ -135,7 +135,7 @@ void printRunConfiguration(string seq) {
 		standardRun = false;
 	}
 
-	if (ENABLE_BPP == true) {
+	if (BPP_ENABLED == true) {
 		printf("+ calculating base pair probabilities\n");
 		standardRun = false;
 	}

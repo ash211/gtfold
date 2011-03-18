@@ -13,7 +13,7 @@ extern bool NOISOLATE;
 extern bool USERDATA;
 extern bool PARAMS;
 extern bool LIMIT_DISTANCE;
-extern bool ENABLE_BPP;
+extern bool BPP_ENABLED;
 extern bool SUBOPT_ENABLED;
 
 extern string seqfile;
