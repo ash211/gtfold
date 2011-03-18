@@ -90,47 +90,48 @@ int read_sequence_file(const char* filename, std::string& seq)
 	return SUCCESS;
 }
 
-int handle_IUPAC_code(const char* str, const int bases)
-{
-	int* stack_unidentified_base;
-	int stack_count=0;
-	bool unspecd=0;
-	stack_unidentified_base=new int[bases];
-	std::string s = str;
+/**
+ * Encode the given string of letters into an RNA sequence.
+ *
+ * This handles IUPAC codes and places the results into the array RNA.
+ *
+ * @param seq The string to encode
+ * @return A boolean representing success or failure of the encoding.  Failure
+ *         can occur when seeing unknown IUPAC codes.
+ */
+bool encodeSequence(string seq) {
+	unsigned int unspecifiedBaseCount=0;
+	unsigned int unspecifiedBases[seq.length()];
 
-	for(int i = 1; i <= bases; i++)
-	{
-		RNA[i] = encode(s[i-1]);
+	for(unsigned int i=1; i<=seq.length(); i++) {
+		RNA[i] = encode(seq[i-1]);
 
-		if (RNA[i]=='X') 
-		{
-			fprintf(stderr,"ERROR: Base unrecognized\n");
-			return FAILURE;
+		// die on non-IUPAC codes
+		if (RNA[i]=='X') {
+			fprintf(stderr, "ERROR: Non-IUPAC nucleotide code at position: %d (%c)\n", i, seq[i-1]);
+			fprintf(stderr, "See http://www.bioinformatics.org/sms/iupac.html for valid codes.\n");
+			return false;
 		}
-		else if(RNA[i]!='X' && !isWatsonCrickBase(s[i-1]))
-		{
-			unspecd=1;
-			stack_unidentified_base[stack_count]=i;
-			stack_count++;
-		}
-	}
-	if(unspecd) 
-	{
-		printf("IUPAC codes have been detected at positions:");
 
-		printf("%d", stack_unidentified_base[0]);
-		for(int i=1;i<stack_count;i++)
-			printf(", %d", stack_unidentified_base[i]);
-
-		printf("\n");
-		//printf("You may wish to resubmit the sequence with fully specified positions. Alternatively, GTfold will fold the sequence under the standard assumption that these ambiguous positions do not pair.  Do you wish to continue with the current computation? <Y/N>");
-		//char reply;
-		//scanf("%c",&reply);
-		//return (reply=='n'||reply=='N')?(FAILURE):(SUCCESS);
-		return SUCCESS;
+		// add non-canonical IUPAC codes to the warning list
+		if(!isWatsonCrickBase(seq[i-1]))
+			unspecifiedBases[unspecifiedBaseCount++]=i;
 	}
-	else 
-		return SUCCESS;
+
+	// just print a warning for non-canonical IUPAC codes
+	if(unspecifiedBaseCount > 0) {
+		printf("\nNon-canonical IUPAC codes have been detected at position%s: ", unspecifiedBaseCount == 1 ? "" : "s");
+
+		// put [0] first for nice comma separation
+		printf("%d (%c)", unspecifiedBases[0], seq.at(unspecifiedBases[0]-1));
+		for(unsigned int i=1; i<unspecifiedBaseCount; i++)
+			printf(", %d (%c)", unspecifiedBases[i], seq[unspecifiedBases[i]-1]);
+
+		printf("\nPlease replace with canonical IUPAC codes (A,C,G,U,T) and retry.\n");
+		return false;
+	}
+
+	return true;
 }
 
 void print_header() {
@@ -179,7 +180,7 @@ int main(int argc, char** argv) {
 	
 	init_fold(seq.length());
 	
-	if (handle_IUPAC_code(seq.c_str(), seq.length())  == FAILURE)
+	if (!encodeSequence(seq))
 	{
 		free_fold(seq.length());
 		exit(0);
