@@ -50,17 +50,14 @@ double get_seconds()
 
 void init_fold(int len) 
 {	
-
  	init_global_params(len);
 	create_tables(len);
-	return;
 }
 
 void free_fold(int len) 
 {
 	free_global_params();
 	free_tables(len);
-	return;
 }
 
 /**
