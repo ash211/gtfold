@@ -9,6 +9,7 @@ bool USERDATA;
 bool PARAMS;
 bool LIMIT_DISTANCE;
 bool ENABLE_BPP;
+bool SUBOPT_ENABLED;
 
 string seqfile = "";
 string constraintsFile = "";
@@ -81,6 +82,7 @@ void parse_options(int argc, char** argv) {
 			} else if(strcmp(argv[i], "--bpp") == 0) {
 				ENABLE_BPP = true;
 			} else if(strcmp(argv[i], "--subopt") == 0) {
+				SUBOPT_ENABLED = true;
 				if(i < argc)
 					suboptDelta = atoi(argv[++i]);
 				else

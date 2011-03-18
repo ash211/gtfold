@@ -185,7 +185,7 @@ int main(int argc, char** argv) {
 	printf("- MFE runtime: %9.6f seconds\n", t1);
 	
 	
-	if (suboptDelta > 0)
+	if (SUBOPT_ENABLED)
 	{	
 		t1 = get_seconds();
 		subopt_traceback(seq.length(), suboptDelta);
