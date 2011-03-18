@@ -39,40 +39,40 @@ using namespace std;
 
 std::string EN_DATADIR;
 
- int poppen[5];
- int maxpen;
- int eparam[11];
- int multConst[3]; /* for multiloop penalties. */
- int dangle[4][4][4][2]; /* Contain dangling energy values */
- int inter[31]; /* Contains size penalty for internal loops */
- int bulge[31]; /* Contain the size penalty for bulges */
- int hairpin[31]; /* Contains the size penalty for hairpin loops */
- int stack[256]; /* Stacking energy used to calculate energy of stack loops */
- int tstkh[256]; /* Terminal mismatch energy used in the calculations of hairpin loops */
- int tstki[256]; /* Terminal mismatch energy used in the calculations of internal loops */
- int tloop[maxtloop + 1][2];
- int numoftloops;
- int iloop22[5][5][5][5][5][5][5][5]; /* 2*2 internal looops */
- int iloop21[5][5][5][5][5][5][5]; /* 2*1 internal loops */
- int iloop11[5][5][5][5][5][5]; /* 1*1 internal loops */
- int coax[6][6][6][6];
- int tstackcoax[6][6][6][6];
- int coaxstack[6][6][6][6];
- int tstack[6][6][6][6];
- int tstkm[6][6][6][6];
- int auend;
- int gubonus;
- int cint; /* cint, cslope, c3 are used for poly C hairpin loops */
- int cslope;
- int c3;
- int efn2a;
- int efn2b;
- int efn2c;
- int triloop[maxtloop + 1][2];
- int numoftriloops;
- int init;
- int gail; /* It is either 0 or 1. It is used for grosely asymmetric internal loops */
- float prelog;
+int poppen[5];
+int maxpen;
+int eparam[11];
+int multConst[3]; /* for multiloop penalties. */
+int dangle[4][4][4][2]; /* Contain dangling energy values */
+int inter[31]; /* Contains size penalty for internal loops */
+int bulge[31]; /* Contain the size penalty for bulges */
+int hairpin[31]; /* Contains the size penalty for hairpin loops */
+int stack[256]; /* Stacking energy used to calculate energy of stack loops */
+int tstkh[256]; /* Terminal mismatch energy used in the calculations of hairpin loops */
+int tstki[256]; /* Terminal mismatch energy used in the calculations of internal loops */
+int tloop[maxtloop + 1][2];
+int numoftloops;
+int iloop22[5][5][5][5][5][5][5][5]; /* 2*2 internal looops */
+int iloop21[5][5][5][5][5][5][5]; /* 2*1 internal loops */
+int iloop11[5][5][5][5][5][5]; /* 1*1 internal loops */
+int coax[6][6][6][6];
+int tstackcoax[6][6][6][6];
+int coaxstack[6][6][6][6];
+int tstack[6][6][6][6];
+int tstkm[6][6][6][6];
+int auend;
+int gubonus;
+int cint; /* cint, cslope, c3 are used for poly C hairpin loops */
+int cslope;
+int c3;
+int efn2a;
+int efn2b;
+int efn2c;
+int triloop[maxtloop + 1][2];
+int numoftriloops;
+int init;
+int gail; /* It is either 0 or 1. It is used for grosely asymmetric internal loops */
+float prelog;
 
 void readThermodynamicParameters(const char *userdatadir,bool userdatalogic) {
 
