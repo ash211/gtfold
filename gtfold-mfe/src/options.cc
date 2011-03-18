@@ -82,7 +82,7 @@ void parse_options(int argc, char** argv) {
 				ENABLE_BPP = true;
 			} else if(strcmp(argv[i], "--subopt") == 0) {
 				if(i < argc)
-					suboptDelta = atoi(argv[i]);
+					suboptDelta = atoi(argv[++i]);
 				else
 					help();
 			}
