@@ -97,13 +97,13 @@ void parse_options(int argc, char** argv) {
 	}
 
 	// Must have an input file specified
-	if(seqfile.compare("") == 0) {
+	if(seqfile.empty()) {
 		help();
 		printf("Missing input file.\n");
 	}
 
 	// If no output file specified, create one
-	if(outputFile.compare("") == 0) {
+	if(outputFile.empty()) {
 
 		// base it off the input file
 		outputFile += seqfile;
