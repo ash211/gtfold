@@ -229,7 +229,7 @@ int main(int argc, char** argv) {
 	// release the malloc'd arrays
 	free_fold(seq.length());
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 
