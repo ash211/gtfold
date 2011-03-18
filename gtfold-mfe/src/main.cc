@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
 	t1 = get_seconds() - t1;
 	
 	save_ct_file(outputFile, seq, energy);
-	printf("Output saved to %s\n", outputFile.c_str());
+	printf("\nMFE structure saved in .ct format to %s\n", outputFile.c_str());
 
 	/*
 	std::stringstream ss1, ss2;
