@@ -172,16 +172,16 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 	
-	fprintf(stdout,"Computing minimum free energy structure. . . \n");
+	printf("Computing minimum free energy structure. . . \n");
 	fflush(stdout);
 
 	t1 = get_seconds();
 	energy = calculate(seq.length());
 	t1 = get_seconds() - t1;
 	
-	fprintf(stdout,"Done.\n\n");
-	fprintf(stdout,"Minimum Free Energy = %12.4f\n", energy/100.00);
-	fprintf(stdout,"MFE running time (in seconds): %9.6f\n\n", t1);
+	printf("Done.\n\n");
+	printf("Minimum Free Energy = %12.4f\n", energy/100.00);
+	printf("MFE running time (in seconds): %9.6f\n\n", t1);
 	
 	
 	if (suboptDelta > 0)
@@ -189,7 +189,7 @@ int main(int argc, char** argv) {
 		t1 = get_seconds();
 		subopt_traceback(seq.length(), suboptDelta);
 		t1 = get_seconds() - t1;
-		fprintf(stdout,"Subopt traceback running time (in seconds): %9.6f\n\n", t1);
+		printf("Subopt traceback running time (in seconds): %9.6f\n\n", t1);
 
 		free_fold(seq.length());
 		exit(0);
@@ -240,12 +240,12 @@ int initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& nu
 {
 	ifstream cfcons;
 
-	fprintf(stdout, "Running with constraints\n");
-	fprintf(stdout, "Opening constraint file: %s\n", constr_file);
+	printf("Running with constraints\n");
+	printf("Opening constraint file: %s\n", constr_file);
 
 	cfcons.open(constr_file, ios::in);
 	if (cfcons != NULL)
-		fprintf(stdout, "Constraint file opened.\n");
+		printf("Constraint file opened.\n");
 	else {
 		fprintf(stderr, "Error opening constraint file\n\n");
 		cfcons.close();
@@ -263,10 +263,10 @@ int initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& nu
 	}
 	cfcons.close();
 
-	fprintf(stdout, "Number of Constraints given: %d\n\n", numfConstraints
+	printf("Number of Constraints given: %d\n\n", numfConstraints
 			+ numpConstraints);
 	if (numfConstraints + numpConstraints != 0)
-		fprintf(stdout, "Reading Constraints.\n");
+		printf("Reading Constraints.\n");
 	else {
 		fprintf(stderr, "No Constraints found.\n\n");
 		return FAILURE;
@@ -307,21 +307,21 @@ int initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& nu
 		}
 	}
 
-	fprintf(stdout, "Forced base pairs: ");
+	printf("Forced base pairs: ");
 	
 	for(it=0; it<numfConstraints; it++) 
 	{
 		for(int k=1;k<= (*fbp)[it][2];k++)
-			fprintf(stdout, "(%d,%d) ", (*fbp)[it][0]+k-1, (*fbp)[it][1]-k+1);
+			printf("(%d,%d) ", (*fbp)[it][0]+k-1, (*fbp)[it][1]-k+1);
 	}
-	fprintf(stdout, "\nProhibited base pairs: ");
+	printf("\nProhibited base pairs: ");
 	for(it=0; it<numpConstraints; it++) 
 	{
 		for(int k=1;k<= (*pbp)[it][2];k++)
-			fprintf(stdout, "(%d,%d) ", (*pbp)[it][0]+k-1, (*pbp)[it][1]-k+1);
+			printf("(%d,%d) ", (*pbp)[it][0]+k-1, (*pbp)[it][1]-k+1);
 	}
 
-	fprintf(stdout, "\n\n");
+	printf("\n\n");
 
 	return SUCCESS;
 }
