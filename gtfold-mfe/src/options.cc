@@ -23,27 +23,27 @@ int contactDistance = -1;
  * Print the help message and quit.
  */
 void help() {
-    fprintf(stdout, "Usage: gtfold [OPTION]... FILE\n\n");
+    printf("Usage: gtfold [OPTION]... FILE\n\n");
 
-    fprintf(stdout, "  FILE is an RNA sequence file.  Single line or FASTA formats are accepted.\n\n");
+    printf("  FILE is an RNA sequence file.  Single line or FASTA formats are accepted.\n\n");
 
-    fprintf(stdout, "OPTIONS\n");
-    fprintf(stdout, "   -c, --constraints FILE\n                        Load constraints from FILE.  See Constraint syntax below\n");
-    fprintf(stdout, "   -d, --limitCD num    Set a maximum base pair contact distance to num. If no\n                        limit is given, base pairs can be over any distance\n");
-    fprintf(stdout, "   -n, --noisolate      Prevent isolated base pairs from forming\n");
-    fprintf(stdout, "   -o, --output FILE    Output to FILE (default output is to a .ct extension)\n");
-    fprintf(stdout, "   -t, --threads num    Limit number of threads used\n");
+    printf("OPTIONS\n");
+    printf("   -c, --constraints FILE\n                        Load constraints from FILE.  See Constraint syntax below\n");
+    printf("   -d, --limitCD num    Set a maximum base pair contact distance to num. If no\n                        limit is given, base pairs can be over any distance\n");
+    printf("   -n, --noisolate      Prevent isolated base pairs from forming\n");
+    printf("   -o, --output FILE    Output to FILE (default output is to a .ct extension)\n");
+    printf("   -t, --threads num    Limit number of threads used\n");
 
-    fprintf(stdout, "\n");
-    fprintf(stdout, "   -h, --help           Output help (this message) and exit\n");
-    fprintf(stdout, "   -v, --verbose        Run in verbose mode\n");
+    printf("\n");
+    printf("   -h, --help           Output help (this message) and exit\n");
+    printf("   -v, --verbose        Run in verbose mode\n");
 
-    fprintf(stdout, "\nBETA OPTIONS\n");
-    fprintf(stdout, "   --bpp                Calculate base pair probabilities\n");
-    fprintf(stdout, "   --subopt range       Calculate suboptimal structures within 'range' kcal/mol\n");
-    fprintf(stdout, "                        of the mfe\n");
+    printf("\nBETA OPTIONS\n");
+    printf("   --bpp                Calculate base pair probabilities\n");
+    printf("   --subopt range       Calculate suboptimal structures within 'range' kcal/mol\n");
+    printf("                        of the mfe\n");
 
-    fprintf(stdout, "\nConstraint syntax:\n\tF i j k  # force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i j k  # prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i 0 k  # make bases from i to i+k-1 single stranded bases.\n");
+    printf("\nConstraint syntax:\n\tF i j k  # force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i j k  # prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i 0 k  # make bases from i to i+k-1 single stranded bases.\n");
     exit(-1);
 }
 
