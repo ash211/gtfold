@@ -119,10 +119,10 @@ int handle_IUPAC_code(const char* str, const int bases)
 	{
 		printf("IUPAC codes have been detected at positions:");
 
-		for(int i=0;i<stack_count;i++)
-		{
-			printf("%d , ",stack_unidentified_base[i]);
-		}
+		printf("%d", stack_unidentified_base[0]);
+		for(int i=1;i<stack_count;i++)
+			printf(", %d", stack_unidentified_base[i]);
+
 		printf("\n");
 		//printf("You may wish to resubmit the sequence with fully specified positions. Alternatively, GTfold will fold the sequence under the standard assumption that these ambiguous positions do not pair.  Do you wish to continue with the current computation? <Y/N>");
 		//char reply;
@@ -131,9 +131,7 @@ int handle_IUPAC_code(const char* str, const int bases)
 		return SUCCESS;
 	}
 	else 
-	{
 		return SUCCESS;
-	}
 }
 
 void print_header() {
