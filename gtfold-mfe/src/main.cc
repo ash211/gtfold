@@ -218,6 +218,10 @@ int main(int argc, char** argv) {
 	t1 = get_seconds();
 	trace(seq.length());
 	t1 = get_seconds() - t1;
+
+	printf("\n");
+	printSequence(seq.length());
+	printStructure(seq.length());
 	
 	save_ct_file(outputFile, seq, energy);
 	printf("\nMFE structure saved in .ct format to %s\n", outputFile.c_str());
