@@ -180,8 +180,9 @@ int main(int argc, char** argv) {
 	t1 = get_seconds() - t1;
 	
 	printf("Done.\n\n");
-	printf("Minimum Free Energy = %12.4f\n", energy/100.00);
-	printf("MFE running time (in seconds): %9.6f\n\n", t1);
+	printf("Results:\n");
+	printf("- Minimum Free Energy: %12.4f kcal/mol\n", energy/100.00);
+	printf("- MFE runtime: %9.6f seconds\n\n", t1);
 	
 	
 	if (suboptDelta > 0)
@@ -189,7 +190,7 @@ int main(int argc, char** argv) {
 		t1 = get_seconds();
 		subopt_traceback(seq.length(), suboptDelta);
 		t1 = get_seconds() - t1;
-		printf("Subopt traceback running time (in seconds): %9.6f\n\n", t1);
+		printf("Subopt traceback running time: %9.6f seconds\n\n", t1);
 
 		free_fold(seq.length());
 		exit(0);
