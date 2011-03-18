@@ -74,7 +74,7 @@ std::string EN_DATADIR;
  int gail; /* It is either 0 or 1. It is used for grosely asymmetric internal loops */
  float prelog;
 
-void populate(const char *userdatadir,bool userdatalogic) {
+void readThermodynamicParameters(const char *userdatadir,bool userdatalogic) {
 
 	cout << "Loading in GTfold data files from ";
 #ifndef GENBIN

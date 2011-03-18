@@ -159,6 +159,9 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
+	// Read in thermodynamic parameters. Always use Turner99 data (for now)
+	readThermodynamicParameters("Turner99",false);
+
 	printRunConfiguration(seq);
 	
 	init_fold(seq.length());
@@ -168,9 +171,6 @@ int main(int argc, char** argv) {
 		free_fold(seq.length());
 		exit(0);
 	}
-		
-	// always use Turner99 data (for now)
-	populate("Turner99",false);
 	
 	fprintf(stdout,"Computing minimum free energy structure. . . \n");
 	fflush(stdout);

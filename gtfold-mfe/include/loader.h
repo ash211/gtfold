@@ -25,7 +25,7 @@
 #include "constants.h"
 #include "data.h"
 
-void populate(const char *userdatadir,bool userdatalogic);
+void readThermodynamicParameters(const char *userdatadir,bool userdatalogic);
 
 int initStackValues(std::string fileName);
 int initMiscloopValues(std::string fileName);
