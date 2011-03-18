@@ -226,37 +226,7 @@ int main(int argc, char** argv) {
 	save_ct_file(outputFile, seq, energy);
 	printf("\nMFE structure saved in .ct format to %s\n", outputFile.c_str());
 
-	/*
-	std::stringstream ss1, ss2;
-	char suboptfile[1024];
-	ss1 << seq.length();
-	ss2 << energy/100.0;
-
-	strcpy (suboptfile, argv[fileIndex]);
-	strcat ( suboptfile, ".ct");
-	ofstream outfile;
-	outfile.open ( suboptfile );
-
-	fprintf(stdout, "Writing secondary structure to the file: %s\n", suboptfile);
-
-	outfile << bases << "\t  dG = " << energy/100.0;
-	i = 1;
-	while ( i <= bases ) {
-		outfile << endl << i << "\t" << s[i-1] << "\t" << i-1 << "\t" << (i+1)%(bases+1) << "\t" << structure[i] << "\t" << i;
-		i++;
-	}
-	outfile << endl;
-
-	outfile.close();
-
-	fprintf(stdout,"\n\n");
-	fprintf(stdout,"Traceback running time (in seconds): %9.6f\n", t1);
-
-	fprintf(stdout, "\n\nFolding complete\n\n");
-	printSequence(bases);
-	//printConstraints(bases);
-	printStructure(bases);
-*/
+	// release the malloc'd arrays
 	free_fold(seq.length());
 
 	return 0;
