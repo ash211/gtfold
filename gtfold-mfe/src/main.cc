@@ -100,7 +100,7 @@ int handle_IUPAC_code(const char* str, const int bases)
 
 	for(int i = 1; i <= bases; i++)
 	{
-		RNA[i] = getBase((s.substr(i-1,1)).c_str());
+		RNA[i] = encode(s[i-1]);
 		RNA1[i] = getBase1((s.substr(i-1,1)).c_str());
 
 		if (RNA[i]=='X') 

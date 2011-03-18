@@ -8,7 +8,7 @@
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
 char baseToDigit(const char* base) ;
-unsigned char getBase(const char* base) ;
+unsigned char encode(char base);
 unsigned char getBase1(const char* base) ;
 
 #endif
