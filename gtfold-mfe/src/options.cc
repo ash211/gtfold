@@ -140,7 +140,7 @@ void printRunConfiguration(string seq) {
 		standardRun = false;
 	}
 
-	if (suboptDelta != -1) {
+	if (SUBOPT_ENABLED) {
 		printf("+ calculating suboptimal structures within %d kcal/mol of MFE\n", suboptDelta);
 		standardRun = false;
 	}
