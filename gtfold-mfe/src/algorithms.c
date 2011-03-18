@@ -170,11 +170,12 @@ int calculate(int len) {
 		for (j=1; j<=len; j++) {VV[j]=INFINITY_;WMi[j]=INFINITY_; }
 	}
 
-	printf("Total IntLoop time = %fs \n",tint);
-	printf("Total Stack time = %fs \n",tst);
-	printf("Total HairPin time = %fs \n",thair);
-	printf("Total MultiLoop time = %fs \n",tml);
-	printf("Total WM time = %fs \n",twm);
+	printf("Runtime Statistics:\n");
+	printf("- total IntLoop time = %fs \n",tint);
+	printf("- total Stack time = %fs \n",tst);
+	printf("- total HairPin time = %fs \n",thair);
+	printf("- total MultiLoop time = %fs \n",tml);
+	printf("- total WM time = %fs \n",twm);
 
 	for (j = TURN+2; j <= len; j++)	{
 		int i, Wj, Widjd, Wijd, Widj, Wij, Wim1;

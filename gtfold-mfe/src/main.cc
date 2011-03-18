@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 	
-	printf("Computing minimum free energy structure. . . \n");
+	printf("\nComputing minimum free energy structure...\n");
 	fflush(stdout);
 
 	t1 = get_seconds();
@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
 	printf("Done.\n\n");
 	printf("Results:\n");
 	printf("- Minimum Free Energy: %12.4f kcal/mol\n", energy/100.00);
-	printf("- MFE runtime: %9.6f seconds\n\n", t1);
+	printf("- MFE runtime: %9.6f seconds\n", t1);
 	
 	
 	if (suboptDelta > 0)
