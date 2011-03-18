@@ -43,7 +43,10 @@ void help() {
     printf("   --subopt range       Calculate suboptimal structures within 'range' kcal/mol\n");
     printf("                        of the mfe\n");
 
-    printf("\nConstraint syntax:\n\tF i j k  # force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i j k  # prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n\tP i 0 k  # make bases from i to i+k-1 single stranded bases.\n");
+    printf("\nConstraint syntax:\n");
+    printf("\tF i j k  # force (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n");
+    printf("\tP i j k  # prohibit (i,j)(i+1,j-1),.......,(i+k-1,j-k+1) pairs\n");
+    printf("\tP i 0 k  # make bases from i to i+k-1 single stranded bases.\n");
     exit(-1);
 }
 
