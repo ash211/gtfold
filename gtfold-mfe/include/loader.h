@@ -38,4 +38,6 @@ int initInt21Values(std::string fileName);
 int initInt22Values(std::string fileName);
 int initInt11Values(std::string fileName);
 
+extern std::string EN_DATADIR;
+
 #endif

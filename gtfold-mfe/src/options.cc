@@ -1,3 +1,4 @@
+#include "loader.h"
 #include "options.h"
 
 using namespace std;
@@ -145,6 +146,7 @@ void printRunConfiguration(string seq) {
 	if(standardRun)
 		printf("- standard\n");
 
+	printf("- thermodynamic parameters: %s\n", EN_DATADIR.c_str());
 	printf("- input file: %s\n", seqfile.c_str());
 	printf("  - sequence length: %d\n", (int)seq.length());
 	printf("  - sequence contents: %s\n", seq.c_str());
