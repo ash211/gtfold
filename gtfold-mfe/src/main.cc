@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
 	fflush(stdout);
 
 	t1 = get_seconds();
-	energy = calculate(seq.length());
+	energy = calculate(seq.length(), nThreads);
 	t1 = get_seconds() - t1;
 	
 	printf("Done.\n\n");

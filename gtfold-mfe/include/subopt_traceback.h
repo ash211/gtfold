@@ -75,17 +75,22 @@ struct segment
 	}
 };
 
+typedef segment SEG;
+typedef std::stack<segment>  SEGSTACK;
+
 struct pstruct
 {
 	std::string str;
-	std::stack<segment> st_segment;
-	std::stack<segment> st_v; /* used for backtracking in traceWM */
+	SEGSTACK st_segment;
+	SEGSTACK st_v; /* used for backtracking in traceWM */
+	
 	int ae_;
 	int le_;
 
 	int total() const { return ae_ + le_; }
 
 	pstruct() {}
+	
 	pstruct(const pstruct& ps)
 	{
 		str = ps.str;
@@ -174,7 +179,7 @@ struct pstruct
 
 	void print()
 	{
-		std::stack<segment> st = st_segment;
+		SEGSTACK st = st_segment;
 		std::cout <<'[' << ' ' ;
 		while (!st.empty())
 		{
@@ -196,16 +201,26 @@ struct pstruct
 	}
 };
 
+/* partial structure */
+typedef pstruct ps_t;
 
-void push_to_gstack(std::stack<pstruct>& gs, const pstruct& v);
+/* partial structure stack */
+typedef std::stack<pstruct> ps_stack_t;
 
-void subopt_traceback(int len, int delta);
-void traceV(int i, int j, pstruct& ps, std::stack<pstruct>& gs, int MIN_ENERGY, int delta1);
-void traceVBI( int i, int j, pstruct& ps, std::stack<pstruct>& gs, int MIN_ENERGY, int delta1);
-void traceW( int i, int j, pstruct& ps, std::stack<pstruct>& gs, int MIN_ENERGY, int delta1);
-void traceVM( int i, int j, pstruct& ps, std::stack<pstruct>& gs, int MIN_ENERGY, int delta1);
-void traceWM(pstruct& ps, std::map<std::string, pstruct>& filter, int MIN_ENERGY, int delta1);
+/*  partial structure map */
+typedef std::map<std::string, pstruct> ps_map_t;
 
-//enum label {lW=0, lV, lVBI, lVM, lWM};
+/* secondary structure map */
+typedef std::map<std::string, int> ss_map_t;	
+
+void push_to_gstack(ps_stack_t & gs, const ps_t& v);
+
+ss_map_t subopt_traceback(int len, int gap);
+
+void traceV(int i, int j, ps_t & ps, ps_stack_t & gs, int energy); 
+void traceVBI(int i, int j, ps_t & ps, ps_stack_t & gs, int energy);
+void traceW(int i, int j, ps_t & ps, ps_stack_t & gs, int energy);
+void traceVM(int i, int j, ps_t & ps, ps_stack_t & gs, int energy);
+void traceWM(ps_t& ps, ps_map_t& filter);
 
 #endif

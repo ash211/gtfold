@@ -20,28 +20,24 @@
 
  */
 
-#include "subopt_traceback.h"
-#include "constants.h"
-#include "energy.h"
-#include "global.h"
-#include "utils.h"
-#ifdef _OPENMP   /* The compiler automatically recognizes openmp support and includes the file accordingly*/
-#include "omp.h"
-#endif
 #include <cstdio>
 
-extern int nThreads;
+#include "constants.h"
+#include "energy.h"
+#include "utils.h"
+#include "global.h"
+#include "subopt_traceback.h"
 
 const char* lstr[] = {"W", "V", "VBI", "VM", "WM"};
 
-void (*trace_func[5]) (int i, int j, pstruct& ps,std::stack<pstruct>& gs, int MIN_ENERGY, int delta1);
+void (*trace_func[5]) (int i, int j, ps_t& ps, ps_stack_t& gs, int energy);
 
-void print_stack(std::stack<pstruct> temp)
+void print_stack(ps_stack_t temp)
 {	
 	std::cout << "{\n";
 	while (!temp.empty())
 	{
-		pstruct ps = temp.top();
+		ps_t ps = temp.top();
 		temp.pop();
 		ps.print();
 		std::cout << '\n' ;
@@ -49,33 +45,32 @@ void print_stack(std::stack<pstruct> temp)
 	std::cout << "}\n";
 }
 
-void subopt_traceback1(int energy, int len)
+void process(ss_map_t& subopt_data, int energy, int len)
 {
-	int MIN_ENERGY = energy;
-	int delta1 = 0;
 	int count = 0 ;
-
-	std::stack<pstruct> gstack;
-	std::map<std::string, int> data;
+	ps_stack_t gstack;
 
 	// initialize the partial structure
 	// segment stack = {[1,n]}, label = W, list_bp = {} 
-	pstruct first(0, len);
+	ps_t first(0, len);
 	first.push(segment(5, len, lW, W[len]));	
 	gstack.push(first); // initialize the partial structure stacka
-
-	std::map<std::string, int> subopt_data;
 
 	while (1)
 	{
 		if (gstack.empty()) break; // exit
-		pstruct ps = gstack.top();
+
+		ps_t ps = gstack.top();
 		gstack.pop(); 
 
 		if (ps.empty()) 
 		{
-			std::cout << ps.str << " dG =" << ps.ae_ << std::endl;
-			count++;
+			//std::cout << ps.str << " dG =" << ps.ae_ << std::endl;
+			if (subopt_data.find(ps.str) == subopt_data.end())
+			{
+				subopt_data.insert(std::make_pair<std::string,int>(ps.str,ps.ae_));
+				count++;
+			}
 			continue;
 		}	
 		else
@@ -86,67 +81,54 @@ void subopt_traceback1(int energy, int len)
 
 			if (smt.j_ - smt.i_ >=4)
 			{
-				(*trace_func[smt.label_])(smt.i_, smt.j_, ps, gstack, MIN_ENERGY, delta1);
+				(*trace_func[smt.label_])(smt.i_, smt.j_, ps, gstack, energy);
 			}
 
-			if (gstack.size() == s1 && ps.total() <= MIN_ENERGY + delta1)
+			if (gstack.size() == s1 && ps.total() <= energy)
 			{
-				pstruct ps1(ps);
+				ps_t ps1(ps);
 				gstack.push(ps1);
 			}
 		}
 	}
-	//std::cout << "total structures (dG = " <<  MIN_ENERGY << ") = " << count << std::endl;
 }
 
-
-void subopt_traceback(int len, int delta)
+ss_map_t subopt_traceback(int len, int delta)
 {
-#ifdef _OPENMP
-	if (nThreads >= 0) omp_set_num_threads(nThreads);
-#endif
-
-#ifdef _OPENMP
-#pragma omp parallel
-#pragma omp master
-	fprintf(stdout,"Traceback -- Running with %3d OpenMP thread \n",omp_get_num_threads());
-#endif
 	trace_func[0] = traceW;
 	trace_func[1] = traceV;
 	trace_func[2] = traceVBI;
 	trace_func[3] = traceVM;
 	//trace_func[4] = traceWM;
 
-	int min_energy = W[len];
+	int mfe = W[len];
 	int level = 0; 
-	int len1 = len;
 
-#ifdef _OPENMP
-#pragma omp parallel for private (level) shared(len1) schedule(guided)
-#endif
-	for (level = min_energy; level <= min_energy + delta; level += 10)
-	{
-		subopt_traceback1(level, len1);			
-	}
+	ss_map_t subopt_data;
+
+	for (level = mfe; level <= mfe + delta; level += 10)
+		process(subopt_data, level, len);			
+
+	return subopt_data;
 }
 
-void traceV(int i, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENERGY, int delta1)
+void traceV(int i, int j, ps_t& ps, ps_stack_t& gstack, int energy)
 {
 	// Hairpin Loop
-	if (eH(i,j) + ps.total()  <= MIN_ENERGY + delta1)
+	if (eH(i,j) + ps.total()  <= energy )
 	{
 		//	std::cout << "Hairpin " << i  << ' ' << j << std::endl;
-		pstruct ps1(ps); 
+		ps_t ps1(ps); 
 		ps1.accumulate(eH(i,j));
 		ps1.update(i, j, '(', ')');
 		push_to_gstack(gstack, ps1);
 	}
 
 	// Stack
-	if (eS(i, j) + V(i+1, j-1) + ps.total() <= MIN_ENERGY +delta1)
+	if (eS(i, j) + V(i+1, j-1) + ps.total() <= energy)
 	{
 		//	std::cout << "Stack " << i  << ' ' << j << std::endl;
-		pstruct ps1(ps);
+		ps_t ps1(ps);
 		ps1.push(segment(i+1, j-1, lV, V(i+1, j-1)));
 		ps1.accumulate(eS(i,j));
 		ps1.update(i, j , '(', ')');
@@ -154,20 +136,20 @@ void traceV(int i, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENER
 	}
 
 	// Internal Loop
-	if (VBI(i,j) + ps.total() <= MIN_ENERGY + delta1)
+	if (VBI(i,j) + ps.total() <= energy )
 	{
 		//std::cout << "Internal " << i  << ' ' << j << std::endl;
-		pstruct ps1(ps);
+		ps_t ps1(ps);
 		ps1.push(segment(i, j, lVBI, VBI(i,j)));
 		ps1.update(i, j, '(', ')');
 		push_to_gstack(gstack, ps1);
 	}
 
 	// Multiloop
-	if ( VM(i,j) + ps.total() <= MIN_ENERGY + delta1)
+	if ( VM(i,j) + ps.total() <= energy )
 	{
 		//	std::cout << "Multi " << i  << ' ' << j << std::endl;
-		pstruct ps1(ps);
+		ps_t ps1(ps);
 		ps1.push(segment(i, j, lVM, VM(i,j)));
 		ps1.update(i, j, '(', ')');
 		push_to_gstack(gstack, ps1);
@@ -175,26 +157,19 @@ void traceV(int i, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENER
 
 }
 
-void traceVBI(int i, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENERGY, int delta1)
+void traceVBI(int i, int j, ps_t& ps, ps_stack_t& gstack, int energy)
 {
 	int p,q;
-
-#ifdef _OPENMP
-#pragma omp parallel for private (p) shared(ps) schedule(dynamic)
-#endif
 	for (p = i+1; p < MIN(j-2-TURN, i+MAXLOOP+1); ++p)
 	{
 		int minq = j-i+p-MAXLOOP-2;
 		if (minq < p+1+TURN) minq = p+1+TURN;
 
-#ifdef _OPENMP
-#pragma omp parallel for private (q) shared(j, minq, ps) schedule(dynamic)
-#endif
 		for (q = minq; q < j; q++) 
 		{
-			if (V(p, q) + eL(i, j, p, q) + ps.total() <= MIN_ENERGY + delta1)
+			if (V(p, q) + eL(i, j, p, q) + ps.total() <= energy )
 			{
-				pstruct ps1(ps);
+				ps_t ps1(ps);
 				ps1.push(segment(p, q, lV, V(p, q)));
 				ps1.accumulate(eL(i, j, p, q));
 				push_to_gstack(gstack, ps1);
@@ -203,7 +178,7 @@ void traceVBI(int i, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_EN
 	}
 }
 
-void traceW(int h, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENERGY, int delta1)
+void traceW(int h, int j, ps_t& ps, ps_stack_t& gstack, int energy)
 {
 	if ( (h>=j) || j == 0 || j == 1) return;
 
@@ -212,9 +187,9 @@ void traceW(int h, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENER
 		int wim1 =  MIN(0, W[i-1]);
 
 		int wij = V(i,j) + auPenalty(i, j) + wim1;
-		if (wij + ps.total() <= MIN_ENERGY + delta1)
+		if (wij + ps.total() <= energy )
 		{
-			pstruct ps1(ps);
+			ps_t ps1(ps);
 			ps1.push(segment(i, j, lV, V(i,j)));
 			if (wim1 <= 0 && i > 1) ps1.push(segment(1, i-1, lW, W[i-1]));
 			ps1.accumulate(auPenalty(i, j));
@@ -222,9 +197,9 @@ void traceW(int h, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENER
 		}		
 
 		int wijd = V(i,j-1) + auPenalty(i,j-1) + Ed5(j-1,i,j) + wim1;
-		if (wijd + ps.total() <= MIN_ENERGY + delta1)
+		if (wijd + ps.total() <= energy )
 		{
-			pstruct ps3(ps);
+			ps_t ps3(ps);
 			ps3.push(segment(i, j-1, lV, V(i, j-1)));
 			if (wim1 <= 0 && i > 1)	ps3.push(segment(1, i-1, lW, W[i-1]));
 			ps3.accumulate(auPenalty(i,j-1) + Ed5(j-1,i,j)); 
@@ -232,9 +207,9 @@ void traceW(int h, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENER
 		}	
 
 		int widj = V(i+1,j) + auPenalty(i+1,j) + Ed3(j,i+1,i) + wim1;
-		if (widj + ps.total() <= MIN_ENERGY + delta1)
+		if (widj + ps.total() <= energy )
 		{
-			pstruct ps4(ps);
+			ps_t ps4(ps);
 			ps4.push(segment(i+1, j, lV, V(i+1,j)));
 			if (wim1 <= 0 && i > 1) ps4.push(segment(1, i-1, lW, W[i-1]));
 			ps4.accumulate(auPenalty(i+1, j) + Ed3(j,i+1,i));
@@ -242,9 +217,9 @@ void traceW(int h, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENER
 		}
 
 		int widjd = V(i+1, j-1) + auPenalty(i+1,j-1) + Ed3(j-1, i+1, i) + Ed5(j-1, i+1, j) + wim1;
-		if (widjd + ps.total() <= MIN_ENERGY + delta1)
+		if (widjd + ps.total() <= energy )
 		{
-			pstruct ps2(ps);
+			ps_t ps2(ps);
 			ps2.push(segment(i+1, j-1, lV, V(i+1,j-1)));
 			if (wim1 <= 0 && i > 1) ps2.push(segment(1, i-1, lW, W[i-1]));
 			ps2.accumulate(auPenalty(i+1,j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j));
@@ -252,24 +227,22 @@ void traceW(int h, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENER
 		}
 	}
 
-	if (W[j-1] + ps.total() <= MIN_ENERGY + delta1)
+	if (W[j-1] + ps.total() <= energy )
 	{
-		pstruct ps1(ps);
+		ps_t ps1(ps);
 		ps1.push(segment(1, j-1, lW, W[j-1]));
 		push_to_gstack(gstack, ps1);
 	}	
 }
 
-void traceWM(pstruct& ps, std::map<std::string, pstruct>& filter, int MIN_ENERGY, int delta1)
+void traceWM(ps_t& ps, ps_map_t& filter, int energy)
 {
-	int b = Eb; 
-	int c = Ec; 
-	std::stack<pstruct> wm_stack;
+	ps_stack_t wm_stack;
 	wm_stack.push(ps);
 
 	while (!wm_stack.empty())
 	{
-		pstruct pss = wm_stack.top();
+		ps_t pss = wm_stack.top();
 		wm_stack.pop();
 
 		// check if all segments in pss are Vs
@@ -284,7 +257,7 @@ void traceWM(pstruct& ps, std::map<std::string, pstruct>& filter, int MIN_ENERGY
 				pss.push(ss);
 				key[ss.i_-1] = '*'; key[ss.j_-1] = '*';
 			}
-			filter.insert(std::pair<std::string, pstruct>(key, pss));
+			filter.insert(std::pair<std::string, ps_t>(key, pss));
 			continue;
 		}
 
@@ -295,71 +268,71 @@ void traceWM(pstruct& ps, std::map<std::string, pstruct>& filter, int MIN_ENERGY
 
 		if (wm_seg.label_ == lV)
 		{
-			pstruct ps1(pss);
+			ps_t ps1(pss);
 			ps1.push_v(wm_seg);
 			wm_stack.push(ps1);
 			continue;
 		}
 		int h = i1; int k = j1;
 
-		int wmij = V(h,k) + auPenalty(h,k) +  b ;
-		if (pss.total() + wmij <= MIN_ENERGY + delta1)
+		int wmij = V(h,k) + auPenalty(h,k) + Eb;
+		if (pss.total() + wmij <= energy )
 		{
-			pstruct ps1(pss);
+			ps_t ps1(pss);
 			ps1.push_v(segment(h,k,lV, V(h,k)));
-			ps1.accumulate(auPenalty(h,k) + b);
+			ps1.accumulate(auPenalty(h,k) + Eb);
 			wm_stack.push(ps1);
 		}
 
-		int wmijd = V(h,k-1) + Ed5(k-1,h,k)+ auPenalty(h,k-1) + b + c ;
-		if (pss.total() + wmijd <= MIN_ENERGY + delta1)
+		int wmijd = V(h,k-1) + Ed5(k-1,h,k)+ auPenalty(h,k-1) +Eb+ Ec ;
+		if (pss.total() + wmijd <= energy )
 		{
-			pstruct ps1(pss);
+			ps_t ps1(pss);
 			ps1.push_v(segment(h,k-1,lV, V(h,k-1)));
-			ps1.accumulate(Ed5(k-1,h,k)+ auPenalty(h,k-1) +b+c);
+			ps1.accumulate(Ed5(k-1,h,k)+ auPenalty(h,k-1) +Eb+Ec);
 			wm_stack.push(ps1);
 		}
 
-		int wmidj = V(h+1,k) + Ed3(k,h+1,h) + auPenalty(h+1, k) + b+c ;
-		if (pss.total() + wmidj <= MIN_ENERGY + delta1)
+		int wmidj = V(h+1,k) + Ed3(k,h+1,h) + auPenalty(h+1, k) + Eb+Ec ;
+		if (pss.total() + wmidj <= energy )
 		{
-			pstruct ps1(pss);
+			ps_t ps1(pss);
 			ps1.push_v(segment(h+1, k, lV, V(h+1,k)));
-			ps1.accumulate(Ed3(k,h+1,h) + auPenalty(h+1,k) +b+c);
+			ps1.accumulate(Ed3(k,h+1,h) + auPenalty(h+1,k) +Eb+Ec);
 			wm_stack.push(ps1);
 		}
 
-		int wmidjd = V(h+1, k-1) + Ed3(k-1,h+1,h) + Ed5(k-1,h+1,k) +  auPenalty(h+1,k-1) + b + 2*c ;
-		if (pss.total() + wmidjd <= MIN_ENERGY + delta1)
+		int wmidjd = V(h+1, k-1) + Ed3(k-1,h+1,h) + Ed5(k-1,h+1,k) +  auPenalty(h+1,k-1) +Eb+ 2*Ec ;
+		if (pss.total() + wmidjd <= energy )
 		{
-			pstruct ps1(pss);
+			ps_t ps1(pss);
 			ps1.push_v(segment(h+1, k-1, lV, V(h+1,k-1)));
-			ps1.accumulate(Ed3(k-1,h+1,h) + Ed5(k-1,h+1,k) + auPenalty(h+1,k-1) + b + 2*c);
+			ps1.accumulate(Ed3(k-1,h+1,h) + Ed5(k-1,h+1,k) + auPenalty(h+1,k-1) +Eb+ 2*Ec);
 			wm_stack.push(ps1);
 		}
 
 
-		if (pss.total() + WM(i1,j1-1)  + c  <= MIN_ENERGY + delta1)
+		if (pss.total() + WM(i1,j1-1)  + Ec  <= energy )
 		{
-			pstruct ps1(pss);
+			ps_t ps1(pss);
 			ps1.push(segment(i1,j1-1, lWM, WM(i1,j1-1)));		
-			ps1.accumulate(c);
+			ps1.accumulate(Ec);
 			wm_stack.push(ps1);
 		}
 
-		if (pss.total() + WM(i1+1,j1) + c <= MIN_ENERGY + delta1)
+		if (pss.total() + WM[i1+1][j1] + Ec <= energy )
 		{
-			pstruct ps1(pss);
+			ps_t ps1(pss);
 			ps1.push(segment(i1+1,j1, lWM, WM(i1+1,j1)));		
-			ps1.accumulate(c);
+			ps1.accumulate(Ec);
 			wm_stack.push(ps1);
 		}
 
 		for (int h = i1+1; h <= j1-1; ++h)
 		{	
-			if (WM(i1,h) + WM(h+1,j1) + pss.total() <= MIN_ENERGY + delta1)
+			if (WM(i1,h) + WM(h+1,j1) + pss.total() <= energy )
 			{
-				pstruct ps1(pss);
+				ps_t ps1(pss);
 				ps1.push(segment(i1, h, lWM, WM(i1,h)));
 				ps1.push(segment(h+1, j1, lWM, WM(h+1,j1)));
 				wm_stack.push(ps1);
@@ -368,73 +341,67 @@ void traceWM(pstruct& ps, std::map<std::string, pstruct>& filter, int MIN_ENERGY
 	}
 }
 
-void traceVM(int i, int j, pstruct& ps, std::stack<pstruct>& gstack, int MIN_ENERGY, int delta1)
+void traceVM(int i, int j, ps_t& ps, ps_stack_t& gstack, int energy)
 {
-	std::map<std::string, pstruct> filter;
+	std::map<std::string, ps_t> filter;
 	int h;	
 
-#ifdef _OPENMP
-#pragma omp parallel for private (h) shared(i,j,filter,ps) schedule(dynamic)
-#endif
 	for (h = i+1; h <= j-1; ++h)
 	{
-		int energy;
-		int a = Ea; //multConst[0]; 
-		int b = Eb; //multConst[2]; 
-		int c = Ec; //multConst[1]; 
+		int dG;
 		int d5 = Ed5(i,j,i+1);
 		int d3 = Ed3(i,j,j-1);
-		int common = auPenalty(i,j) + a + b;
+		int common = auPenalty(i,j) + Ea + Eb;
 
-		energy = common + WM(i+1,h-1) + WM(h,j-1);
-		if (energy + ps.total()  <= MIN_ENERGY + delta1)
+		dG = common + WM[i+1][h-1] + WM[h][j-1];
+		if (dG + ps.total()  <= energy )
 		{
-			pstruct ps1(ps);
-			ps1.push(segment(i+1,h-1, lWM, WM(i+1,h-1)));
-			ps1.push(segment(h, j-1, lWM, WM(h,j-1)));
+			ps_t ps1(ps);
+			ps1.push(segment(i+1,h-1, lWM, WM[i+1][h-1]));
+			ps1.push(segment(h, j-1, lWM, WM[h][j-1]));
 			ps1.accumulate(common) ; 
-			traceWM(ps1, filter, MIN_ENERGY, delta1);
+			traceWM(ps1, filter, energy);
 		}
 
-		energy =  common + WM(i+2,h-1) + WM(h,j-1) + d5 + c;
-		if (energy + ps.total()  <= MIN_ENERGY + delta1)
+		dG =  common + WM[i+2][h-1] + WM[h][j-1] + d5 + Ec;
+		if (dG + ps.total()  <= energy )
 		{
-			pstruct ps1(ps);
-			ps1.push(segment(i+2,h-1, lWM, WM(i+2,h-1)));	
-			ps1.push(segment(h, j-1, lWM, WM(h,j-1)));	
-			ps1.accumulate(common + d5 + c);
-			traceWM(ps1, filter, MIN_ENERGY, delta1);
+			ps_t ps1(ps);
+			ps1.push(segment(i+2,h-1, lWM, WM[i+2][h-1]));	
+			ps1.push(segment(h, j-1, lWM, WM[h][j-1]));	
+			ps1.accumulate(common + d5 + Ec);
+			traceWM(ps1, filter, energy);
 		}
 
-		energy = common + WM(i+1,h-1) + WM(h,j-2) + d3 + c;
-		if (energy + ps.total()  <= MIN_ENERGY + delta1)
+		dG = common + WM[i+1][h-1] + WM[h][j-2] + d3 + Ec;
+		if (dG + ps.total()  <= energy )
 		{
-			pstruct ps1(ps);	
-			ps1.push(segment(i+1,h-1, lWM, WM(i+1,h-1)));	
-			ps1.push(segment(h, j-2, lWM, WM(h,j-2)));	
-			ps1.accumulate(common + d3 + c);
-			traceWM(ps1, filter, MIN_ENERGY, delta1);
+			ps_t ps1(ps);	
+			ps1.push(segment(i+1,h-1, lWM, WM[i+1][h-1]));	
+			ps1.push(segment(h, j-2, lWM, WM[h][j-2]));	
+			ps1.accumulate(common + d3 + Ec);
+			traceWM(ps1, filter, energy);
 		}
 
-		energy = common + WM(i+2,h-1) + WM(h,j-2) + d5 + d3 + 2*c;
-		if (energy + ps.total()  <= MIN_ENERGY + delta1)
+		dG = common + WM[i+2][h-1] + WM[h][j-2] + d5 + d3 + 2*Ec;
+		if (dG + ps.total()  <= energy )
 		{ 	
-			pstruct ps1(ps);	
-			ps1.push(segment(i+2,h-1, lWM, WM(i+2,h-1)));	
-			ps1.push(segment(h, j-2, lWM, WM(h,j-2)));	
-			ps1.accumulate(common + d3 + d5 + 2*c) ;
-			traceWM(ps1, filter, MIN_ENERGY, delta1);
+			ps_t ps1(ps);	
+			ps1.push(segment(i+2,h-1, lWM, WM[i+2][h-1]));	
+			ps1.push(segment(h, j-2, lWM, WM[h][j-2]));	
+			ps1.accumulate(common + d3 + d5 + 2*Ec) ;
+			traceWM(ps1, filter, energy);
 		}
 	}
 
-	std::map<std::string, pstruct>::iterator it ;
+	ps_map_t::iterator it ;
 	for (it = filter.begin(); it != filter.end(); ++it)
 	{
 		push_to_gstack(gstack, it->second);
 	}
 }
 
-void push_to_gstack( std::stack<pstruct>& gstack , const pstruct& v)
+void push_to_gstack(ps_stack_t& gstack , const ps_t& v)
 {
 	gstack.push(v);
 }

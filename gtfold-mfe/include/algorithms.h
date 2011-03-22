@@ -23,7 +23,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-	int calculate(int len);
+	int calculate(int len, int nThreads);
 #ifdef __cplusplus
 }
 #endif

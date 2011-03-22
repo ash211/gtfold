@@ -9,32 +9,20 @@ extern int *VV1;
 extern int *W; 
 extern int *VBI; 
 extern int *VM; 
-extern int *WM; 
-extern int *WMi; 
-extern int *WMi1; 
-extern int *WMi2; 
-//extern int **VBI; 
-//extern int **WM; 
-//extern int **V; 
-//extern int **VM; 
+extern int **WM; 
+extern int *WMu; 
+extern int *WMl; 
 extern int *indx; 
 
 
 #define V(i,j) V[indx[j]+i]
 #define VM(i,j) VM[indx[j]+i]
-#define WM(i,j) WM[indx[j]+i]
+#define WM(i,j) WM[i][j]
+#define WMU(i,j) WM[i][j]
+#define WML(i,j) WM[j][i]
+//#define WMU(i,j) WMu[indx[j]+i]
+//#define WML(i,j) WMl[indx[j]+i]
 #define VBI(i,j) VBI[indx[j]+i]
-
-//#define V(i,j) V[indx[i]+j]
-//#define VM(i,j) VM[indx[i]+j]
-//#define WM(i,j) WM[indx[i]+j]
-//#define VBI(i,j) VBI[indx[i]+j]
-
-//#define V(i,j) V[i][j]
-//#define VM(i,j) VM[i][j]
-//#define WM(i,j) WM[i][j]
-//#define VBI(i,j) VBI[i][j]
-
 
 #define auPen(i, j) ((( (i)==BASE_U || (j)==BASE_U ) && ( (i)==BASE_A || (i)==BASE_G || (j)==BASE_A || (j)==BASE_G )) ? auend : 0)
 
