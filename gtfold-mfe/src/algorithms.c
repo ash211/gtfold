@@ -40,32 +40,33 @@ double get_seconds() {
 	return (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0;
 }
 
-int calculate(int len) { 
-	int i, j;
+int calculate(int len, int nThreads) { 
+	int b, i, j;
 	double t1, t2, tint=0, thair=0,tst=0, tml=0, twm=0;
 
-#if 1
+#ifdef _OPENMP
+	if (nThreads>0) omp_set_num_threads(nThreads);
+#endif
+
 #ifdef _OPENMP
 #pragma omp parallel
 #pragma omp master
-		fprintf(stdout,"\n");
-		fprintf(stdout,"Running with %3d OpenMP thread",omp_get_num_threads());
-		if (omp_get_num_threads()>1) fprintf(stdout,"s");
-		fprintf(stdout,".\n");
+	fprintf(stdout,"Thread count: %3d \n",omp_get_num_threads());
 #endif
-#endif
-	//for (b = TURN+1; b <= len-1; b++) {
-	for (i = len-TURN-1; i >= 1; i--) {
+
+	for (b = TURN+1; b <= len-1; b++) {
 #ifdef _OPENMP
 #pragma omp parallel for private (i,j) schedule(guided)
 #endif
-		//	for (i = 1; i <= len - b; i++) {
-		for (j = i+TURN+1; j <= len; j++) {
-			//j = i + b;
-			if (canPair(RNA[i], RNA[j])) {
-				int p, q, h;
-				int newV = INFINITY_;
-				int VBIij = INFINITY_;
+		for (i = 1; i <= len - b; i++) {
+			j = i + b;
+			int newWM = INFINITY_;
+			int bPair = 0;
+			
+			if (canPair(RNA[i], RNA[j])) { 
+				bPair = 1;
+				int p=0, q=0, h;
+				int newV = INFINITY_, VBIij = INFINITY_;
 
 				t1 = get_seconds();
 				newV  = MIN(eH(i, j), newV);
@@ -74,29 +75,29 @@ int calculate(int len) {
 
 				t1 = get_seconds();
 				int stackEnergy = eS(i, j); 
-				//newV= MIN(stackEnergy + V(i+1,j-1), newV);
-				newV= MIN(stackEnergy + VV1[j-1] , newV);
+				newV= MIN(stackEnergy + V(i+1,j-1), newV);
 				t2 = get_seconds();
 				tst += (t2-t1); 
 
 				if (j-i > 6) { 
-				t1 = get_seconds();
-				// Int Loop BEGIN
-				for (p = i+1; p <= MIN(j-2-TURN,i+MAXLOOP+1) ; p++) {
-					int minq = j-i+p-MAXLOOP-2;
-					if (minq < p+1+TURN) minq = p+1+TURN;
-					for (q = minq; q < j; q++) {
-						if (!canPair(RNA[p], RNA[q])) continue;
-						VBIij = MIN(eL(i, j, p, q) + V(p,q), VBIij);
+					t1 = get_seconds();
+					// Int Loop BEGIN
+					for (p = i+1; p <= MIN(j-2-TURN,i+MAXLOOP+1) ; p++) {
+						int minq = j-i+p-MAXLOOP-2;
+						if (minq < p+1+TURN) minq = p+1+TURN;
+						for (q = minq; q < j; q++) {
+							if (!canPair(RNA[p], RNA[q])) continue;
+							VBIij = MIN(eL(i, j, p, q) + V(p,q), VBIij);
+						}
 					}
-				}
 
-				VBI(i,j) = VBIij;
-				// Int Loop END
-				t2 = get_seconds();
-				tint += (t2-t1); 
-				newV = MIN(newV, VBIij);
+					VBI(i,j) = VBIij;
+					// Int Loop END
+					t2 = get_seconds();
+					tint += (t2-t1); 
+					newV = MIN(newV, VBIij);
 				}
+				
 				if (j-i > 10) {	
 					t1 = get_seconds();
 
@@ -105,14 +106,11 @@ int calculate(int len) {
 					VMij = VMijd = VMidj = VMidjd = INFINITY_;
 
 					for (h = i+TURN+1; h <= j-1-TURN; h++) { 
-						//VMij = MIN(VMij, WM(i+1,h-1) + WM(h,j-1));		
-						VMij = MIN(VMij, WMi1[h-1] + WM(h,j-1));		
-						//VMidj = MIN(VMidj, WM(i+2,h-1) + WM(h,j-1));	
-						VMidj = MIN(VMidj, WMi2[h-1] + WM(h,j-1));	
-						//VMijd = MIN(VMijd, WM(i+1,h-1) + WM(h,j-2));	
-						VMijd = MIN(VMijd, WMi1[h-1] + WM(h,j-2));	
-						//VMidjd = MIN(VMidjd, WM(i+2,h-1) + WM(h,j-2));	
-						VMidjd = MIN(VMidjd, WMi2[h-1] + WM(h,j-2));	
+						VMij = MIN(VMij, WMU(i+1,h-1) + WML(h,j-1));		
+						VMidj = MIN(VMidj, WMU(i+2,h-1) + WML(h,j-1));	
+						VMijd = MIN(VMijd, WMU(i+1,h-1) + WML(h,j-2));	
+						VMidjd = MIN(VMidjd, WMU(i+2,h-1) + WML(h,j-2));	
+						newWM = MIN(newWM, VMij);
 					}
 
 					int d3 = Ed3(i,j,j-1);
@@ -130,52 +128,46 @@ int calculate(int len) {
 					t2 = get_seconds();
 					tml += (t2-t1);
 				}
-				V(i,j) = newV;
-
-				VV[j] = newV;
+				V(i,j) = VV[i] = newV;
 			}
 
 			if (j-i > 4) {	
 				t1 = get_seconds();
 				// WM BEGIN
-				int h, newWM = INFINITY_;
-				//newWM = MIN(V(i,j) + auPenalty(i,j) + Eb, newWM);
-				newWM = MIN(VV[j] + auPenalty(i,j) + Eb, newWM);
-				//newWM = MIN(V(i+1,j) + Ed3(j,i+1,i) + auPenalty(i+1,j) + Eb + Ec, newWM);
-				newWM = MIN(VV1[j] + Ed3(j,i+1,i) + auPenalty(i+1,j) + Eb + Ec, newWM);
-				//newWM = MIN(V(i,j-1) + Ed5(j-1,i,j) + auPenalty(i,j-1) + Eb + Ec, newWM);
-				newWM = MIN(VV[j-1] + Ed5(j-1,i,j) + auPenalty(i,j-1) + Eb + Ec, newWM);
-				//newWM = MIN(V(i+1,j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + auPenalty(i+1,j-1) + Eb + 2*Ec, newWM) ;
-				newWM = MIN(VV1[j-1] + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + auPenalty(i+1,j-1) + Eb + 2*Ec, newWM) ;
-
-				//newWM = MIN(WM(i+1,j) + Ec, newWM);
-				newWM = MIN(WMi1[j] + Ec, newWM);
-				//newWM = MIN(WM(i,j-1) + Ec, newWM);
-				newWM = MIN(WMi[j-1] + Ec, newWM);
-
-				for (h = i ; h <= j-TURN-1; h++) {
-					//newWM = MIN(newWM, WM(i,h) + WM(h+1,j));
-					newWM = MIN(newWM, WMi[h] + WM(h+1,j));
+				int h; 	
+				if (!bPair) {
+					for (h = i+TURN+1 ; h <= j-TURN-1; h++) {
+						newWM = MIN(newWM, WMU(i,h-1) + WML(h,j));
+					}
 				}
-				WM(i,j) = WMi[j]=newWM;
+				
+				newWM = MIN(VV[i] + auPenalty(i,j) + Eb, newWM);  //V(i,j)
+				newWM = MIN(VV1[i+1] + Ed3(j,i+1,i) + auPenalty(i+1,j) + Eb + Ec, newWM); //V(i+1,j) 
+				newWM = MIN(VV1[i] + Ed5(j-1,i,j) + auPenalty(i,j-1) + Eb + Ec, newWM); //V(i,j-1)
+				newWM = MIN(V(i+1,j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + auPenalty(i+1,j-1) + Eb + 2*Ec, newWM) ;
+
+				newWM = MIN(WMU(i+1,j) + Ec, newWM);
+				newWM = MIN(WML(i,j-1) + Ec, newWM);
+
+				WMU(i,j) = WML(i,j) = newWM;
 				// WM END
 
 				t2 = get_seconds();
 				twm += (t2-t1);
 			}
 		}
-		int *FF;
-		FF = VV1; VV1=VV; VV=FF;
-		FF = WMi2; WMi2 = WMi1; WMi1 = WMi; WMi = FF;
-		for (j=1; j<=len; j++) {VV[j]=INFINITY_;WMi[j]=INFINITY_; }
+
+		int* FF;
+		FF=VV1; VV1=VV; VV=FF;
+		for (i = 1; i <= len; i++)
+			VV[i] = INFINITY_;
 	}
 
-	printf("Runtime Statistics:\n");
-	printf("- total IntLoop time = %fs \n",tint);
-	printf("- total Stack time = %fs \n",tst);
-	printf("- total HairPin time = %fs \n",thair);
-	printf("- total MultiLoop time = %fs \n",tml);
-	printf("- total WM time = %fs \n",twm);
+	printf("Total IntLoop time = %fs \n",tint);
+	printf("Total Stack time = %fs \n",tst);
+	printf("Total HairPin time = %fs \n",thair);
+	printf("Total MultiLoop time = %fs \n",tml);
+	printf("Total WM time = %fs \n",twm);
 
 	for (j = TURN+2; j <= len; j++)	{
 		int i, Wj, Widjd, Wijd, Widj, Wij, Wim1;
@@ -187,7 +179,7 @@ int calculate(int len) {
 			Wij = V(i, j) + auPenalty(i, j) + Wim1;
 			Widjd = V(i+1,j-1) + auPenalty(i+1,j-1) + Ed3(j-1,i + 1,i) + Ed5(j-1,i+1,j) + Wim1;
 			Wijd = V(i,j-1) + auPenalty(i,j- 1) + Ed5(j-1,i,j) + Wim1;
-			Widj = V(i + 1, j) + auPenalty(i+1,j) + Ed3(j,i + 1,i) + Wim1;
+			Widj = V(i+1, j) + auPenalty(i+1,j) + Ed3(j,i + 1,i) + Wim1;
 			Wj = MIN(MIN(MIN(Wij, Widjd), MIN(Wijd, Widj)), Wj); 
 		}
 

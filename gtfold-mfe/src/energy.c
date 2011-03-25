@@ -13,155 +13,64 @@ int *VV1;
 int *W; 
 int *VBI; 
 int *VM; 
-int *WM; 
-int *WMi; 
-int *WMi1; 
-int *WMi2; 
-//int **V; 
-//int **WM; 
-//int **VM; 
-//int **VBI; 
+int **WM; 
 int *indx; 
 
 void create_tables(int len)
 {	
-	//int i;
-	
 	V = (int *) malloc(((len+1)*len/2 + 1) * sizeof(int));
-	if (V == NULL) 
-	{
-		perror("Cannot allocate array 'V'");
+	if (V == NULL) {
+		perror("Cannot allocate variable 'V'");
 		exit(-1);
 	}
 
 	VV1 = (int *) malloc((len+ 1)*sizeof(int));
-	if (VV1 == NULL) 
-	{
-		perror("Cannot allocate array 'VV1'");
+	if (VV1 == NULL) {
+		perror("Cannot allocate variable 'V'");
 		exit(-1);
 	}
+
 	VV = (int *) malloc((len+ 1)*sizeof(int));
-	if (VV == NULL) 
-	{
-		perror("Cannot allocate array 'VV'");
+	if (VV == NULL) {
+		perror("Cannot allocate variable 'V'");
 		exit(-1);
 	}
-
-	WMi = (int *) malloc((len+ 1)*sizeof(int));
-	if (WMi == NULL) 
-	{
-		perror("Cannot allocate array 'WMi'");
+	
+	int i;
+	WM = (int **) malloc((len+1)* sizeof(int *));
+	if (WM == NULL) {
+		perror("Cannot allocate variable 'WM'");
 		exit(-1);
-	}
-
-	WMi1 = (int *) malloc((len+ 1)*sizeof(int));
-	if (WMi1 == NULL) 
-	{
-		perror("Cannot allocate array 'WMi1'");
-		exit(-1);
-	}
-
-	WMi2 = (int *) malloc((len+ 1)*sizeof(int));
-	if (WMi2 == NULL) 
-	{
-		perror("Cannot allocate array 'WMi2'");
-		exit(-1);
-	}
-
-	WM = (int *) malloc(((len+1)*len/2 + 1) * sizeof(int));
-	if (WM == NULL) 
-	{
-		perror("Cannot allocate array 'WM'");
-		exit(-1);
-	}
+	}   
+	for (i = 0; i <= len; i++) {
+		WM[i] = (int *)malloc((len+1)* sizeof(int));
+		if (WM[i] == NULL) {
+			perror("Cannot allocate variable 'WM[i]'");
+			exit(-1);
+		}   
+	}   
 
 	VM = (int *) malloc(((len+1)*len/2 + 1) * sizeof(int));
-	if (VM == NULL) 
-	{
-		perror("Cannot allocate array 'VM'");
+	if (VM == NULL) {
+		perror("Cannot allocate variable 'V'");
 		exit(-1);
 	}
 
 	VBI = (int *) malloc(((len+1)*len/2 + 1) * sizeof(int));
-	if (VBI == NULL) 
-	{
-		perror("Cannot allocate array 'VBI'");
+	if (VBI == NULL) {
+		perror("Cannot allocate variable 'V'");
 		exit(-1);
 	}
-
-	/*
-	V = (int **) malloc((len+1)* sizeof(int *));
-	if (V == NULL) 
-	{
-		perror("Cannot allocate array 'VM'");
-		exit(-1);
-	}
-	for (i = 0; i < len+1; i++) {
-		V[i] = (int *) malloc((len+1)*sizeof(int));
-		if (V[i] == NULL) {
-			perror("Cannot allocate array 'VM[i]'");
-			exit(-1);
-		}
-	}
-	*/
 
 	W = (int *) malloc((len+1) * sizeof(int));
-	if (W == NULL) 
-	{
-		perror("Cannot allocate array 'W'");
+	if (W == NULL) {
+		perror("Cannot allocate variable 'W'");
 		exit(-1);
 	}
 
-	/*
-	VBI = (int **) malloc((len+1) * sizeof(int *));
-	if (VBI == NULL) 
-	{
-		perror("Cannot allocate array 'VBI'");
-		exit(-1);
-	}
-
-	for (i = 0; i < len+1; i++) {
-		VBI[i] = (int *) malloc((len+1)* sizeof(int));
-		if (VBI[i] == NULL) 
-		{
-			perror("Cannot allocate array 'VBI[i]'");
-			exit(-1);
-		}
-	}
-
-	VM = (int **) malloc((len+1)* sizeof(int *));
-	if (VM == NULL) 
-	{
-		perror("Cannot allocate array 'VM'");
-		exit(-1);
-	}
-	for (i = 0; i < len+1; i++) {
-		VM[i] = (int *) malloc((len+1)*sizeof(int));
-		if (VM[i] == NULL) {
-			perror("Cannot allocate array 'VM[i]'");
-			exit(-1);
-		}
-	}
-
-	WM = (int **) malloc((len+1)*sizeof(int *));
-	if (WM == NULL) 
-	{
-		perror("Cannot allocate array 'WM'");
-		exit(-1);
-	}
-	for (i = 0; i < len+1; i++) 
-	{
-		WM[i] = (int *) malloc((len+1)*sizeof(int));
-		if (WM[i] == NULL) {
-			perror("Cannot allocate array 'WM[i]'");
-			exit(-1);
-		}
-	}
-	*/
-    
 	indx = (int*) malloc((len+1) * sizeof(int));
 	if (indx == NULL) {
-		perror("Cannot allocate array 'indx'");
+		perror("Cannot allocate variable 'indx'");
 		exit(-1);
 	}
 
@@ -171,21 +80,14 @@ void create_tables(int len)
 
 void init_tables(int len) 
 {
-	int i, LLL;
+	int i, j, LLL;
 	
 	for (i = 0; i <= len; i++) {
 		W[i] = INFINITY_; 
 		VV[i] = INFINITY_;
 		VV1[i] = INFINITY_;
-		WMi[i] = INFINITY_;
-		WMi1[i] = INFINITY_;
-		WMi2[i] = INFINITY_;
-		//for (j = 0; j <= len; j++) {
-			//V[i][j] = INFINITY_;
-			//VBI[i][j] = INFINITY_;
-			//VM[i][j] = INFINITY_;
-			//WM[i][j] = INFINITY_;
-		//}
+		for (j = 0; j <= len; j++) 
+			WM[i][j] = INFINITY_;
 	}
 	
 	
@@ -193,15 +95,9 @@ void init_tables(int len)
 
 	for (i = 0; i < LLL; i++) {
 		V[i] = INFINITY_;
-		WM[i] = INFINITY_;
 		VM[i] = INFINITY_;
 		VBI[i] = INFINITY_;
 	}
-
-	/*
-	for (i = 0; i <= len; i++) {
-		indx[i] = (len)*(i-1)-(i*(i-1))/2;
-	}*/
 
 	for (i = 1; i <= (unsigned) len; i++) 
 	    indx[i] = (i*(i-1)) >> 1;        /* n(n-1)/2 */
@@ -212,27 +108,17 @@ void init_tables(int len)
 void free_tables(int len)
 {
 	free(indx);
-	//for (i = 0; i < len; i++)
-	//	free(WM[i]);
 	
+	int i;
+	for (i = 0; i <= len; i++)
+	         free(WM[i]);
 	free(WM);
-	
-	//for (i = 0; i < len; i++)
-	//	free(VM[i]);
-	free(VM);
-	
 
-	//for (i = 0; i < len; i++)
-	//	free(V[i]);
+	free(VM);
+	free(VBI);
 	free(V);
 	free(VV);
 	free(VV1);
-
-
-	//for (i = 0; i < len; i++)
-	//	free(VBI[i]);
-	
-	free(VBI);
 	free(W);
 }
 
@@ -241,8 +127,7 @@ inline int Ed3(int i, int j, int k) { return dangle[RNA[i]][RNA[j]][RNA[k]][1];}
 inline int Ed5(int i, int j, int k) { return dangle[RNA[i]][RNA[j]][RNA[k]][0]; }
 inline int auPenalty(int i, int j) { return auPen(RNA[i], RNA[j]);}
 
-inline int eL(int i, int j, int ip, int jp) 
-{
+inline int eL(int i, int j, int ip, int jp) {
 	int energy;
 	int size1, size2, size;
 	int loginc; /* SH: Originally unassiged, but needs to be set to 0 so it doesn't throw off later calculations. */

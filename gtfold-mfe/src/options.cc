@@ -129,15 +129,15 @@ void printRunConfiguration(string seq) {
 
 	printf("Run Configuration:\n");
 
-#ifdef _OPENMP
-	if(nThreads == -1)
-		printf("- [OMP] thread count: %d\n", omp_get_num_threads());
-	else
-		printf("- [OMP] thread count: %d\n", nThreads);
-#else
-	printf("- thread count: 1\n");
-#endif
-
+//#ifdef _OPENMP
+//	if(nThreads == -1)
+//		printf("- [OMP] thread count: %d\n", omp_get_num_threads());
+//	else
+//		printf("- [OMP] thread count: %d\n", nThreads);
+//#else
+//	printf("- thread count: 1\n");
+//#endif
+//
 
 	if (NOISOLATE == true) {
 		printf("- preventing isolated base pairs\n");
