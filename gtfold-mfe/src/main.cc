@@ -87,6 +87,10 @@ int read_sequence_file(const char* filename, std::string& seq)
 
 	fs.close();
 
+    size_t loc;
+    while((loc = seq.find(" ")) != string::npos)
+        seq.erase(loc, 1);
+
 	return SUCCESS;
 }
 
