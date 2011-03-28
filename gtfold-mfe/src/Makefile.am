@@ -10,6 +10,7 @@ gtfold_SOURCES = \
 	loader.cc\
 	utils.cc\
 	options.cc\
+	constraints.cc\
 	global.c\
 	energy.c\
 	algorithms.c \
