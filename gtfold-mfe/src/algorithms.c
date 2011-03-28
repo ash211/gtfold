@@ -29,20 +29,14 @@
 #include "energy.h"
 #include "global.h"
 #include "algorithms.h"
+#include "constraints.h"
 
 #ifdef _OPENMP   
 #include "omp.h"
 #endif
 
-double get_seconds() {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	return (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0;
-}
-
 int calculate(int len, int nThreads) { 
 	int b, i, j;
-	double t1, t2, tint=0, thair=0,tst=0, tml=0, twm=0;
 
 #ifdef _OPENMP
 	if (nThreads>0) omp_set_num_threads(nThreads);
@@ -60,48 +54,33 @@ int calculate(int len, int nThreads) {
 #endif
 		for (i = 1; i <= len - b; i++) {
 			j = i + b;
-			int newWM = INFINITY_;
-			int bPair = 0;
-			
-			if (canPair(RNA[i], RNA[j])) { 
-				bPair = 1;
-				int p=0, q=0, h;
-				int newV = INFINITY_, VBIij = INFINITY_;
+			int flag = 0, newWM = INFINITY_; 
 
-				t1 = get_seconds();
-				newV  = MIN(eH(i, j), newV);
-				t2 = get_seconds();
-				thair += (t2-t1); 
+			if (canPair(RNA[i], RNA[j])) {
+				flag = 1;
+				
+				int eh = eH(i, j); //hair pin
+				int es = eS(i, j) +  V(i+1,j-1); // stack
 
-				t1 = get_seconds();
-				int stackEnergy = eS(i, j); 
-				newV= MIN(stackEnergy + V(i+1,j-1), newV);
-				t2 = get_seconds();
-				tst += (t2-t1); 
+				if (j-i > 6) {  // Internal Loop BEGIN
+					int p=0, q=0;
+					int VBIij = INFINITY_;
 
-				if (j-i > 6) { 
-					t1 = get_seconds();
-					// Int Loop BEGIN
 					for (p = i+1; p <= MIN(j-2-TURN,i+MAXLOOP+1) ; p++) {
 						int minq = j-i+p-MAXLOOP-2;
 						if (minq < p+1+TURN) minq = p+1+TURN;
 						for (q = minq; q < j; q++) {
 							if (!canPair(RNA[p], RNA[q])) continue;
+							if (!ssOK(i,p) || !ssOK(q,j)) continue;
+							
 							VBIij = MIN(eL(i, j, p, q) + V(p,q), VBIij);
 						}
 					}
-
-					VBI(i,j) = VBIij;
-					// Int Loop END
-					t2 = get_seconds();
-					tint += (t2-t1); 
-					newV = MIN(newV, VBIij);
-				}
+					VBI(i,j) = pairOK(i,j)?VBIij:INFINITY_;
+				} 	// Internal Loop END
 				
-				if (j-i > 10) {	
-					t1 = get_seconds();
-
-					// Multi Loop BEGIN
+				if (j-i > 10) {	 // Multi Loop BEGIN
+					int h;
 					int VMij, VMijd, VMidj, VMidjd;
 					VMij = VMijd = VMidj = VMidjd = INFINITY_;
 
@@ -116,63 +95,46 @@ int calculate(int len, int nThreads) {
 					int d3 = Ed3(i,j,j-1);
 					int d5 = Ed5(i,j,i+1);
 
-					VMij = MIN(VMij, VMidj + d5 +Ec);
-					VMij = MIN(VMij, VMijd + d3 +Ec);
-					VMij = MIN(VMij, VMidjd + d5 +  d3+ 2*Ec);
+					VMij = MIN(VMij, baseOK(i+1)?(VMidj + d5 +Ec):INFINITY_);
+					VMij = MIN(VMij, baseOK(j-1)?(VMijd + d3 +Ec):INFINITY_);
+					VMij = MIN(VMij, (baseOK(i+1)&&baseOK(j-1))?(VMidjd + d5 +  d3+ 2*Ec):INFINITY_);
 					VMij = VMij + Ea + Eb + auPenalty(i,j);
+					
+					VM(i,j) = pairOK(i,j)?VMij:INFINITY_;
+				} // Multi Loop END
 
-					VM(i,j) = VMij;
-					newV = MIN(newV, VM(i,j));
-					// Multi Loop END
-
-					t2 = get_seconds();
-					tml += (t2-t1);
-				}
-				V(i,j) = VV[i] = newV;
+				V(i,j) = pairOK(i,j)?MIN4(eh,es,VBI(i,j),VM(i,j)):INFINITY_;
 			}
+			else
+				V(i,j) = INFINITY_;
 
 			if (j-i > 4) {	
-				t1 = get_seconds();
 				// WM BEGIN
-				int h; 	
-				if (!bPair) {
+				int h; 
+				if (!flag) {
 					for (h = i+TURN+1 ; h <= j-TURN-1; h++) {
 						newWM = MIN(newWM, WMU(i,h-1) + WML(h,j));
 					}
 				}
 				
-				newWM = MIN(VV[i] + auPenalty(i,j) + Eb, newWM);  //V(i,j)
-				newWM = MIN(VV1[i+1] + Ed3(j,i+1,i) + auPenalty(i+1,j) + Eb + Ec, newWM); //V(i+1,j) 
-				newWM = MIN(VV1[i] + Ed5(j-1,i,j) + auPenalty(i,j-1) + Eb + Ec, newWM); //V(i,j-1)
-				newWM = MIN(V(i+1,j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + auPenalty(i+1,j-1) + Eb + 2*Ec, newWM) ;
-
-				newWM = MIN(WMU(i+1,j) + Ec, newWM);
-				newWM = MIN(WML(i,j-1) + Ec, newWM);
+				newWM = MIN(V(i,j) + auPenalty(i,j) + Eb, newWM);  //V(i,j)
+				newWM = baseOK(i)?MIN(V(i+1,j) + Ed3(j,i+1,i) + auPenalty(i+1,j) + Eb + Ec, newWM): INFINITY_; //V(i+1,j) 
+				newWM = baseOK(j)?MIN(V(i,j-1) + Ed5(j-1,i,j) + auPenalty(i,j-1) + Eb + Ec, newWM): INFINITY_; //V(i,j-1)
+				newWM = (baseOK(i)&&baseOK(j))?MIN(V(i+1,j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + auPenalty(i+1,j-1) + Eb + 2*Ec, newWM): INFINITY_ ;
+				
+				newWM = baseOK(i)?MIN(WMU(i+1,j) + Ec, newWM):INFINITY_;
+				newWM = baseOK(j)?MIN(WML(i,j-1) + Ec, newWM):INFINITY_;
 
 				WMU(i,j) = WML(i,j) = newWM;
 				// WM END
-
-				t2 = get_seconds();
-				twm += (t2-t1);
 			}
 		}
 
-		int* FF;
-		FF=VV1; VV1=VV; VV=FF;
-		for (i = 1; i <= len; i++)
-			VV[i] = INFINITY_;
 	}
-
-	printf("Total IntLoop time = %fs \n",tint);
-	printf("Total Stack time = %fs \n",tst);
-	printf("Total HairPin time = %fs \n",thair);
-	printf("Total MultiLoop time = %fs \n",tml);
-	printf("Total WM time = %fs \n",twm);
-
+	
 	for (j = TURN+2; j <= len; j++)	{
 		int i, Wj, Widjd, Wijd, Widj, Wij, Wim1;
 		Wj = INFINITY_;
-
 		for (i = 1; i < j-TURN; i++) {
 			Wij = Widjd = Wijd = Widj = INFINITY_;
 			Wim1 = MIN(0, W[i-1]); 

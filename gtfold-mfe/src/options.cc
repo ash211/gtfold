@@ -10,6 +10,7 @@ bool PARAMS;
 bool LIMIT_DISTANCE;
 bool BPP_ENABLED;
 bool SUBOPT_ENABLED;
+bool CONS_ENABLED = false;
 
 string seqfile = "";
 string constraintsFile = "";
@@ -63,8 +64,10 @@ void parse_options(int argc, char** argv) {
 			if(strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
 				help();
 			} else if(strcmp(argv[i], "--constraints") == 0 || strcmp(argv[i], "-c") == 0) {
-				if(i < argc)
+				if(i < argc) {
 					constraintsFile = argv[++i];
+					CONS_ENABLED = true;
+				}
 				else
 					help();
 			} else if(strcmp(argv[i], "--limitCD") == 0 || strcmp(argv[i], "-d") == 0) {
