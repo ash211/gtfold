@@ -27,15 +27,11 @@
 
 using namespace std;
 
-//void traverse_wholeData(int[], int, int);
+void init_fold(string seq);
+void free_fold(int len);
 
-enum GTFOLD_FLAGS { SUCCESS = 0, FAILURE, ERR_OPEN_FILE, NO_CONS_FOUND};
-
-GTFOLD_FLAGS initialize_constraints(int*** fbp, int*** pbp, int& numpConstraints, int& numfConstraints, const char* constr_file);
-
-GTFOLD_FLAGS handle_IUPAC_code(const std::string& s, const int bases);
+bool encodeSequence(string seq);
 void limit_contact_distance(int lCD, int length);
-void force_noncanonical_basepair(const char* nc_basepairs, int length);
 
 bool is_valid_base(char c)
 {	
@@ -52,13 +48,12 @@ void trim_spaces(std::string& str)
 	size_t endpos = str.find_last_not_of(" \t"); // Find the first character position from reverse af
 
 	// if all spaces or empty return an empty string
-	if(( string::npos == startpos ) || ( string::npos == endpos))
+	if(( std::string::npos == startpos ) || ( std::string::npos == endpos))
 	{
 		str = "";
 	}
 	else
 		str = str.substr( startpos, endpos-startpos+1 );
-
 }
 
 void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters = " ")
@@ -79,7 +74,4 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens, const st
 	}
 }
 	
-	
-
-
 #endif
