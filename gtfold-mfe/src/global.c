@@ -7,9 +7,7 @@ unsigned char *RNA;
 int *structure; 
 unsigned int chPairKey;
 
-
-void init_global_params(int len)
-{
+void init_global_params(int len) {
 	RNA = (unsigned char *) malloc((len+1)* sizeof(unsigned char));
 	if (RNA == NULL) {
 		perror("Cannot allocate variable 'RNA'");
@@ -20,21 +18,18 @@ void init_global_params(int len)
 		perror("Cannot allocate variable 'structure'");
 		exit(-1);
 	}
-	
+
 	init_checkPair();
 }
 
-void free_global_params()
-{
+void free_global_params() {
 	free(structure);
 	free(RNA);
 }
 
-void printSequence(int len) 
-{
+void print_sequence(int len) {
 	int i;
-	for (i = 1; i <= len; i++) 
-	{
+	for (i = 1; i <= len; i++) {
 		if (RNA[i] == BASE_A)
 			printf("A");
 		else if (RNA[i] == BASE_C)
@@ -49,8 +44,7 @@ void printSequence(int len)
 	printf("\n");
 }
 
-void printStructure(int len) 
-{
+void print_structure(int len) {
 	int i = 1;
 	for (i = 1; i <= len; i++) 
 	{
@@ -64,13 +58,7 @@ void printStructure(int len)
 	printf("\n");
 }
 
-int canPair(int a, int b)
-{
-	return (chPairKey & (1 << (((a)<<2) + (b)))); 
-}  
-
-void init_checkPair() 
-{
+void init_checkPair() {
 	int i, j;
 	chPairKey = 0;
 	for (i = 0; i < 4; i++)
@@ -78,15 +66,17 @@ void init_checkPair()
 			chPairKey += checkPair(i, j) << ((i << 2) + j);
 }
 
-int update_checkPair(int i, int j) 
-{
+int update_checkPair(int i, int j) {
 	int r = 0;
 	if (!((i >= 0 && i <=3 )&&(j >=0 && j <=3)))
 		return r;
-	if (!(chPairKey & (1 << ((i << 2) + j))))
-	{
+	if (!(chPairKey & (1 << ((i << 2) + j)))) {
 		chPairKey += 1 << ((i << 2) + j);	
 		r = 1;
 	}
 	return r;
+}
+
+inline int canPair(int a, int b) {
+	return (chPairKey & (1 << (((a)<<2) + (b)))); 
 }

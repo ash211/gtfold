@@ -50,8 +50,8 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_gtfold_OBJECTS = main.$(OBJEXT) loader.$(OBJEXT) utils.$(OBJEXT) \
 	options.$(OBJEXT) global.$(OBJEXT) energy.$(OBJEXT) \
-	algorithms.$(OBJEXT) algorithms-partition.$(OBJEXT) \
-	subopt_traceback.$(OBJEXT) traceback.$(OBJEXT)
+	algorithms.$(OBJEXT) traceback.$(OBJEXT) constraints.$(OBJEXT) \
+	subopt_traceback.$(OBJEXT)
 gtfold_OBJECTS = $(am_gtfold_OBJECTS)
 gtfold_DEPENDENCIES =
 gtfold_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(gtfold_LDFLAGS) \
@@ -185,12 +185,12 @@ gtfold_SOURCES = \
 	loader.cc\
 	utils.cc\
 	options.cc\
+	constraints.cc\
 	global.c\
 	energy.c\
-	algorithms.c\
-	algorithms-partition.c\
-	subopt_traceback.cc\
-	traceback.c
+	algorithms.c \
+	traceback.c \
+	subopt_traceback.cc
 
 gtfold_LDFLAGS = 
 gtfold_LDADD = -lm
@@ -276,8 +276,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/algorithms-partition.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/algorithms.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/constraints.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/energy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/global.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loader.Po@am__quote@

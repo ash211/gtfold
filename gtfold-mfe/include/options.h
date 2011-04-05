@@ -15,6 +15,7 @@ extern bool PARAMS;
 extern bool LIMIT_DISTANCE;
 extern bool BPP_ENABLED;
 extern bool SUBOPT_ENABLED;
+extern bool CONS_ENABLED;
 
 extern string seqfile;
 extern string constraintsFile;

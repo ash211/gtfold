@@ -25,6 +25,12 @@
 
 #include "constants.h"
 
+using namespace std;
+
+void init_fold(string seq);
+void free_fold(int len);
+
+bool encodeSequence(string seq);
 void limit_contact_distance(int lCD, int length);
 
 bool is_valid_base(char c)

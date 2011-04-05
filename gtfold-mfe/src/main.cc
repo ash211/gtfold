@@ -36,28 +36,41 @@
 #include "global.h"
 #include "energy.h"
 #include "algorithms.h"
+#include "constraints.h"
 #include "traceback.h"
 #include "subopt_traceback.h"
 
 using namespace std;
 
-double get_seconds() 
-{
+double get_seconds() {
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0;
 }
 
-void init_fold(int len) 
-{	
- 	init_global_params(len);
+void init_fold(string seq) {
+	int len = seq.length();
+
+	init_global_params(len);
+
+	if (!encodeSequence(seq)) {
+		free_fold(seq.length());
+		exit(0);
+	}
+	
 	create_tables(len);
+	
+	if (CONS_ENABLED) {
+		init_constraints(constraintsFile.c_str(), len);
+	}
 }
 
-void free_fold(int len) 
-{
-	free_global_params();
+void free_fold(int len) {
+	if (CONS_ENABLED) 
+		free_constraints(len);
+
 	free_tables(len);
+	free_global_params();
 }
 
 /**
@@ -67,8 +80,7 @@ void free_fold(int len)
  * @param seq A C++ string object (passed by reference) to save to
  * @return SUCCESS or FAILURE
  */
-int read_sequence_file(const char* filename, std::string& seq)
-{
+int read_sequence_file(const char* filename, std::string& seq) {
 	seq = "";
 
 	ifstream fs;
@@ -176,19 +188,13 @@ int main(int argc, char** argv) {
 		printf("Failed to open sequence file: %s.\n\n", seqfile.c_str());
 		exit(-1);
 	}
-
+	
 	// Read in thermodynamic parameters. Always use Turner99 data (for now)
 	readThermodynamicParameters("Turner99",false);
 
 	printRunConfiguration(seq);
 	
-	init_fold(seq.length());
-	
-	if (!encodeSequence(seq))
-	{
-		free_fold(seq.length());
-		exit(0);
-	}
+	init_fold(seq);
 	
 	printf("\nComputing minimum free energy structure...\n");
 	fflush(stdout);
@@ -203,8 +209,7 @@ int main(int argc, char** argv) {
 	printf("- MFE runtime: %9.6f seconds\n", t1);
 	
 	
-	if (SUBOPT_ENABLED)
-	{	
+	if (SUBOPT_ENABLED) {	
 		t1 = get_seconds();
 		subopt_traceback(seq.length(), suboptDelta);
 		t1 = get_seconds() - t1;
@@ -219,9 +224,12 @@ int main(int argc, char** argv) {
 	t1 = get_seconds() - t1;
 
 	printf("\n");
-	printSequence(seq.length());
-	printStructure(seq.length());
-	
+	print_sequence(seq.length());
+	print_structure(seq.length());
+	if (CONS_ENABLED)
+		print_constraints(seq.length());
+
+
 	save_ct_file(outputFile, seq, energy);
 	printf("\nMFE structure saved in .ct format to %s\n", outputFile.c_str());
 
@@ -229,95 +237,4 @@ int main(int argc, char** argv) {
 	free_fold(seq.length());
 
 	return EXIT_SUCCESS;
-}
-
-
-int initialize_constraints(int*** fbp, int ***pbp, int& numpConstraints, int& numfConstraints, const char* constr_file)
-{
-	ifstream cfcons;
-
-	printf("Running with constraints\n");
-	printf("Opening constraint file: %s\n", constr_file);
-
-	cfcons.open(constr_file, ios::in);
-	if (cfcons != NULL)
-		printf("Constraint file opened.\n");
-	else {
-		fprintf(stderr, "Error opening constraint file\n\n");
-		cfcons.close();
-		return FAILURE; //exit(-1);
-	}
-
-	char cons[100];
-
-	while (!cfcons.eof()) {
-		cfcons.getline(cons, 100);
-		if (cons[0] == 'F' || cons[0] == 'f')
-			numfConstraints++;
-		if (cons[0] == 'P' || cons[0] == 'p')
-			numpConstraints++;
-	}
-	cfcons.close();
-
-	printf("Number of Constraints given: %d\n\n", numfConstraints
-			+ numpConstraints);
-	if (numfConstraints + numpConstraints != 0)
-		printf("Reading Constraints.\n");
-	else {
-		fprintf(stderr, "No Constraints found.\n\n");
-		return FAILURE;
-	}
-
-	*fbp = (int**) malloc(numfConstraints * sizeof(int*));
-	*pbp = (int**) malloc(numpConstraints * sizeof(int*));
-
-	int fit = 0, pit = 0, it = 0;
-
-	for (it = 0; it < numfConstraints; it++) {
-		(*fbp)[it] = (int*) malloc(2* sizeof (int));
-	}
-	for(it=0; it<numpConstraints; it++) {
-		(*pbp)[it] = (int*)malloc(2*sizeof(int));
-	}
-	cfcons.open(constr_file, ios::in);
-
-	while(!cfcons.eof()) {
-		cfcons.getline(cons,100);
-		char *p=strtok(cons, " ");
-		p = strtok(NULL, " ");
-		if(cons[0]=='F' || cons[0]=='f') {
-			int fit1=0;
-			while(p!=NULL) {
-				(*fbp)[fit][fit1++] = atoi(p);
-				p = strtok(NULL, " ");
-			}
-			fit++;
-		}
-		if( cons[0]=='P' || cons[0]=='p') {
-			int pit1=0;
-			while(p!=NULL) {
-				(*pbp)[pit][pit1++] = atoi(p);
-				p = strtok(NULL, " ");
-			}
-			pit++;
-		}
-	}
-
-	printf("Forced base pairs: ");
-	
-	for(it=0; it<numfConstraints; it++) 
-	{
-		for(int k=1;k<= (*fbp)[it][2];k++)
-			printf("(%d,%d) ", (*fbp)[it][0]+k-1, (*fbp)[it][1]-k+1);
-	}
-	printf("\nProhibited base pairs: ");
-	for(it=0; it<numpConstraints; it++) 
-	{
-		for(int k=1;k<= (*pbp)[it][2];k++)
-			printf("(%d,%d) ", (*pbp)[it][0]+k-1, (*pbp)[it][1]-k+1);
-	}
-
-	printf("\n\n");
-
-	return SUCCESS;
 }
