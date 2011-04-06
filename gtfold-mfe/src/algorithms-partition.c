@@ -3,20 +3,54 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "algorithms-partition.h"
 #include "algorithms.h"
-#include "utils.h"
+#include "data.h"
 #include "energy.h"
 #include "global.h"
-#include "algorithms-partition.h"
-#include "data.h"
+#include "utils.h"
 
-// double[][] QB;
-// double[][] Q;
-// double[][] QM;
-
+double** QB;
+double** Q;
+double** QM;
+double** P;
 
 // Boltzmann constant (R) * Standard 37C temperature (T in Kelvin)
 double RT = 0.00198721 * 310.15;
+
+/**
+ *
+ * @param QB pointer to the given 2D array
+ * @param Q pointer to the given 2D array
+ * @param QM pointer to the given 2D array
+ * @param P pointer to the given 2D array
+ */
+void mallocPartitionArrays(int length) {
+    QB = mallocTwoD(length+1, length+1);
+    if(QB == NULL) {
+        fprintf(stderr,"Failed to allocate QB\n");
+        exit(-1);
+    }
+
+    Q = mallocTwoD(length+1, length+1);
+    if(Q == NULL) {
+        fprintf(stderr,"Failed to allocate Q\n");
+        exit(-1);
+    }
+
+    QM = mallocTwoD(length+1, length+1);
+    if(QM == NULL) {
+        fprintf(stderr,"Failed to allocate QM\n");
+        exit(-1);
+    }
+
+    P = mallocTwoD(length+1, length+1);
+    if(P == NULL) {
+        fprintf(stderr,"Failed to allocate P\n");
+        exit(-1);
+    }
+}
+
 
 // Based on pseudocode in figure 6 in 
 //
@@ -31,7 +65,7 @@ double RT = 0.00198721 * 310.15;
  * @param QM Matrix
  *
  */
-void fill_partition_fn_arrays(int len, double** QB, double** Q, double** QM) {
+void fillPartitionArrays(int len, double** QB, double** Q, double** QM) {
 
     // multiConst[3] is a global variable with 3 values: a, b, c for the
     // experimental constants

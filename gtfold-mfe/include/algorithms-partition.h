@@ -7,7 +7,9 @@ extern "C" {
 #endif
 
 
-void fill_partition_fn_arrays(int len, double** QB, double** Q, double** QM);
+void mallocPartitionArrays(int length);
+void fillPartitionArrays(int len, double** QB, double** Q, double** QM);
+
 void fillBasePairProbabilities(int length, int *structure, double **Q, double **QB, double **QM, double**P);
 void printBasePairProbabilities(int n, int *structure, double **P);
 
@@ -15,6 +17,11 @@ double probabilityUnpaired(int length, int i, double **P);
 
 double **mallocTwoD(int r, int c);
 void freeTwoD(double** arr, int r, int c);
+
+extern double** QB;
+extern double** Q;
+extern double** QM;
+extern double** P;
 
 typedef struct _pFuncData {
     int len;

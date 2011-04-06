@@ -36,6 +36,7 @@
 #include "global.h"
 #include "energy.h"
 #include "algorithms.h"
+#include "algorithms-partition.h"
 #include "constraints.h"
 #include "traceback.h"
 #include "subopt_traceback.h"
@@ -178,7 +179,7 @@ void save_ct_file(string outputFile, string seq, int energy) {
 int main(int argc, char** argv) {
 	std::string seq;
 	int energy;
-	double t1;
+	double t1 = 0, t_bpp = 0;
 
 	print_header();
 
@@ -202,12 +203,25 @@ int main(int argc, char** argv) {
 	t1 = get_seconds();
 	energy = calculate(seq.length(), nThreads);
 	t1 = get_seconds() - t1;
-	
 	printf("Done.\n\n");
+
+	if (BPP_ENABLED) {
+		mallocPartitionArrays(seq.length());
+
+		printf("Computing partition function arrays...\n");
+		t_bpp = get_seconds();
+		fillPartitionArrays(seq.length(), QB, Q, QM);
+		t_bpp = get_seconds() - t_bpp;
+		printf("Done.\n\n");
+	}
+
 	printf("Results:\n");
 	printf("- Minimum Free Energy: %12.4f kcal/mol\n", energy/100.00);
 	printf("- MFE runtime: %9.6f seconds\n", t1);
-	
+
+	if (BPP_ENABLED) {
+		printf("- BPP runtime: %9.6f seconds\n", t_bpp);
+	}
 	
 	if (SUBOPT_ENABLED) {	
 		t1 = get_seconds();

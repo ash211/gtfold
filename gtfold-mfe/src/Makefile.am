@@ -14,6 +14,7 @@ gtfold_SOURCES = \
 	global.c\
 	energy.c\
 	algorithms.c \
+	algorithms-partition.c \
 	traceback.c \
 	subopt_traceback.cc
 
