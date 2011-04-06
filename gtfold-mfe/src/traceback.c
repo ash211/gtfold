@@ -60,8 +60,11 @@ void traceW(int j) {
 	if (j == 0 || j == 1) return;
 
 	for (i = 1; i < j && !done; i++) {
+		if (j-i < TURN) continue;
+		
 		wim1 = MIN(0, W[i-1]);
 		flag = 1;
+		
 		if (wim1 != W[i-1]) flag = 0;
 
 		Widjd = Wijd =  Widj = INFINITY_;
@@ -121,6 +124,7 @@ void traceW(int j) {
 
 int traceV(int i, int j) {
 	int a, b, c, d, Vij;
+	if (j-i < TURN)  return INFINITY_;
 
 	a = eH(i, j);
 	b = eS(i, j) + V(i + 1, j - 1);
