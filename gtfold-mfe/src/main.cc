@@ -179,7 +179,7 @@ void save_ct_file(string outputFile, string seq, int energy) {
 int main(int argc, char** argv) {
 	std::string seq;
 	int energy;
-	double t1 = 0, t_bpp = 0;
+	double t1 = 0, t_bpp = 0, t_pfunc = 0, t_trace=0;
 
 	print_header();
 
@@ -205,25 +205,7 @@ int main(int argc, char** argv) {
 	t1 = get_seconds() - t1;
 	printf("Done.\n\n");
 
-	if (BPP_ENABLED) {
-		mallocPartitionArrays(seq.length());
-
-		printf("Computing partition function arrays...\n");
-		t_bpp = get_seconds();
-		fillPartitionArrays(seq.length(), QB, Q, QM);
-		t_bpp = get_seconds() - t_bpp;
-		printf("Done.\n\n");
-	}
-
-	printf("Results:\n");
-	printf("- Minimum Free Energy: %12.4f kcal/mol\n", energy/100.00);
-	printf("- MFE runtime: %9.6f seconds\n", t1);
-
-	if (BPP_ENABLED) {
-		printf("- BPP runtime: %9.6f seconds\n", t_bpp);
-	}
-	
-	if (SUBOPT_ENABLED) {	
+	if (SUBOPT_ENABLED) {
 		t1 = get_seconds();
 		subopt_traceback(seq.length(), suboptDelta);
 		t1 = get_seconds() - t1;
@@ -232,12 +214,42 @@ int main(int argc, char** argv) {
 		free_fold(seq.length());
 		exit(0);
 	}
-	
-	t1 = get_seconds();
-	trace(seq.length());
-	t1 = get_seconds() - t1;
 
-	printf("\n");
+	printf("Computing MFE traceback...\n");
+	t_trace = get_seconds();
+	trace(seq.length());
+	t_trace = get_seconds() - t_trace;
+	printf("Done.\n\n");
+
+	if (BPP_ENABLED) {
+		mallocPartitionArrays(seq.length());
+
+		printf("Computing partition function arrays...\n");
+		t_pfunc = get_seconds();
+		fillPartitionArrays(seq.length(), QB, Q, QM);
+		t_pfunc = get_seconds() - t_pfunc;
+		printf("Done.\n\n");
+
+		printf("Computing base pair probabilities...\n");
+		t_bpp = get_seconds();
+		fillBasePairProbabilities(seq.length(), structure, Q, QB, QM, P);
+		t_bpp = get_seconds() - t_bpp;
+		printf("Done.\n\n");
+	}
+
+	printf("Results:\n");
+	printf("- Minimum Free Energy: %12.4f kcal/mol\n", energy/100.00);
+	printf("- MFE runtime: %9.6f seconds\n", t1);
+	printf("- MFE traceback runtime: %9.6f seconds\n", t_trace);
+
+	if (BPP_ENABLED) {
+		printf("- partition function calculation: %9.6f seconds\n", t_pfunc);
+		printf("- BPP runtime: %9.6f seconds\n", t_bpp);
+		//TODO: don't send this to stdout
+		printBasePairProbabilities(seq.length(), structure, P);
+	}
+
+	printf("\nMFE structure:\n");
 	print_sequence(seq.length());
 	print_structure(seq.length());
 	if (CONS_ENABLED)
