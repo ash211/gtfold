@@ -18,7 +18,6 @@ int nFBP;
 static int load_constraints(const char* constr_file, int verbose=0) {
 	std::ifstream cfcons;
     fprintf(stdout, "- Running with constraints\n");
-    //fprintf(stdout, "Opening constraint file: %s\n", constr_file);
 
     cfcons.open(constr_file, std::ios::in);
     if (cfcons == 0) {
@@ -153,32 +152,64 @@ void print_constraints(int len) {
     printf("\n");
 }
 
-int ssOK(int i, int j) {
+int is_ss(int i, int j) {
 	if (CONS_ENABLED) {
 		int it;
 		for (it = i + 1; it < j; it++) {
-			if (BP[it] > 0) return 0;
+			if (BP[it] > 0) return 1;
 		}
-		return 1;
+		return 0;
 	}
 	else
-		return 1;
+		return 0;
 }
 
-int baseOK(int i) {
-	if (CONS_ENABLED)
-		return (BP[i] <=0);
+int prohibit_base(int i) {
+		return (BP[i] == -1);
+}
+
+int check_base(int i) {
+	if (CONS_ENABLED) 
+		return (BP[i] <= 0);
 	else
 		return 1;
 }
 
-int pairOK(int i, int j) {
-	if (CONS_ENABLED)
-	return !(BP[i] < 0 || BP[j] < 0 ||  
-			(BP[i] > 0 && j != BP[i]) ||
-			(BP[j] > 0 && i != BP[j]));  			
-	else
-		return 1;
+int force_pair(int i, int j) {
+		return (BP[i] > 0 && j != BP[i]);
 }
 
+int force_pair1(int i, int j) {
+	if (CONS_ENABLED) 
+		return (BP[i]==j);
+	else
+		return 0;
+}
 
+int check_iloop(int i, int j, int p, int q) {
+	if (CONS_ENABLED) 
+		return is_ss(i,p) || is_ss(q,j);
+	else 
+		return 0;
+}
+
+int check_pair(int i, int j) {
+	if (CONS_ENABLED) 
+		return prohibit_base(i) || prohibit_base(j) || force_pair(i,j) || force_pair(j,i);
+	else
+		return 0;
+}
+
+int check_stack(int i, int j) {
+	if (CONS_ENABLED) 
+		return force_pair(i,j) || force_pair(j,i);
+	else
+		return 0;
+}
+
+int check_hairpin(int i, int j) {
+	if (CONS_ENABLED) 
+		return is_ss(i,j) || force_pair(i,j) || force_pair(j,i);
+	else
+		return 0;
+}
