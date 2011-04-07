@@ -239,6 +239,7 @@ int main(int argc, char** argv) {
 
 	printf("Results:\n");
 	printf("- Minimum Free Energy: %12.4f kcal/mol\n", energy/100.00);
+	printf("- Sum of energy of loops: %12.2f kcal/mol\n", total_en/100.0);
 	printf("- MFE runtime: %9.6f seconds\n", t1);
 	printf("- MFE traceback runtime: %9.6f seconds\n", t_trace);
 

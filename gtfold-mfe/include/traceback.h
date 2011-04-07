@@ -37,4 +37,6 @@ int traceVM(int i, int j);
 int traceVBI(int i, int j);
 int traceWM(int i, int j);
 
+extern int total_en;
+
 #endif

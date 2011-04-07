@@ -44,7 +44,6 @@ void trace(int len) {
 
 	traceW(len);
 	
-	printf("- sum of energy of loops: %12.2f kcal/mol\n", total_en/100.0);
 	return;
 }
 
