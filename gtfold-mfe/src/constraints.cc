@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <algorithm>
 
 #include "global.h"
 #include "options.h"
@@ -14,6 +16,12 @@ int** FBP;
 
 int nPBP;
 int nFBP;
+
+bool compare_bp(const std::pair<int,int>& o1, 
+			   	const std::pair<int,int>& o2) {
+	return o1.first < o2.first;
+}
+
 
 static int load_constraints(const char* constr_file, int verbose=0) {
 	std::ifstream cfcons;
@@ -76,19 +84,20 @@ static int load_constraints(const char* constr_file, int verbose=0) {
         }
     }
 
-	if (verbose == 1) {
-		fprintf(stdout, "Forced base pairs: ");
-		for(it=0; it< nFBP; it++) {
-			for(int k=1;k<= FBP[it][2];k++)
-				fprintf(stdout, "(%d,%d) ", FBP[it][0]+k-1, FBP[it][1]-k+1);
-		}
-		fprintf(stdout, "\nProhibited base pairs: ");
-		for(it=0; it< nPBP; it++) {
-			for(int k=1;k<= PBP[it][2];k++)
-				fprintf(stdout, "(%d,%d) ", PBP[it][0]+k-1, PBP[it][1]-k+1);
-		}
-		fprintf(stdout, "\n\n");
+	std::vector<std::pair<int,int> > v_fbp;
+	for(it=0; it< nFBP; it++) {
+		for(int k=1;k<= FBP[it][2];k++)
+			v_fbp.push_back(std::pair<int,int>(FBP[it][0]+k-1, FBP[it][1]-k+1));
 	}
+	std::sort(v_fbp.begin(), v_fbp.end(), compare_bp);
+	for (size_t ii = 0; ii < v_fbp.size() -1 ; ++ii) {
+		if (v_fbp[ii].second <= v_fbp[ii+1].second) {
+			fprintf(stderr, "\nConstraints create pseudoknots, exiting !!!\n");
+			exit(-1);
+		}
+			
+	}
+
 
     return 0;
 }
