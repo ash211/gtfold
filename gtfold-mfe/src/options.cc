@@ -11,6 +11,7 @@ bool LIMIT_DISTANCE;
 bool BPP_ENABLED;
 bool SUBOPT_ENABLED;
 bool CONS_ENABLED = false;
+bool VERBOSE = false;
 
 string seqfile = "";
 string constraintsFile = "";
@@ -87,7 +88,10 @@ void parse_options(int argc, char** argv) {
 					nThreads = atoi(argv[++i]);
 				else
 					help();	
-			} else if(strcmp(argv[i], "--bpp") == 0) {
+			} else if (strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-v") == 0) {
+                VERBOSE = true;
+			}
+			else if(strcmp(argv[i], "--bpp") == 0) {
 				BPP_ENABLED = true;
 			} else if(strcmp(argv[i], "--subopt") == 0) {
 				SUBOPT_ENABLED = true;
@@ -169,6 +173,6 @@ void printRunConfiguration(string seq) {
 	printf("- thermodynamic parameters: %s\n", EN_DATADIR.c_str());
 	printf("- input file: %s\n", seqfile.c_str());
 	printf("  - sequence length: %d\n", (int)seq.length());
-	//printf("  - sequence contents: %s\n", seq.c_str());
+	printf("  - sequence contents: %s\n", seq.c_str());
 	printf("- output file: %s\n", outputFile.c_str());
 }
