@@ -109,6 +109,10 @@ int init_constraints(const char* constr_file,int length) {
 
 	if (nPBP != 0) {
 		for (it = 0; it < nPBP; it++) {
+			if (PBP[it][2] < 1) {
+				printf("Invalid entry (%d %d %d)\n", PBP[it][0], PBP[it][1],PBP[it][2]);
+				continue;
+			}	
 			for(k= 1; k <= PBP[it][2];k++) {
 				BP[PBP[it][0]+k-1] = -1;
 				if(PBP[it][1]!=0) {
@@ -119,11 +123,21 @@ int init_constraints(const char* constr_file,int length) {
 	}
 	if (nFBP != 0) {
 		for (it = 0; it < nFBP; it++) {
+			if (FBP[it][2] < 1) {
+				printf("Invalid entry (%d %d %d)\n", FBP[it][0], FBP[it][1], FBP[it][2]);
+				continue;
+			}
 			for(k=1; k <= FBP[it][2];k++) {
+				int i1 = FBP[it][0]+k-1;
+				int j1 = FBP[it][1]-k+1;
 				if (!canPair(RNA[FBP[it][0]+k-1], RNA[FBP[it][1]-k+1])) {
 					printf("Can't constrain (%d,%d)\n", FBP[it][0]+k-1, FBP[it][1]-k+1);
 					continue;
 				}
+				if (j1-i1 < TURN) {
+					printf("Can't constrain (%d,%d)\n", i1, j1);
+					continue;
+				}	
 				BP[FBP[it][0]+k-1] = FBP[it][1]+1-k;
 				BP[FBP[it][1]+1-k] = FBP[it][0]+k-1;
 			}
