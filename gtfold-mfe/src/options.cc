@@ -112,6 +112,12 @@ void parse_options(int argc, char** argv) {
 
 		// base it off the input file
 		outputFile += seqfile;
+		
+		size_t pos;
+		// extract file name from the path
+		if ((pos=outputFile.find_last_of('/')) > 0) {
+			outputFile = outputFile.substr(pos+1);
+		}
 
 		// and if an extension exists, remove it ...
 		if(outputFile.find(".") != string::npos)
@@ -131,16 +137,6 @@ void printRunConfiguration(string seq) {
 	bool standardRun = true;
 
 	printf("Run Configuration:\n");
-
-//#ifdef _OPENMP
-//	if(nThreads == -1)
-//		printf("- [OMP] thread count: %d\n", omp_get_num_threads());
-//	else
-//		printf("- [OMP] thread count: %d\n", nThreads);
-//#else
-//	printf("- thread count: 1\n");
-//#endif
-//
 
 	if (NOISOLATE == true) {
 		printf("- preventing isolated base pairs\n");
@@ -173,6 +169,6 @@ void printRunConfiguration(string seq) {
 	printf("- thermodynamic parameters: %s\n", EN_DATADIR.c_str());
 	printf("- input file: %s\n", seqfile.c_str());
 	printf("  - sequence length: %d\n", (int)seq.length());
-	printf("  - sequence contents: %s\n", seq.c_str());
+	//printf("  - sequence contents: %s\n", seq.c_str());
 	printf("- output file: %s\n", outputFile.c_str());
 }
