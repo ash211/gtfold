@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
 	}
 	
 	t1 = get_seconds();
-	trace(seq.length());
+	trace(seq.length(), VERBOSE);
 	t1 = get_seconds() - t1;
 
 	printf("\n");

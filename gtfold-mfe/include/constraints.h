@@ -18,9 +18,15 @@ void print_constraints(int length) ;
 #ifdef __cplusplus
 extern "C" {
 #endif
-int ssOK(int i, int j); 
-int baseOK(int i);
-int pairOK(int i, int j);
+int is_ss(int i, int j); 
+int prohibit_base(int i) ;
+int check_base(int i) ;
+int force_pair(int i, int j) ;
+int force_pair1(int i, int j) ;
+int check_iloop(int i, int j, int p, int q) ;
+int check_pair(int i, int j) ;
+int check_stack(int i, int j) ;
+int check_hairpin(int i, int j) ;
 #ifdef __cplusplus
 }
 #endif

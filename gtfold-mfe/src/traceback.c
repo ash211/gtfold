@@ -23,17 +23,19 @@
 #include <assert.h>
 #include "data.h"
 #include "constants.h"
+#include "constraints.h"
 #include "energy.h"
 #include "global.h"
 #include "traceback.h"
 #include "utils.h"
 
-
+int verbose = -1;
 int total_en = 0;
+int total_ex = 0;
 
-void trace(int len) {
+void trace(int len, int vbose) {
 	int i;
-	
+	verbose = vbose;
 	for (i = 0; i < len+1; i++)
 		structure[i] = 0;
 
@@ -42,103 +44,90 @@ void trace(int len) {
 		return;
 	}
 
+	printf("\n");
 	traceW(len);
-	
-	printf("- sum of energy of loops: %12.2f kcal/mol\n", total_en/100.0);
+	printf("- sum of energy of Loops:   	  %12.2f kcal/mol\n", total_en/100.0);
+	printf("- sum of energy of External Loop: %12.2f kcal/mol\n", total_ex/100.0);
 	return;
 }
 
-/* Traces W[j] */
-void traceW(int j) 
-{
+void traceW(int j) {
 	int done, i, Wj,Wj_temp;
 	int wim1, flag, Widjd, Wijd, Widj, Wij;
-
-	flag = 1;
-
-	done = 0; /* the done variable makes it sure that we are tracebacking the first optimal possibility */
 	Wj = INFINITY_;
-	int min_i=1;
-	if (j == 0 || j == 1) {
-		/* W[j] = 0; */
-	} else {
-		for (i = 1; i < j && !done; i++) {
-			wim1 = MIN(0, W[i-1]);
-			flag = 1;
-			if (wim1 != W[i-1]) flag = 0;
+	flag = 1;
+	done = 0; 
+	
+	if (j == 0 || j == 1) return;
 
-			Widjd = INFINITY_;
-			Wijd = INFINITY_;
-			Widj = INFINITY_;
-			Wij = V(i,j) + auPenalty(i, j) + wim1;
-			Widjd = V(i+1,j-1) + auPenalty(i+1, j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + wim1;
-			Wijd = V(i,j-1) + auPenalty(i,j-1) + Ed5(j-1,i,j) + wim1;
-			Widj = V(i+1,j) + auPenalty(i+1,j) + Ed3(j,i+1,i) + wim1;
-			Wj_temp=Wj;
+	for (i = 1; i < j && !done; i++) {
+		if (j-i < TURN) continue;
 
-			Wj = MIN(MIN(MIN(Wij, Widjd), MIN(Wijd, Widj)), Wj);
-			if (Wj_temp>Wj) min_i=i;	
+		wim1 = MIN(0, W[i-1]);
+		flag = 1;
+		if (wim1 != W[i-1]) flag = 0;
 
-			if (W[j] == Wj) {
-				if (W[j] == Wij) { /* If the optimal secondary structure contain base pair (i,j) as paired.*/
-					done = 1;
-					structure[i] = j;
-					structure[j] = i;
-					//printf("AU Penalty: %12.2f\n",auPen(RNA[i], RNA[j])/100.00);
-					traceV(i, j);
+		Widjd = Wijd =  Widj = INFINITY_;
+		Wij = V(i,j) + auPenalty(i, j) + wim1;
+		Widjd =(check_base(i)&&check_base(j))?(V(i+1,j-1) + auPenalty(i+1, j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + wim1): INFINITY_;
+		Wijd = (check_base(j))?(V(i,j-1) + auPenalty(i,j-1) + Ed5(j-1,i,j) + wim1):INFINITY_;
+		Widj = (check_base(i))?(V(i+1,j) + auPenalty(i+1,j) + Ed3(j,i+1,i) + wim1):INFINITY_;
+		Wj_temp=Wj;
+		Wj = MIN(MIN(MIN(Wij, Widjd), MIN(Wijd, Widj)), Wj);
 
-					if (flag ) 
-						traceW(i - 1);
-					break;
-				} else if (W[j] == Widjd) { /* If base pair (i+1,j-1) is pairing and there is a dangling base on both its sides */
-					done = 1;
-					structure[i + 1] = j - 1;
-					structure[j - 1] = i + 1;
-					//printf("AU Penalty: %12.2f\nEnergy of dangling base on both the sides: %12.2f  %12.2f\n",
-					//auPen(RNA[i + 1], RNA[j - 1])/100.00, dangle[RNA[j - 1]][RNA[i + 1]][RNA[i]][1]/100.00, dangle[RNA[j - 1]][RNA[i + 1]][RNA[j]][0]/100.00);
-					traceV(i + 1, j - 1);
-
-					if (flag)// || checkSS(1,i))
-						traceW(i - 1);
-					break;
-				} else if (W[j] == Wijd) { /* If base pair (i,j-1) pairs and base j is single stranded. */
-					done = 1;
-					structure[i] = j - 1;
-					structure[j - 1] = i;
-					//	printf("AU Penalty: %12.2f \nEnergy of dangling base: %12.2f \n",
-					//	auPen(RNA[i], RNA[j - 1])/100.00,dangle[RNA[j - 1]][RNA[i]][RNA[j]][0]/100.00);
-					traceV(i, j - 1);
-
-					if (flag) // || checkSS(1,i) )
-						traceW(i - 1);
-					break;
-				} else if (W[j] == Widj) { /* If base pair (i+1,j) pairs and base i is single stranded. */
-					done = 1;
-					structure[i + 1] = j;
-					structure[j] = i + 1;
-					//	printf("AU Penalty: %12.2f\nEnergy of dangling base:  %12.2f\n",
-					//	auPen(RNA[i + 1], RNA[j])/100.00, dangle[RNA[j]][RNA[i + 1]][RNA[i]][1]/100.00);
-					traceV(i + 1, j);
-					if (flag) // || checkSS(1,i))
-						traceW(i - 1);
-					break;
-				}
+		if (W[j] == Wj) {
+			if (W[j] == Wij) { 
+				done = 1;
+				if (verbose == 1) 
+					printf("i %5d j %5d ExtLoop   %12.2f\n", i, j, auPenalty(i, j)/100.00);
+				total_ex += auPenalty(i, j);
+				structure[i] = j;
+				structure[j] = i;
+				traceV(i, j);
+				if (flag || is_ss(1,i)) traceW(i - 1);
+				break;
+			} else if (W[j] == Widjd && check_base(i) && check_base(j)) { 
+				done = 1;
+				if (verbose == 1) 
+					printf("i %5d j %5d ExtLoop   %12.2f\n", i+1, j-1, (auPenalty(i+1, j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j))/100.00);
+				total_ex += (auPenalty(i+1, j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j));
+				structure[i + 1] = j - 1;
+				structure[j - 1] = i + 1;
+				traceV(i + 1, j - 1);
+				if (flag || is_ss(1,i)) traceW(i - 1);
+				break;
+			} else if (W[j] == Wijd && check_base(j)) { 
+				done = 1;
+				if (verbose == 1) 
+					printf("i %5d j %5d ExtLoop   %12.2f\n", i, j-1, (auPenalty(i,j-1) + Ed5(j-1,i,j))/100.00);
+				total_ex += (auPenalty(i,j-1) + Ed5(j-1,i,j));
+				structure[i] = j - 1;
+				structure[j - 1] = i;
+				traceV(i, j - 1);
+				if (flag || is_ss(1,i)) traceW(i - 1);
+				break;
+			} else if (W[j] == Widj && check_base(i)) { 
+				done = 1;
+				if (verbose == 1) 
+					printf("i %5d j %5d ExtLoop   %12.2f\n", i+1, j, (auPenalty(i+1,j) + Ed3(j,i+1,i))/100.00);
+				total_ex += (auPenalty(i+1,j) + Ed3(j,i+1,i));
+				structure[i + 1] = j;
+				structure[j] = i + 1;
+				traceV(i + 1, j);
+				if (flag || is_ss(1,i)) traceW(i - 1);
+				break;
 			}
 		}
-		
-		if (W[j] == W[j - 1] && !done) 
-			traceW(j-1);
-
 	}
+		
+	if (W[j] == W[j - 1] && !done) traceW(j-1);
 
 	return;
 }
 
-
-/* Trace the structure inside V[i][j]. This function traces "which type of loop (i,j) base pair is closing" */
 int traceV(int i, int j) {
-
 	int a, b, c, d, Vij;
+	if (j-i < TURN)  return INFINITY_;
 
 	a = eH(i, j);
 	b = eS(i, j) + V(i + 1, j - 1);
@@ -148,31 +137,34 @@ int traceV(int i, int j) {
 	
 	Vij = MIN(MIN(a, b), MIN(c, d));
 	
-	if (Vij == a && Vij != b && Vij != c && Vij != d) { /* If () a hairpin loop */
-		//printf("i %5d j %5d Hairpin  Loop %12.2f\n", i, j, eH(i, j)/100.00);
+	if (Vij == a && Vij != b && Vij != c && Vij != d) { 
+		if (verbose == 1) 
+			printf("i %5d j %5d Hairpin   %12.2f\n", i, j, eH(i, j)/100.00);
 		total_en += eH(i,j);
 		return Vij;
-	} else if (Vij == b /*&& Vij != a && Vij != c && Vij != d*/) { /* If it forms a stack */
-		//printf("i %5d j %5d Stack 	 Loop %12.2f\n", i, j, eS(i, j)/100.00);
+	} else if (Vij == b) { 
+		if (verbose == 1) 
+			printf("i %5d j %5d Stack     %12.2f\n", i, j, eS(i, j)/100.00);
 		total_en += eS(i,j);
 		structure[i + 1] = j - 1;
 		structure[j - 1] = i + 1;
 		traceV(i + 1, j - 1);
 		return Vij;
-	} else if (Vij == c /*&& Vij != a && Vij != b && Vij != d*/) { /* If it forms an internal loop */
-		//printf("i %5d j %5d Internal Loop", i, j);
+	} else if (Vij == c) { 
+		if (verbose == 1) 
+			printf("i %5d j %5d IntLoop  ", i, j);
 		traceVBI(i, j);
 		return Vij;
-	} else if (Vij == d && Vij != a && Vij != b && Vij != c) { /* If it forms a multiloop */
+	} else if (Vij == d && Vij != a && Vij != b && Vij != c) { 
 		int eVM = traceVM(i, j);
-		//printf("i %5d j %5d Multi    Loop %12.2f\n", i, j, (Vij-eVM)/100.0);
+		if (verbose ==1) 
+			printf("i %5d j %5d MultiLoop %12.2f\n", i, j, (Vij-eVM)/100.0);
 		total_en += (Vij-eVM);
 		return Vij;
 	} 
 	return 0;
 }
 
-/* Traces VBI[i][j] */
 int traceVBI(int i, int j) {
 	
 	int VBIij_temp;
@@ -183,7 +175,8 @@ int traceVBI(int i, int j) {
 	jfinal = 0;
 
 	for (ip = i + 1; ip < j - 1; ip++) {
-		for (jp = ip + 1; jp < j; jp++) { /* Search which internal loop (ip,jp) is closing */
+		for (jp = ip + 1; jp < j; jp++) {
+			if (check_iloop(i,j,ip,jp)) continue;
 			el = eL(i, j, ip, jp);
 			v = V(ip, jp);
 			VBIij_temp = el + v;
@@ -199,32 +192,27 @@ int traceVBI(int i, int j) {
 
 	structure[ifinal] = jfinal;
 	structure[jfinal] = ifinal;
-	//printf(" %12.2f\n", eL(i, j, ifinal, jfinal)/100.00);
+	if (verbose==1) 
+		printf(" %12.2f\n", eL(i, j, ifinal, jfinal)/100.00);
 	total_en += eL(i, j, ifinal, jfinal);
 
 	int eVI = traceV(ifinal, jfinal);
 	return eVI ;
 }
 
-/* Tracing VM[i][j] */
 int traceVM(int i, int j) {
 
 	int done;
 	int h;
-	int a, b;
 	int A_temp;
 	int eVM = 0;
 
 	done = 0;
-	a = eparam[5];
-	b = eparam[10]; /* efn2b */
-
 	int VMij = VM(i,j);
 
 	for (h = i + 2; h <= j - 1 && !done; h++) {
-		A_temp = WM(i+1,h-1) + WM(h,j - 1) + a + b + auPen(RNA[i],
-				RNA[j]);
-		if (A_temp == VMij) { /* No dangling bases on any of the sides of base pair (i,j) in the multiloop */
+		A_temp = WM(i+1,h-1) + WM(h,j - 1) + Ea + Eb + auPenalty(i, j);
+		if (A_temp == VMij) { 
 			done = 1;
 			eVM += traceWM(i + 1, h - 1);
 			eVM += traceWM(h, j - 1);
@@ -232,40 +220,45 @@ int traceVM(int i, int j) {
 		}
 	}
 
-	for (h = i + 3; h <= j - 1 && !done; h++) {
-		A_temp = WM(i + 2,h - 1) + WM(h,j - 1) + a + b + auPenalty(i,j) + Ed5(i,j,i + 1); 
-		if (A_temp == VMij) {
-			done = 1;
-			eVM += traceWM(i + 2, h - 1);
-			eVM += traceWM(h, j - 1);
-			break;
+	if (check_base(i+1)) {
+		for (h = i + 3; h <= j - 1 && !done; h++) {
+			A_temp = WM(i + 2,h - 1) + WM(h,j - 1) + Ea + Eb + auPenalty(i,j) + Ed5(i,j,i + 1); 
+			if (A_temp == VMij) {
+				done = 1;
+				eVM += traceWM(i + 2, h - 1);
+				eVM += traceWM(h, j - 1);
+				break;
+			}
 		}
 	}
 
-	for (h = i + 2; h <= j - 2 && !done; h++) { /* If base j-1 is dangling on 3' end of the base pair (i,j) */
-		A_temp = WM(i + 1,h - 1) + WM(h,j - 2) + a + b + auPenalty(i, j) + Ed3(i,j,j - 1);
-		if (A_temp == VMij) {
-			done = 1;
-			eVM += traceWM(i + 1, h - 1);
-			eVM += traceWM(h, j - 2);
-			break;
+	if (check_base(j-1)) {
+		for (h = i + 2; h <= j - 2 && !done; h++) { 
+			A_temp = WM(i + 1,h - 1) + WM(h,j - 2) + Ea + Eb + auPenalty(i, j) + Ed3(i,j,j - 1);
+			if (A_temp == VMij) {
+				done = 1;
+				eVM += traceWM(i + 1, h - 1);
+				eVM += traceWM(h, j - 2);
+				break;
+			}
 		}
 	}
 
-	for (h = i + 3; h <= j - 2 && !done; h++) { /* If base pair (i,j) has dangling bases on both sides. */
-		A_temp = WM(i + 2,h - 1) + WM(h,j - 2) + a + b + auPenalty(i,j) + Ed5(i,j,i + 1) + Ed3(i,j,j - 1);
-		if (A_temp == VMij) {
-			done = 1;
-			eVM += traceWM(i + 2, h - 1);
-			eVM += traceWM(h, j - 2);
-			break;
+	if (check_base(i+1)&&check_base(j-1)) {
+		for (h = i + 3; h <= j - 2 && !done; h++) { 
+			A_temp = WM(i + 2,h - 1) + WM(h,j - 2) + Ea + Eb + auPenalty(i,j) + Ed5(i,j,i + 1) + Ed3(i,j,j - 1);
+			if (A_temp == VMij) {
+				done = 1;
+				eVM += traceWM(i + 2, h - 1);
+				eVM += traceWM(h, j - 2);
+				break;
+			}
 		}
 	}
 
 	return eVM;
 }
 
-/* Tracing WM[i][j] */
 int traceWM(int i, int j) {
 
 	int done;
@@ -279,7 +272,7 @@ int traceWM(int i, int j) {
 		return 0;
 	else {
 		for (h = i; h < j && !done; h++) {
-			int aa = WM(i,h) + WM(h + 1,j); /* If WM(i,j) came from the summation of two WM terms */
+			int aa = WM(i,h) + WM(h + 1,j); 
 			if (aa == WM(i,j)) {
 				done = 1;
 				h1 = h;
@@ -290,30 +283,30 @@ int traceWM(int i, int j) {
 			eWM += traceWM(i, h);
 			eWM += traceWM(h + 1, j);
 		} else {
-			if (WM(i,j) == V(i,j) + auPenalty(i, j) + Eb) { /* If base pair (i,j) pairs*/
+			if (WM(i,j) == V(i,j) + auPenalty(i, j) + Eb) { 
 				done = 1;
 				structure[i] = j;
 				structure[j] = i;
 				eWM += traceV(i, j);
-			} else if (WM(i,j) == V(i+1, j) + Ed3(j,i + 1,i) + auPenalty(i+1, j) + Eb + Ec) { 
+			} else if (WM(i,j) == V(i+1, j) + Ed3(j,i + 1,i) + auPenalty(i+1, j) + Eb + Ec && check_base(i)) { 
 				done = 1;
 				eWM += traceV(i + 1, j);
 				structure[i + 1] = j;
 				structure[j] = i + 1;
-			} else if (WM(i,j) == V(i,j-1) + Ed5(j-1,i,j) + auPenalty(i,j-1) +  Eb + Ec ) { 
+			} else if (WM(i,j) == V(i,j-1) + Ed5(j-1,i,j) + auPenalty(i,j-1) +  Eb + Ec && check_base(j) ) { 
 				done = 1;
 				eWM += traceV(i, j - 1);
 				structure[i] = j - 1;
 				structure[j - 1] = i;
-			} else if (WM(i,j) == V(i+1,j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + auPenalty(i+1, j-1) + Eb + 2*Ec) { 
+			} else if (WM(i,j) == V(i+1,j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + auPenalty(i+1, j-1) + Eb + 2*Ec && check_base(i) && check_base(j)) { 
 				done = 1;
 				eWM += traceV(i + 1, j - 1);
 				structure[i + 1] = j - 1;
 				structure[j - 1] = i + 1;
-			} else if (WM(i,j) == WM(i + 1,j) + Ec ) { 
+			} else if (WM(i,j) == WM(i + 1,j) + Ec && check_base(i)) { 
 				done = 1;
 				eWM += traceWM(i + 1, j);
-			} else if (WM(i,j) == WM(i,j - 1) + Ec ) { 
+			} else if (WM(i,j) == WM(i,j - 1) + Ec && check_base(j)) { 
 				done = 1;
 				eWM += traceWM(i, j - 1);
 			}

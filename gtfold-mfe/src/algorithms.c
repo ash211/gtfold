@@ -58,10 +58,8 @@ int calculate(int len, int nThreads) {
 
 			if (canPair(RNA[i], RNA[j])) {
 				flag = 1;
-				
-				int eh = eH(i, j); //hair pin
-				int es = eS(i, j) +  V(i+1,j-1); // stack
-
+				int eh = check_hairpin(i,j)?INFINITY_:eH(i, j); //hair pin
+				int es = check_stack(i,j)?INFINITY_:(eS(i, j) + V(i+1,j-1)); // stack
 				if (j-i > 6) {  // Internal Loop BEGIN
 					int p=0, q=0;
 					int VBIij = INFINITY_;
@@ -71,12 +69,11 @@ int calculate(int len, int nThreads) {
 						if (minq < p+1+TURN) minq = p+1+TURN;
 						for (q = minq; q < j; q++) {
 							if (!canPair(RNA[p], RNA[q])) continue;
-							if (!ssOK(i,p) || !ssOK(q,j)) continue;
-							
+							if (check_iloop(i,j,p,q)) continue;
 							VBIij = MIN(eL(i, j, p, q) + V(p,q), VBIij);
 						}
 					}
-					VBI(i,j) = pairOK(i,j)?VBIij:INFINITY_;
+					VBI(i,j) = check_pair(i,j)?INFINITY_:VBIij;
 				} 	// Internal Loop END
 				
 				if (j-i > 10) {	 // Multi Loop BEGIN
@@ -95,21 +92,19 @@ int calculate(int len, int nThreads) {
 					int d3 = Ed3(i,j,j-1);
 					int d5 = Ed5(i,j,i+1);
 
-					VMij = MIN(VMij, baseOK(i+1)?(VMidj + d5 +Ec):INFINITY_);
-					VMij = MIN(VMij, baseOK(j-1)?(VMijd + d3 +Ec):INFINITY_);
-					VMij = MIN(VMij, (baseOK(i+1)&&baseOK(j-1))?(VMidjd + d5 +  d3+ 2*Ec):INFINITY_);
+					VMij = MIN(VMij, check_base(i+1)?(VMidj + d5 +Ec):INFINITY_) ;
+					VMij = MIN(VMij, check_base(j-1)?(VMijd + d3 +Ec):INFINITY_);
+					VMij = MIN(VMij, (check_base(i+1)&&check_base(j-1))?(VMidjd + d5 +  d3+ 2*Ec):INFINITY_);
 					VMij = VMij + Ea + Eb + auPenalty(i,j);
-					
-					VM(i,j) = pairOK(i,j)?VMij:INFINITY_;
+					VM(i,j) = check_pair(i,j)?INFINITY_:VMij;
 				} // Multi Loop END
 
-				V(i,j) = pairOK(i,j)?MIN4(eh,es,VBI(i,j),VM(i,j)):INFINITY_;
+				V(i,j) = check_pair(i,j)?INFINITY_:MIN4(eh,es,VBI(i,j),VM(i,j));
 			}
 			else
 				V(i,j) = INFINITY_;
 
-			if (j-i > 4) {	
-				// WM BEGIN
+			if (j-i > 4) {	// WM BEGIN
 				int h; 
 				if (!flag) {
 					for (h = i+TURN+1 ; h <= j-TURN-1; h++) {
@@ -117,35 +112,43 @@ int calculate(int len, int nThreads) {
 					}
 				}
 				
-				newWM = MIN(V(i,j) + auPenalty(i,j) + Eb, newWM);  //V(i,j)
-				newWM = baseOK(i)?MIN(V(i+1,j) + Ed3(j,i+1,i) + auPenalty(i+1,j) + Eb + Ec, newWM): INFINITY_; //V(i+1,j) 
-				newWM = baseOK(j)?MIN(V(i,j-1) + Ed5(j-1,i,j) + auPenalty(i,j-1) + Eb + Ec, newWM): INFINITY_; //V(i,j-1)
-				newWM = (baseOK(i)&&baseOK(j))?MIN(V(i+1,j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + auPenalty(i+1,j-1) + Eb + 2*Ec, newWM): INFINITY_ ;
+				newWM = MIN(V(i,j) + auPenalty(i,j) + Eb, newWM); 
+				newWM = check_base(i)?MIN(V(i+1,j) + Ed3(j,i+1,i) + auPenalty(i+1,j) + Eb + Ec, newWM): INFINITY_; 
+				newWM = check_base(j)?MIN(V(i,j-1) + Ed5(j-1,i,j) + auPenalty(i,j-1) + Eb + Ec, newWM) : INFINITY_; 
+				newWM = (check_base(i)&&check_base(j))?MIN(V(i+1,j-1) + Ed3(j-1,i+1,i) + Ed5(j-1,i+1,j) + auPenalty(i+1,j-1) + Eb + 2*Ec, newWM): INFINITY_;
 				
-				newWM = baseOK(i)?MIN(WMU(i+1,j) + Ec, newWM):INFINITY_;
-				newWM = baseOK(j)?MIN(WML(i,j-1) + Ec, newWM):INFINITY_;
+				newWM = check_base(i)?MIN(WMU(i+1,j) + Ec, newWM):INFINITY_;
+				newWM = check_base(j)?MIN(WML(i,j-1) + Ec, newWM):INFINITY_;
 
 				WMU(i,j) = WML(i,j) = newWM;
-				// WM END
-			}
+			} // WM END
 		}
-
 	}
-	
+
 	for (j = TURN+2; j <= len; j++)	{
-		int i, Wj, Widjd, Wijd, Widj, Wij, Wim1;
+		int i, branch=0, Wj, Widjd, Wijd, Widj, Wij, Wim1;
 		Wj = INFINITY_;
 		for (i = 1; i < j-TURN; i++) {
 			Wij = Widjd = Wijd = Widj = INFINITY_;
 			Wim1 = MIN(0, W[i-1]); 
 			Wij = V(i, j) + auPenalty(i, j) + Wim1;
-			Widjd = V(i+1,j-1) + auPenalty(i+1,j-1) + Ed3(j-1,i + 1,i) + Ed5(j-1,i+1,j) + Wim1;
-			Wijd = V(i,j-1) + auPenalty(i,j- 1) + Ed5(j-1,i,j) + Wim1;
-			Widj = V(i+1, j) + auPenalty(i+1,j) + Ed3(j,i + 1,i) + Wim1;
-			Wj = MIN(MIN(MIN(Wij, Widjd), MIN(Wijd, Widj)), Wj); 
+			Widjd = (check_base(i)&&check_base(j))?(V(i+1,j-1) + auPenalty(i+1,j-1) + Ed3(j-1,i + 1,i) + Ed5(j-1,i+1,j) + Wim1):INFINITY_;
+			Wijd = check_base(j)?(V(i,j-1) + auPenalty(i,j-1) + Ed5(j-1,i,j) + Wim1):INFINITY_;
+			Widj =  (check_base(i))?(V(i+1, j) + auPenalty(i+1,j) + Ed3(j,i + 1,i) + Wim1):INFINITY_;
+			Wj = MIN(MIN4(Wij, Widjd, Wijd, Widj), Wj); 
+			
+			if (Wj<INFINITY_) {
+				if (Wj==Wij && force_pair1(i,j))
+				   branch = 1;
+				else if	(Wj==Widjd && force_pair1(i+1,j-1))
+				   branch = 1;
+				else if	(Wj==Wijd && force_pair1(i,j-1))
+				  branch = 1;	
+				else if	(force_pair1(i+1,j))
+					branch = 1;
+			}
 		}
-
-		W[j] = MIN(Wj, W[j-1]);
+		W[j] = branch?Wj:MIN(Wj, W[j-1]);
 	}
 
 	return W[len];
