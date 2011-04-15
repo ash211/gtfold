@@ -122,7 +122,7 @@ void fillPartitionArrays(int len, double** QB, double** Q, double** QM) {
             for(d=i; d<=j-4; ++d) {
                 for(e=d+4; e<=j; ++e) {
                     Q[i][j] += Q[i][d-1]*QB[d][e];
-                    QM[i][j] += exp(-(b+c*(d-i)+c*(j-e))/100.0) * QB[d][e];
+                    QM[i][j] += exp(-(b+c*(d-i)+c*(j-e))/100.0/RT) * QB[d][e];
                     QM[i][j] += QM[i][d-1] * QB[d][e] * exp(-(b+c*(j-e))/100.0/RT);
                 }
             }
