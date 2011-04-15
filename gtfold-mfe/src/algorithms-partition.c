@@ -96,8 +96,8 @@ void fillPartitionArrays(int len, double** QB, double** Q, double** QM) {
             int j = i+l-1;
 
             // QB recursion
-            // Only calculate if i and j actually pair
-            if(checkPair(RNA[i],RNA[j])) {
+            // Do everywhere but when i==j (l == 1)
+            if(l > 1) {
 
                 // NOTE: eH returns an integer encoded as fixed point.  So a
                 // return value of 115 represents raw value 115/100 = 1.15
