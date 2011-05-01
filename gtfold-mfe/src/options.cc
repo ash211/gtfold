@@ -14,7 +14,10 @@ bool CONS_ENABLED = false;
 
 string seqfile = "";
 string constraintsFile = "";
+
+string outputFileBase = "";
 string outputFile = "";
+string bppOutputFile = "";
 
 int suboptDelta = -1;
 int nThreads = -1;
@@ -107,19 +110,24 @@ void parse_options(int argc, char** argv) {
 		printf("Missing input file.\n");
 	}
 
-	// If no output file specified, create one
-	if(outputFile.empty()) {
+    // Create the extension-less outputFileBase:
 
-		// base it off the input file
-		outputFile += seqfile;
+    // prefer to base it on the specified output file
+    outputFileBase = "";
+    if(!outputFile.empty())
+        outputFileBase += outputFile.c_str();
+    else
+        outputFileBase += seqfile.c_str();
 
-		// and if an extension exists, remove it ...
-		if(outputFile.find(".") != string::npos)
-			outputFile.erase(outputFile.rfind("."));
+    // drop any existing extension
+    if(outputFileBase.find(".") != string::npos)
+        outputFileBase.erase(outputFileBase.rfind("."));
 
-		// ... and append the .ct
-		outputFile += ".ct";
-	}
+    // append .ct to get regular outputFile
+    outputFile = outputFileBase + ".ct";
+
+    // append .bpp to get bppOutputFile
+    bppOutputFile = outputFileBase + ".bpp";
 }
 
 /**

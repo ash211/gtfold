@@ -12,6 +12,7 @@ void fillPartitionArrays(int len, double** QB, double** Q, double** QM);
 
 void fillBasePairProbabilities(int length, int *structure, double **Q, double **QB, double **QM, double**P);
 void printBasePairProbabilities(int n, int *structure, double **P);
+void saveBasePairProbabilities(int n, int *structure, double **P, const char *filename);
 
 double probabilityUnpaired(int length, int i, double **P);
 

@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "algorithms-partition.h"
 #include "algorithms.h"
@@ -103,11 +104,15 @@ void fillPartitionArrays(int len, double** QB, double** Q, double** QM) {
                 // return value of 115 represents raw value 115/100 = 1.15
                 QB[i][j] = exp(-eH(i,j)/100.0/RT);
 
+                // check for a d-e pair inside the i-j pair
                 for(d=i+1; d<=j-4; ++d) {
                     for(e=d+4; e<=j-1; ++e) {
                         
-                        if(d == i + 1 && e == j -1)
+                        // right atop is a stacked pair
+                        if(d == i + 1 && e == j - 1)
                             QB[i][j] += exp(-eS(i,j)/100.0/RT)*QB[d][e];
+
+                        // otherwise an inner loop / bulge
                         else
                             QB[i][j] += exp(-eL(i,j,d,e)/100.0/RT)*QB[d][e];
 
@@ -213,10 +218,46 @@ void printBasePairProbabilities(int n, int *structure, double **P) {
     for(i=1; i<=n; ++i) {
         int j = structure[i];
         if(j)
-            printf("%d-%d pair\tPr: %f\n", i, j, P[MIN(i,j)][MAX(i,j)]);
+            printf("%d-%d\t%f\n", i, j, P[MIN(i,j)][MAX(i,j)]);
         else
-            printf("%d unpaired\tPr: %f\n", i, probabilityUnpaired(n, i, P));
+            printf("%d\t%f\n", i, probabilityUnpaired(n, i, P));
     }
+}
+
+/**
+ * @param n Length of the RNA strand
+ * @param structure Array of what pairs with what.  structure[i] = j means
+ *                  that the nucleotide at index i is paired with that at
+ *                  index j. structure[i] = 0 means the nucleotide is
+ *                  unpaired.
+ * @param P Partition function array
+ * @param filename File to write to
+ */
+void saveBasePairProbabilities(int n, int *structure, double **P, const char* filename) {
+    int overwritten = 0;
+    if(access(filename, F_OK) != -1) {
+        overwritten = 1;
+    }
+
+    FILE *f = fopen(filename, "w+");
+
+    int i;
+    for(i=1; i<=n; ++i) {
+        int j = structure[i];
+        if(j)
+            fprintf(f, "%d-%d\t%f\n", i, j, P[MIN(i,j)][MAX(i,j)]);
+        else
+            fprintf(f, "%d\t%f\n", i, probabilityUnpaired(n, i, P));
+    }
+
+    if(fclose(f)) {
+        printf("Error writing BPP to file %s\n", filename);
+        return;
+    }
+
+    printf("BPP saved in .bpp format to %s%s\n", filename,
+                                                 overwritten ? " (overwritten)"
+                                                            : "");
 }
 
 /**

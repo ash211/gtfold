@@ -246,8 +246,6 @@ int main(int argc, char** argv) {
 	if (BPP_ENABLED) {
 		printf("- partition function calculation: %9.6f seconds\n", t_pfunc);
 		printf("- BPP runtime: %9.6f seconds\n", t_bpp);
-		//TODO: don't send this to stdout
-		printBasePairProbabilities(seq.length(), structure, P);
 	}
 
 	printf("\nMFE structure:\n");
@@ -257,8 +255,12 @@ int main(int argc, char** argv) {
 		print_constraints(seq.length());
 
 
+    // file outputs
 	save_ct_file(outputFile, seq, energy);
 	printf("\nMFE structure saved in .ct format to %s\n", outputFile.c_str());
+
+	if (BPP_ENABLED)
+        saveBasePairProbabilities(seq.length(), structure, P, bppOutputFile.c_str());
 
 	// release the malloc'd arrays
 	free_fold(seq.length());

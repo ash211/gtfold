@@ -20,6 +20,7 @@ extern bool CONS_ENABLED;
 extern string seqfile;
 extern string constraintsFile;
 extern string outputFile;
+extern string bppOutputFile;
 
 extern int suboptDelta;
 extern int nThreads;
