@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <algorithm>
 
 #include "global.h"
 #include "options.h"
@@ -15,10 +17,15 @@ int** FBP;
 int nPBP;
 int nFBP;
 
+bool compare_bp(const std::pair<int,int>& o1, 
+			   	const std::pair<int,int>& o2) {
+	return o1.first < o2.first;
+}
+
+
 static int load_constraints(const char* constr_file, int verbose=0) {
 	std::ifstream cfcons;
     fprintf(stdout, "- Running with constraints\n");
-    //fprintf(stdout, "Opening constraint file: %s\n", constr_file);
 
     cfcons.open(constr_file, std::ios::in);
     if (cfcons == 0) {
@@ -77,19 +84,20 @@ static int load_constraints(const char* constr_file, int verbose=0) {
         }
     }
 
-	if (verbose == 1) {
-		fprintf(stdout, "Forced base pairs: ");
-		for(it=0; it< nFBP; it++) {
-			for(int k=1;k<= FBP[it][2];k++)
-				fprintf(stdout, "(%d,%d) ", FBP[it][0]+k-1, FBP[it][1]-k+1);
-		}
-		fprintf(stdout, "\nProhibited base pairs: ");
-		for(it=0; it< nPBP; it++) {
-			for(int k=1;k<= PBP[it][2];k++)
-				fprintf(stdout, "(%d,%d) ", PBP[it][0]+k-1, PBP[it][1]-k+1);
-		}
-		fprintf(stdout, "\n\n");
+	std::vector<std::pair<int,int> > v_fbp;
+	for(it=0; it< nFBP; it++) {
+		for(int k=1;k<= FBP[it][2];k++)
+			v_fbp.push_back(std::pair<int,int>(FBP[it][0]+k-1, FBP[it][1]-k+1));
 	}
+	std::sort(v_fbp.begin(), v_fbp.end(), compare_bp);
+	for (size_t ii = 0; ii < v_fbp.size() -1 ; ++ii) {
+		if (v_fbp[ii].second <= v_fbp[ii+1].second) {
+			fprintf(stderr, "\nConstraints create pseudoknots, exiting !!!\n");
+			exit(-1);
+		}
+			
+	}
+
 
     return 0;
 }
@@ -110,6 +118,10 @@ int init_constraints(const char* constr_file,int length) {
 
 	if (nPBP != 0) {
 		for (it = 0; it < nPBP; it++) {
+			if (PBP[it][2] < 1) {
+				printf("Invalid entry (%d %d %d)\n", PBP[it][0], PBP[it][1],PBP[it][2]);
+				continue;
+			}	
 			for(k= 1; k <= PBP[it][2];k++) {
 				BP[PBP[it][0]+k-1] = -1;
 				if(PBP[it][1]!=0) {
@@ -120,11 +132,21 @@ int init_constraints(const char* constr_file,int length) {
 	}
 	if (nFBP != 0) {
 		for (it = 0; it < nFBP; it++) {
+			if (FBP[it][2] < 1) {
+				printf("Invalid entry (%d %d %d)\n", FBP[it][0], FBP[it][1], FBP[it][2]);
+				continue;
+			}
 			for(k=1; k <= FBP[it][2];k++) {
+				int i1 = FBP[it][0]+k-1;
+				int j1 = FBP[it][1]-k+1;
 				if (!canPair(RNA[FBP[it][0]+k-1], RNA[FBP[it][1]-k+1])) {
 					printf("Can't constrain (%d,%d)\n", FBP[it][0]+k-1, FBP[it][1]-k+1);
 					continue;
 				}
+				if (j1-i1 < TURN) {
+					printf("Can't constrain (%d,%d)\n", i1, j1);
+					continue;
+				}	
 				BP[FBP[it][0]+k-1] = FBP[it][1]+1-k;
 				BP[FBP[it][1]+1-k] = FBP[it][0]+k-1;
 			}
@@ -153,32 +175,64 @@ void print_constraints(int len) {
     printf("\n");
 }
 
-int ssOK(int i, int j) {
+int is_ss(int i, int j) {
 	if (CONS_ENABLED) {
 		int it;
 		for (it = i + 1; it < j; it++) {
-			if (BP[it] > 0) return 0;
+			if (BP[it] > 0) return 1;
 		}
-		return 1;
+		return 0;
 	}
 	else
-		return 1;
+		return 0;
 }
 
-int baseOK(int i) {
-	if (CONS_ENABLED)
-		return (BP[i] <=0);
+int prohibit_base(int i) {
+		return (BP[i] == -1);
+}
+
+int check_base(int i) {
+	if (CONS_ENABLED) 
+		return (BP[i] <= 0);
 	else
 		return 1;
 }
 
-int pairOK(int i, int j) {
-	if (CONS_ENABLED)
-	return !(BP[i] < 0 || BP[j] < 0 ||  
-			(BP[i] > 0 && j != BP[i]) ||
-			(BP[j] > 0 && i != BP[j]));  			
-	else
-		return 1;
+int force_pair(int i, int j) {
+		return (BP[i] > 0 && j != BP[i]);
 }
 
+int force_pair1(int i, int j) {
+	if (CONS_ENABLED) 
+		return (BP[i]==j);
+	else
+		return 0;
+}
 
+int check_iloop(int i, int j, int p, int q) {
+	if (CONS_ENABLED) 
+		return is_ss(i,p) || is_ss(q,j);
+	else 
+		return 0;
+}
+
+int check_pair(int i, int j) {
+	if (CONS_ENABLED) 
+		return prohibit_base(i) || prohibit_base(j) || force_pair(i,j) || force_pair(j,i);
+	else
+		return 0;
+}
+
+int check_stack(int i, int j) {
+	if (CONS_ENABLED) 
+		return force_pair(i,j) || force_pair(j,i);
+	else
+		return 0;
+}
+
+int check_hairpin(int i, int j) {
+	if (CONS_ENABLED) 
+		return is_ss(i,j) || force_pair(i,j) || force_pair(j,i);
+	else
+		return 0;
+}

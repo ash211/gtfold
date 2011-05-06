@@ -11,6 +11,7 @@ bool LIMIT_DISTANCE;
 bool BPP_ENABLED;
 bool SUBOPT_ENABLED;
 bool CONS_ENABLED = false;
+bool VERBOSE = false;
 
 string seqfile = "";
 string constraintsFile = "";
@@ -90,7 +91,10 @@ void parse_options(int argc, char** argv) {
 					nThreads = atoi(argv[++i]);
 				else
 					help();	
-			} else if(strcmp(argv[i], "--bpp") == 0) {
+			} else if (strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-v") == 0) {
+                VERBOSE = true;
+			}
+			else if(strcmp(argv[i], "--bpp") == 0) {
 				BPP_ENABLED = true;
 			} else if(strcmp(argv[i], "--subopt") == 0) {
 				SUBOPT_ENABLED = true;
@@ -139,16 +143,6 @@ void printRunConfiguration(string seq) {
 	bool standardRun = true;
 
 	printf("Run Configuration:\n");
-
-//#ifdef _OPENMP
-//	if(nThreads == -1)
-//		printf("- [OMP] thread count: %d\n", omp_get_num_threads());
-//	else
-//		printf("- [OMP] thread count: %d\n", nThreads);
-//#else
-//	printf("- thread count: 1\n");
-//#endif
-//
 
 	if (NOISOLATE == true) {
 		printf("- preventing isolated base pairs\n");

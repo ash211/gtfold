@@ -217,7 +217,7 @@ int main(int argc, char** argv) {
 
 	printf("Computing MFE traceback...\n");
 	t_trace = get_seconds();
-	trace(seq.length());
+	trace(seq.length(), VERBOSE);
 	t_trace = get_seconds() - t_trace;
 	printf("Done.\n\n");
 
