@@ -30,17 +30,6 @@
 #include <map>
 #include <vector>
 
-
-#define Ed3(x, y, z)  dangle[RNA[x]][RNA[y]][RNA[z]][1]
-#define Ed5(x, y, z)  dangle[RNA[x]][RNA[y]][RNA[z]][0]
-#define auPenalty(x, y) auPen(RNA[x], RNA[y]) 
-#define Ea multConst[0]
-#define Eb multConst[2]
-#define Ec multConst[1] 
-
-#define V(x,y)	V[indx[x]+y]
-#define TURN 3
-
 enum label {lW=0, lV, lVBI, lVM, lWM};
 extern const char* lstr[]; 
 

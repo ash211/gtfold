@@ -8,11 +8,15 @@ bin_PROGRAMS = gtfold
 gtfold_SOURCES = \
 	main.cc\
 	loader.cc\
+	utils.cc\
+	options.cc\
+	constraints.cc\
+	global.c\
+	energy.c\
+	algorithms.c \
+	traceback.c \
 	subopt_traceback.cc\
-	algorithms.c\
-	algorithms-partition.c\
-	traceback.c
-
+	shapereader.cc
 
 gtfold_LDFLAGS = 
 

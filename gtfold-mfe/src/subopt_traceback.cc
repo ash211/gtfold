@@ -22,10 +22,11 @@
 
 #include <cstdio>
 
-#include "subopt_traceback.h"
 #include "constants.h"
-#include "data.h"
-#include "algorithms.h"
+#include "energy.h"
+#include "utils.h"
+#include "global.h"
+#include "subopt_traceback.h"
 
 const char* lstr[] = {"W", "V", "VBI", "VM", "WM"};
 
@@ -135,21 +136,21 @@ void traceV(int i, int j, ps_t& ps, ps_stack_t& gstack, int energy)
 	}
 
 	// Internal Loop
-	if (VBI[i][j] + ps.total() <= energy )
+	if (VBI(i,j) + ps.total() <= energy )
 	{
 		//std::cout << "Internal " << i  << ' ' << j << std::endl;
 		ps_t ps1(ps);
-		ps1.push(segment(i, j, lVBI, VBI[i][j]));
+		ps1.push(segment(i, j, lVBI, VBI(i,j)));
 		ps1.update(i, j, '(', ')');
 		push_to_gstack(gstack, ps1);
 	}
 
 	// Multiloop
-	if ( VM[i][j] + ps.total() <= energy )
+	if ( VM(i,j) + ps.total() <= energy )
 	{
 		//	std::cout << "Multi " << i  << ' ' << j << std::endl;
 		ps_t ps1(ps);
-		ps1.push(segment(i, j, lVM, VM[i][j]));
+		ps1.push(segment(i, j, lVM, VM(i,j)));
 		ps1.update(i, j, '(', ')');
 		push_to_gstack(gstack, ps1);
 	}
@@ -311,10 +312,10 @@ void traceWM(ps_t& ps, ps_map_t& filter, int energy)
 		}
 
 
-		if (pss.total() + WM[i1][j1-1]  + Ec  <= energy )
+		if (pss.total() + WM(i1,j1-1)  + Ec  <= energy )
 		{
 			ps_t ps1(pss);
-			ps1.push(segment(i1,j1-1, lWM, WM[i1][j1-1]));		
+			ps1.push(segment(i1,j1-1, lWM, WM(i1,j1-1)));		
 			ps1.accumulate(Ec);
 			wm_stack.push(ps1);
 		}
@@ -322,18 +323,18 @@ void traceWM(ps_t& ps, ps_map_t& filter, int energy)
 		if (pss.total() + WM[i1+1][j1] + Ec <= energy )
 		{
 			ps_t ps1(pss);
-			ps1.push(segment(i1+1,j1, lWM, WM[i1+1][j1]));		
+			ps1.push(segment(i1+1,j1, lWM, WM(i1+1,j1)));		
 			ps1.accumulate(Ec);
 			wm_stack.push(ps1);
 		}
 
 		for (int h = i1+1; h <= j1-1; ++h)
 		{	
-			if (WM[i1][h] + WM[h+1][j1] + pss.total() <= energy )
+			if (WM(i1,h) + WM(h+1,j1) + pss.total() <= energy )
 			{
 				ps_t ps1(pss);
-				ps1.push(segment(i1, h, lWM, WM[i1][h]));
-				ps1.push(segment(h+1, j1, lWM, WM[h+1][j1]));
+				ps1.push(segment(i1, h, lWM, WM(i1,h)));
+				ps1.push(segment(h+1, j1, lWM, WM(h+1,j1)));
 				wm_stack.push(ps1);
 			}
 		}
