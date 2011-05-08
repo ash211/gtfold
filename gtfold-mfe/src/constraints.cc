@@ -451,5 +451,11 @@ int check_hairpin(int i, int j) {
 		//return is_ss(i,j) || force_pair(i,j) || force_pair(j,i);
 	}	
 	else return 0;
+}
 
+int withinCD(int i, int j){
+	if (LIMIT_DISTANCE){	
+		return j-i+1>contactDistance;
+	}
+	else return 1;
 }
