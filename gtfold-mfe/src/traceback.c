@@ -68,7 +68,9 @@ void traceW(int j) {
 
 		wim1 = MIN(0, W[i-1]);
 		flag = 1;
-		if (wim1 != W[i-1]) flag = 0; //ZS: flag is false if the free energy of the best structure to W[i] is 0 --> all should be ss 
+		if (wim1 != W[i-1] && !check_ssregion(1,i)) flag = 0; 
+		//ZS: flag is false if the free energy of the best structure to W[i] is > 0 --> all should be ss 
+		//UNLESS there is at least one base that is forced to pair in that region, this is revealed by check_ssregion(1,i)
 
 		Widjd = Wijd =  Widj = INFINITY_;
 		Wij = V(i,j) + auPenalty(i, j) + wim1;
@@ -123,7 +125,7 @@ void traceW(int j) {
 			}
 		}
 	}
-		
+
 	if (W[j] == W[j - 1] && !done) traceW(j-1);
 
 	return;
