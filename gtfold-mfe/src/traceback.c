@@ -62,8 +62,8 @@ void traceW(int j) {
 	if (j == 0 || j == 1) return;
 
 	
-
 	for (i = 1; i < j && !done; i++) {
+
 		if (j-i < TURN) continue;
 
 		wim1 = MIN(0, W[i-1]);
