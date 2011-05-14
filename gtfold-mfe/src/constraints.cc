@@ -377,10 +377,13 @@ int force_ss1(int i){
 
 int force_ssregion1(int i, int j){
 	if(CONS_ENABLED){
+		int value = 1;
 		for(int p = i; p<j; p++){
-			if(BP(p,p)==3){return 1;}
+			if(BP(p,p)!=3){
+				value= 0;
+			}
 		}
-		return 0;
+		return value;
 	}
 	else return 0;
 }
@@ -390,7 +393,7 @@ int check_iloop(int i, int j, int p, int q) {
 	if (CONS_ENABLED){
 		//Need to check that i,j and p,q pairs are allowed, 
 		//and single-stranded regions between i,p and q,j are allowed
-		return check_pair(i,j)&&check_pair(p,q)&&check_ssregion(i,p)&&check_ssregion(q,j);
+		return check_pair(i,j)||check_pair(p,q)||check_ssregion(i,p)||check_ssregion(q,j);
 	}
 		//Original code (Prashant's):
 		//return is_ss(i,p) || is_ss(q,j);
@@ -447,7 +450,7 @@ int check_hairpin(int i, int j) {
 	//1 when a hairpin with i,j as closing pair isn't allowed.
 	if (CONS_ENABLED){
 		//Need to check if pair is allowed and if anything pairs between them
-		return check_pair(i,j)&&check_ssregion(i,j);
+		return check_pair(i,j)||check_ssregion(i,j);
 		//Original code (Prashant's)
 		//return is_ss(i,j) || force_pair(i,j) || force_pair(j,i);
 	}	
