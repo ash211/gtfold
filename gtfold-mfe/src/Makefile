@@ -51,7 +51,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_gtfold_OBJECTS = main.$(OBJEXT) loader.$(OBJEXT) utils.$(OBJEXT) \
 	options.$(OBJEXT) constraints.$(OBJEXT) global.$(OBJEXT) \
 	energy.$(OBJEXT) algorithms.$(OBJEXT) traceback.$(OBJEXT) \
-	subopt_traceback.$(OBJEXT) shapereader.$(OBJEXT)
+	subopt_traceback.$(OBJEXT) partition-dangle.$(OBJEXT) \
+	shapereader.$(OBJEXT)
 gtfold_OBJECTS = $(am_gtfold_OBJECTS)
 gtfold_DEPENDENCIES =
 gtfold_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(gtfold_LDFLAGS) \
@@ -74,12 +75,12 @@ DIST_SOURCES = $(gtfold_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /home/zs/git/gtfold/gtfold-mfe/missing --run aclocal-1.11
-AMTAR = ${SHELL} /home/zs/git/gtfold/gtfold-mfe/missing --run tar
-AUTOCONF = ${SHELL} /home/zs/git/gtfold/gtfold-mfe/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/zs/git/gtfold/gtfold-mfe/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/zs/git/gtfold/gtfold-mfe/missing --run automake-1.11
-AWK = gawk
+ACLOCAL = ${SHELL} /home/josh/Projects/gtfold/gtfold-mfe/missing --run aclocal-1.11
+AMTAR = ${SHELL} /home/josh/Projects/gtfold/gtfold-mfe/missing --run tar
+AUTOCONF = ${SHELL} /home/josh/Projects/gtfold/gtfold-mfe/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/josh/Projects/gtfold/gtfold-mfe/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/josh/Projects/gtfold/gtfold-mfe/missing --run automake-1.11
+AWK = mawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2 -Wall
@@ -106,7 +107,7 @@ LDFLAGS =
 LIBOBJS = 
 LIBS = -lgomp 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/zs/git/gtfold/gtfold-mfe/missing --run makeinfo
+MAKEINFO = ${SHELL} /home/josh/Projects/gtfold/gtfold-mfe/missing --run makeinfo
 MKDIR_P = /bin/mkdir -p
 OBJEXT = o
 OPENMP_CFLAGS = -fopenmp
@@ -122,10 +123,10 @@ SET_MAKE =
 SHELL = /bin/bash
 STRIP = 
 VERSION = 1.18
-abs_builddir = /home/zs/git/gtfold/gtfold-mfe/src
-abs_srcdir = /home/zs/git/gtfold/gtfold-mfe/src
-abs_top_builddir = /home/zs/git/gtfold/gtfold-mfe
-abs_top_srcdir = /home/zs/git/gtfold/gtfold-mfe
+abs_builddir = /home/josh/Projects/gtfold/gtfold-mfe/src
+abs_srcdir = /home/josh/Projects/gtfold/gtfold-mfe/src
+abs_top_builddir = /home/josh/Projects/gtfold/gtfold-mfe
+abs_top_srcdir = /home/josh/Projects/gtfold/gtfold-mfe
 ac_ct_CC = gcc
 ac_ct_CXX = g++
 am__include = include
@@ -153,7 +154,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/zs/git/gtfold/gtfold-mfe/install-sh
+install_sh = ${SHELL} /home/josh/Projects/gtfold/gtfold-mfe/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -191,6 +192,7 @@ gtfold_SOURCES = \
 	algorithms.c \
 	traceback.c \
 	subopt_traceback.cc\
+	partition-dangle.c\
 	shapereader.cc
 
 gtfold_LDFLAGS = 
@@ -284,6 +286,7 @@ include ./$(DEPDIR)/global.Po
 include ./$(DEPDIR)/loader.Po
 include ./$(DEPDIR)/main.Po
 include ./$(DEPDIR)/options.Po
+include ./$(DEPDIR)/partition-dangle.Po
 include ./$(DEPDIR)/shapereader.Po
 include ./$(DEPDIR)/subopt_traceback.Po
 include ./$(DEPDIR)/traceback.Po

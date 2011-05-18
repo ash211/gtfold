@@ -16,6 +16,7 @@ gtfold_SOURCES = \
 	algorithms.c \
 	traceback.c \
 	subopt_traceback.cc\
+	partition-dangle.c\
 	shapereader.cc
 
 gtfold_LDFLAGS = 

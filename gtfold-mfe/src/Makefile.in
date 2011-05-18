@@ -51,7 +51,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_gtfold_OBJECTS = main.$(OBJEXT) loader.$(OBJEXT) utils.$(OBJEXT) \
 	options.$(OBJEXT) constraints.$(OBJEXT) global.$(OBJEXT) \
 	energy.$(OBJEXT) algorithms.$(OBJEXT) traceback.$(OBJEXT) \
-	subopt_traceback.$(OBJEXT) shapereader.$(OBJEXT)
+	subopt_traceback.$(OBJEXT) partition-dangle.$(OBJEXT) \
+	shapereader.$(OBJEXT)
 gtfold_OBJECTS = $(am_gtfold_OBJECTS)
 gtfold_DEPENDENCIES =
 gtfold_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(gtfold_LDFLAGS) \
@@ -191,6 +192,7 @@ gtfold_SOURCES = \
 	algorithms.c \
 	traceback.c \
 	subopt_traceback.cc\
+	partition-dangle.c\
 	shapereader.cc
 
 gtfold_LDFLAGS = 
@@ -284,6 +286,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/options.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/partition-dangle.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shapereader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/subopt_traceback.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/traceback.Po@am__quote@

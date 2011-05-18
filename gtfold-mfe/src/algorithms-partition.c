@@ -217,7 +217,6 @@ double **mallocTwoD(int r, int c) {
             return NULL;
         }
     }
-
     return arr;
 }
 
