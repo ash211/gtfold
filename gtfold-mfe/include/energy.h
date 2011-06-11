@@ -23,6 +23,7 @@ extern int *indx;
 //#define WMU(i,j) WMu[indx[j]+i]
 //#define WML(i,j) WMl[indx[j]+i]
 #define VBI(i,j) VBI[indx[j]+i]
+#define RT ((0.00198721 * 310.15)/100.00)
 
 #define auPen(i, j) ((( (i)==BASE_U || (j)==BASE_U ) && ( (i)==BASE_A || (i)==BASE_G || (j)==BASE_A || (j)==BASE_G )) ? auend : 0)
 

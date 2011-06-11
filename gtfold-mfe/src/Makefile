@@ -51,7 +51,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_gtfold_OBJECTS = main.$(OBJEXT) loader.$(OBJEXT) utils.$(OBJEXT) \
 	options.$(OBJEXT) constraints.$(OBJEXT) global.$(OBJEXT) \
 	energy.$(OBJEXT) algorithms.$(OBJEXT) traceback.$(OBJEXT) \
-	subopt_traceback.$(OBJEXT) partition-dangle.$(OBJEXT) \
+	subopt_traceback.$(OBJEXT) algorithms-partition.$(OBJEXT) \
+	partition-dangle.$(OBJEXT) random-sample.$(OBJEXT) \
 	shapereader.$(OBJEXT)
 gtfold_OBJECTS = $(am_gtfold_OBJECTS)
 gtfold_DEPENDENCIES =
@@ -192,7 +193,9 @@ gtfold_SOURCES = \
 	algorithms.c \
 	traceback.c \
 	subopt_traceback.cc\
+	algorithms-partition.c\
 	partition-dangle.c\
+	random-sample.cc\
 	shapereader.cc
 
 gtfold_LDFLAGS = 
@@ -279,6 +282,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+include ./$(DEPDIR)/algorithms-partition.Po
 include ./$(DEPDIR)/algorithms.Po
 include ./$(DEPDIR)/constraints.Po
 include ./$(DEPDIR)/energy.Po
@@ -287,6 +291,7 @@ include ./$(DEPDIR)/loader.Po
 include ./$(DEPDIR)/main.Po
 include ./$(DEPDIR)/options.Po
 include ./$(DEPDIR)/partition-dangle.Po
+include ./$(DEPDIR)/random-sample.Po
 include ./$(DEPDIR)/shapereader.Po
 include ./$(DEPDIR)/subopt_traceback.Po
 include ./$(DEPDIR)/traceback.Po

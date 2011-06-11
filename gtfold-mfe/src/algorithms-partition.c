@@ -16,7 +16,6 @@
 
 
 // Boltzmann constant (R) * Standard 37C temperature (T in Kelvin)
-double RT = 0.00198721 * 310.15;
 
 // Based on pseudocode in figure 6 in 
 //
@@ -67,18 +66,18 @@ void fill_partition_fn_arrays(int len, double** QB, double** Q, double** QM) {
 
                 // NOTE: eH returns an integer encoded as fixed point.  So a
                 // return value of 115 represents raw value 115/100 = 1.15
-                QB[i][j] = exp(-eH(i,j)/100.0/RT);
+                QB[i][j] = exp(-eH(i,j)/RT);
 
                 for(d=i+1; d<=j-4; ++d) {
                     for(e=d+4; e<=j-1; ++e) {
                         
                 if(d == i + 1 && e == j -1)
-                    QB[i][j] += exp(-eS(i,j)/100.0/RT)*QB[d][e];
+                    QB[i][j] += exp(-eS(i,j)/RT)*QB[d][e];
                 else 
-                    QB[i][j] += exp(-eL(i,j,d,e)/100.0/RT)*QB[d][e];
+                    QB[i][j] += exp(-eL(i,j,d,e)/RT)*QB[d][e];
 
                         QB[i][j] += QM[i+1][d-1]*QB[d][e] *
-                            exp(-(a + b + c*(j-e-1))/100.0/RT);
+                            exp(-(a + b + c*(j-e-1))/RT);
                     }
                 }
             }
@@ -88,8 +87,8 @@ void fill_partition_fn_arrays(int len, double** QB, double** Q, double** QM) {
             for(d=i; d<=j-4; ++d) {
                 for(e=d+4; e<=j; ++e) {
                     Q[i][j] += Q[i][d-1]*QB[d][e];
-                    QM[i][j] += exp(-(b+c*(d-i)+c*(j-e))/100.0) * QB[d][e];
-                    QM[i][j] += QM[i][d-1] * QB[d][e] * exp(-(b+c*(j-e))/100.0/RT);
+                    QM[i][j] += exp(-(b+c*(d-i)+c*(j-e))/RT) * QB[d][e];
+                    QM[i][j] += QM[i][d-1] * QB[d][e] * exp(-(b+c*(j-e))/RT);
                 }
             }
         }
@@ -137,22 +136,22 @@ void fillBasePairProbabilities(int length, int *structure, double **Q, double **
                     tempBuffer = P[i][j]*QB[h][l]/QB[i][j];
 
                     if(i == h-1 && j == l+1) //of which stacked pairs are a special case
-                        tempBuffer *= exp(-eS(i,j)/100.0/RT);
+                        tempBuffer *= exp(-eS(i,j)/RT);
                     else
-                        tempBuffer *= exp(-eL(i,j,h,l)/100.0/RT);
+                        tempBuffer *= exp(-eL(i,j,h,l)/RT);
 
                     P[h][l] += tempBuffer;
 
                     // third term
                     tempBuffer = 0; // Start over for multiloops
                     if(j - l > 3)
-                        tempBuffer += exp(-((h-i-1)*c/100.0/RT)) * QM[l+1][j-1];
+                        tempBuffer += exp(-((h-i-1)*c/RT)) * QM[l+1][j-1];
                     if(h - i > 3)
-                        tempBuffer += exp(-((j-l-1)*c/100.0/RT)) * QM[i+1][h-1];
+                        tempBuffer += exp(-((j-l-1)*c/RT)) * QM[i+1][h-1];
                     if(j - l > 3 && h - i > 3)
                         tempBuffer += QM[i+1][h-1] * QM[l+1][j-1];
 
-                    tempBuffer *= P[i][j] * QB[h][l] / QB[i][j] * exp(-(a+b)/100.0/RT);
+                    tempBuffer *= P[i][j] * QB[h][l] / QB[i][j] * exp(-(a+b)/RT);
 
                     P[h][l] += tempBuffer;
                 }
