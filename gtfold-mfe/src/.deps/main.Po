@@ -94,11 +94,12 @@ main.o: main.cc /usr/include/c++/4.5/iostream \
  /usr/include/c++/4.5/bits/vector.tcc ../include/constants.h \
  ../include/utils.h ../include/loader.h ../include/data.h \
  ../include/options.h /usr/include/c++/4.5/cstring ../include/global.h \
- ../include/energy.h ../include/algorithms.h ../include/constraints.h \
- ../include/traceback.h ../include/subopt_traceback.h \
- /usr/include/c++/4.5/cassert /usr/include/assert.h \
- /usr/include/c++/4.5/stack /usr/include/c++/4.5/deque \
- /usr/include/c++/4.5/bits/stl_deque.h \
+ ../include/energy.h ../include/algorithms.h \
+ ../include/algorithms-partition.h ../include/partition-dangle.h \
+ ../include/constraints.h ../include/traceback.h \
+ ../include/subopt_traceback.h /usr/include/c++/4.5/cassert \
+ /usr/include/assert.h /usr/include/c++/4.5/stack \
+ /usr/include/c++/4.5/deque /usr/include/c++/4.5/bits/stl_deque.h \
  /usr/include/c++/4.5/bits/deque.tcc \
  /usr/include/c++/4.5/bits/stl_stack.h /usr/include/c++/4.5/map \
  /usr/include/c++/4.5/bits/stl_tree.h /usr/include/c++/4.5/bits/stl_map.h \
@@ -403,6 +404,10 @@ main.o: main.cc /usr/include/c++/4.5/iostream \
 ../include/energy.h:
 
 ../include/algorithms.h:
+
+../include/algorithms-partition.h:
+
+../include/partition-dangle.h:
 
 ../include/constraints.h:
 

@@ -30,7 +30,9 @@
  * @param QM Matrix
  *
  */
-void fill_partition_fn_arrays(int len, double** QB, double** Q, double** QM) {
+
+
+void fill_partition_fn_arrays(int len, double** Q, double** QB, double** QM) {
 
     // multiConst[3] is a global variable with 3 values: a, b, c for the
     // experimental constants

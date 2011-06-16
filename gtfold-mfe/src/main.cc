@@ -36,6 +36,8 @@
 #include "global.h"
 #include "energy.h"
 #include "algorithms.h"
+#include "algorithms-partition.h"
+#include "partition-dangle.h"
 #include "constraints.h"
 #include "traceback.h"
 #include "subopt_traceback.h"
@@ -259,5 +261,28 @@ int main(int argc, char** argv) {
 	// release the malloc'd arrays
 	free_fold(seq.length());
 
+	if(BPP_ENABLED){
+		printf("Calculating partition function\n");
+		double ** Q,  **QM, **QB, **P;
+		Q = mallocTwoD(seq.length() + 1, seq.length() + 1);
+		QM = mallocTwoD(seq.length() + 1, seq.length() + 1);
+		QB = mallocTwoD(seq.length() + 1, seq.length() + 1);
+		P = mallocTwoD(seq.length() + 1, seq.length() + 1);
+
+		fill_partition_fn_arrays(seq.length(), Q, QB, QM);
+		fillBasePairProbabilities(seq.length(), structure, Q, QB, QM, P);
+		printBasePairProbabilities(seq.length(), structure, P);
+
+		freeTwoD(Q, seq.length() + 1, seq.length() + 1);
+		freeTwoD(QM, seq.length() + 1, seq.length() + 1);
+		freeTwoD(QB, seq.length() + 1, seq.length() + 1);
+		freeTwoD(P, seq.length() + 1, seq.length() + 1);
+	}
+/*
+	dangle_struct partition;
+	partition = malloc_partition_arrays_d(seq.length());
+	fill_partition_arrays_d(partition);
+	printf("Done with the partition functioni.\n");
+*/
 	return EXIT_SUCCESS;
 }

@@ -18,12 +18,12 @@ using namespace std;
 //gives me a link error it should get this function
 //from partition-dangle
 
-double cond_dangle(int j, int h, int l){
+/*double cond_dangle(int j, int h, int l){
 	if(j - 1 == l)
 		return 1;
 	else 
 		return exp(-Ed3(h,l,l+1)/RT);
-}
+}*/
 
 double randdouble(){
 	    return rand()/(double(RAND_MAX)+1);
